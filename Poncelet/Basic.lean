@@ -81,7 +81,7 @@ theorem ind {motive : P2 → Prop} (mk : ∀ p, (hp : p ≠ 0) → motive (mk p 
 end P2
 
 def OuterCircle (p : P2) : Prop :=
-  p.lift (fun p hp ↦ (p 1 - u * p 0) ^ 2 + p 2 ^ 2 = r ^ 2 * p 0 ^ 2) fun p q hp hq h ↦ (by
+  p.lift (fun p hp ↦ (p 0 - u * p 2) ^ 2 + p 1 ^ 2 = r ^ 2 * p 2 ^ 2) fun p q hp hq h ↦ (by
     obtain ⟨l, h0, rfl⟩ := h
     simp_rw [Pi.smul_apply, smul_eq_mul]
     conv_rhs =>
@@ -90,7 +90,7 @@ def OuterCircle (p : P2) : Prop :=
   )
 
 def InnerCircle (p : P2) : Prop :=
-  p.lift (fun p hp ↦ p 1 ^ 2 + p 2 ^ 2 = p 0 ^ 2) fun p q hp hq h ↦ by
+  p.lift (fun p hp ↦ p 0 ^ 2 + p 1 ^ 2 = p 2 ^ 2) fun p q hp hq h ↦ by
     obtain ⟨l, h0, rfl⟩ := h
     simp_rw [Pi.smul_apply, smul_eq_mul]
     conv_rhs =>
@@ -98,7 +98,7 @@ def InnerCircle (p : P2) : Prop :=
     congrm ?_ = ?_ <;> ring
 
 def Incidence (p q : P2) : Prop :=
-  P2.lift₂ (fun p q hp hq ↦ p 1 * q 1 + p 2 * q 2 = p 0 * q 0) (fun p q r s hp hq hr hs hpr hqs ↦ by
+  P2.lift₂ (fun p q hp hq ↦ p 0 * q 0 + p 1 * q 1 = p 2 * q 2) (fun p q r s hp hq hr hs hpr hqs ↦ by
     obtain ⟨l, hl0, rfl⟩ := hpr
     obtain ⟨m, hm0, rfl⟩ := hqs
     simp_rw [Pi.smul_apply, smul_eq_mul]
@@ -112,58 +112,58 @@ def dom : Set (P2 × P2) := {pq | OuterCircle u r pq.1 ∧ InnerCircle pq.2 ∧ 
 @[simp]
 theorem mem_dom {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq : q ≠ 0) :
     ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom u r ↔ (
-    (p 1 - u * p 0) ^ 2 + p 2 ^ 2 = r ^ 2 * p 0 ^ 2 ∧
-    q 1 ^ 2 + q 2 ^ 2 = q 0 ^ 2 ∧
-    p 1 * q 1 + p 2 * q 2 = p 0 * q 0) := by rfl
+    (p 0 - u * p 2) ^ 2 + p 1 ^ 2 = r ^ 2 * p 2 ^ 2 ∧
+    q 0 ^ 2 + q 1 ^ 2 = q 2 ^ 2 ∧
+    p 0 * q 0 + p 1 * q 1 = p 2 * q 2) := by rfl
 
 noncomputable
 def rPoint' (p q : Fin 3 → ℂ) : Fin 3 → ℂ :=
-  if q 0 = 0 then
-    if p 0 = 0 then
-      ![2 * u * q 2, -(r ^ 2 - u ^ 2) * q 2, (r ^ 2 - u ^ 2) * q 1]
+  if q 2 = 0 then
+    if p 2 = 0 then
+      ![-(r ^ 2 - u ^ 2) * q 1, (r ^ 2 - u ^ 2) * q 0, 2 * u * q 1]
     else
-      ![0, q 2, -q 1]
+      ![q 1, -q 0, 0]
   else
-    ![p 0 * q 0 ^ 2,
-      2 * q 1 * p 0 * q 0 + 2 * u * q 2 ^ 2 * p 0 - p 1 * q 0 ^ 2,
-      2 * q 2 * p 0 * q 0 - 2 * u * q 1 * q 2 * p 0  - p 2 * q 0 ^ 2]
+    ![2 * q 0 * p 2 * q 2 + 2 * u * q 1 ^ 2 * p 2 - p 0 * q 2 ^ 2,
+      2 * q 1 * p 2 * q 2 - 2 * u * q 0 * q 1 * p 2  - p 1 * q 2 ^ 2,
+      p 2 * q 2 ^ 2]
 
 theorem rPoint'_rPoint' (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq : q ≠ 0)
     (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom u r) :
     ∃ l : ℂ, rPoint' u r (rPoint' u r p q) q = l • p := by
   obtain ⟨ho, hi, hpq⟩ := mem_dom u r hp hq |>.mp h
   unfold rPoint'
-  by_cases! hq0 : q 0 = 0
-  · by_cases hp0 : p 0 = 0
-    · have hq2 : q 2 ≠ 0 := by
+  by_cases! hq0 : q 2 = 0
+  · by_cases hp0 : p 2 = 0
+    · have hq2 : q 1 ≠ 0 := by
         by_contra! hq2
-        have : q 1 = 0 := by simpa [hq0, hq2] using hi
+        have : q 0 = 0 := by simpa [hq0, hq2] using hi
         clear h
         contrapose! hq
         ext n; fin_cases n <;> assumption
-      have hp1 : p 1 ≠ 0 := by
+      have hp1 : p 0 ≠ 0 := by
         by_contra! hp1
-        have : p 2 = 0 := by simpa [hp1, hp0, hq2] using hpq
+        have : p 1 = 0 := by simpa [hp1, hp0, hq2] using hpq
         clear h
         contrapose! hp
         ext n; fin_cases n <;> assumption
-      use q 2 / p 1
+      use q 1 / p 0
       ext n
       fin_cases n
+      · suffices q 1 = q 1 / p 0 * p 0 by simpa [hp0, hq0, hu, hq2]
+        grind
+      · suffices -q 0 = q 1 / p 0 * p 1 by simpa [hp0, hq0, hu, hq2]
+        grind
       · simp [hp0, hq0, hu, hq2]
-      · suffices q 2 = q 2 / p 1 * p 1 by simpa [hp0, hq0, hu, hq2]
-        grind
-      · suffices -q 1 = q 2 / p 1 * p 2 by simpa [hp0, hq0, hu, hq2]
-        grind
-    · use 2 * u * q 2 / p 0
+    · use 2 * u * q 1 / p 2
       ext n
       fin_cases n
+      · suffices (u ^ 2 - r ^ 2) * q 1 = 2 * u * q 1 / p 2 * p 0 by simpa [hp0, hq0]
+        grind
+      · suffices (r ^ 2 - u ^ 2) * q 0 = 2 * u * q 1 / p 2 * p 1 by simpa [hp0, hq0]
+        grind
       · simp [hp0, hq0]
-      · suffices (u ^ 2 - r ^ 2) * q 2 = 2 * u * q 2 / p 0 * p 1 by simpa [hp0, hq0]
-        grind
-      · suffices (r ^ 2 - u ^ 2) * q 1 = 2 * u * q 2 / p 0 * p 2 by simpa [hp0, hq0]
-        grind
-  use q 0 ^ 4
+  use q 2 ^ 4
   ext n
   fin_cases n
   all_goals
@@ -174,19 +174,19 @@ theorem rPoint'_ne_zero (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq 
     (hpq : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom u r) : rPoint' u r p q ≠ 0 := by
   unfold rPoint'
   by_contra! h0
-  by_cases! hq0 : q 0 = 0
-  · by_cases! hp0 : p 0 = 0
-    · obtain ⟨hq2, _⟩ : q 2 = 0 ∧ _ := by simpa [hu, hp0, hq0] using h0
-      have hq1 : q 1 = 0 := by simpa [hq2, hq0] using (mem_dom u r hp hq |>.mp hpq).2.1
+  by_cases! hq0 : q 2 = 0
+  · by_cases! hp0 : p 2 = 0
+    · obtain ⟨_, _, hq2⟩ : _ ∧ _ ∧ q 1 = 0 := by simpa [hu, hp0, hq0] using h0
+      have hq1 : q 0 = 0 := by simpa [hq2, hq0] using (mem_dom u r hp hq |>.mp hpq).2.1
       clear hpq
       contrapose! hq
       ext n; fin_cases n <;> assumption
-    · obtain ⟨hq2, hq1⟩ : q 2 = 0 ∧ q 1 = 0 := by simpa [hp0, hq0] using h0
+    · obtain ⟨hq2, hq1⟩ : q 1 = 0 ∧ q 0 = 0 := by simpa [hp0, hq0] using h0
       clear hpq
       contrapose! hq
       ext n; fin_cases n <;> assumption
-  · by_cases! hp0 : p 0 = 0
-    · obtain ⟨hp1, hp2⟩ : p 1 = 0 ∧ p 2 = 0 := by simpa [hp0, hq0] using h0
+  · by_cases! hp0 : p 2 = 0
+    · obtain ⟨hp1, hp2⟩ : p 0 = 0 ∧ p 1 = 0 := by simpa [hp0, hq0] using h0
       clear hpq
       contrapose! hp
       ext n; fin_cases n <;> assumption
@@ -195,21 +195,21 @@ theorem rPoint'_ne_zero (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq 
 theorem rPoint'_eq_self (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq : q ≠ 0)
     (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom u r) :
     (∃ l : ℂ, rPoint' u r p q = l • p) ↔
-    (2 * u * q 1 * q 0 + u ^ 2 * q 2 ^ 2) * q 2 = (1 + u ^ 2 - r ^ 2) * q 0 ^ 2 * q 2 := by
+    (2 * u * q 0 * q 2 + u ^ 2 * q 1 ^ 2) * q 1 = (1 + u ^ 2 - r ^ 2) * q 2 ^ 2 * q 1 := by
   obtain ⟨ho, hi, hpq⟩ := mem_dom u r hp hq |>.mp h
 
-  by_cases! hq0 : q 0 = 0
+  by_cases! hq0 : q 2 = 0
   · unfold rPoint'
-    by_cases! hp0 : p 0 = 0
-    · have hq2 : q 2 ≠ 0 := by
+    by_cases! hp0 : p 2 = 0
+    · have hq2 : q 1 ≠ 0 := by
         by_contra! hq2
-        have : q 1 = 0 := by simpa [hq0, hq2] using hi
+        have : q 0 = 0 := by simpa [hq0, hq2] using hi
         clear h
         contrapose! hq
         ext n; fin_cases n <;> assumption
       simp [hq0, hp0, hu]
-      /-suffices (∃ l, ![2 * u * q 2, (u ^ 2 - r ^ 2) * q 2, (r ^ 2 - u ^ 2) * q 1] = l • p) ↔
-        u * q 1 = 0 by simpa [hq0, hp0]
+      /-suffices (∃ l, ![2 * u * q 1, (u ^ 2 - r ^ 2) * q 1, (r ^ 2 - u ^ 2) * q 0] = l • p) ↔
+        u * q 0 = 0 by simpa [hq0, hp0]
 
       apply iff_of_false
       · by_contra!
@@ -219,29 +219,20 @@ theorem rPoint'_eq_self (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq 
       ·
         sorry
     · sorry
-  trans rPoint' u r p q = q 0 ^ 2 • p
+  trans rPoint' u r p q = q 2 ^ 2 • p
   · sorry
 
   unfold rPoint'
   constructor
-  · intro heq
-    obtain heq1 := congrFun heq 1
-    obtain heq2 := congrFun heq 2
-    simp [hq0] at heq1
-    simp [hq0] at heq2
-    have heq1' : q 1 * p 0 * q 0 + u * q 2 ^ 2 * p 0 = q 0 ^ 2 * p 1 := by grind
-    have heq2' : q 2 * p 0 * q 0 - u * q 1 * q 2 * p 0 = q 0 ^ 2 * p 2 := by grind
-    obtain he := congr($heq1'  + $heq2')
-
-    sorry
+  · sorry
   · sorry
 
 noncomputable
 def rPoint (pq : P2 × P2) : P2 × P2 := ⟨P2.lift₂ (fun p q hp hq ↦ P2.mk' (rPoint' u r p q)) (by
   intro p q p' q' hp hq hp' hq' ⟨l, hl0, hl⟩ ⟨m, hm0, hm⟩
   unfold rPoint'
-  have hp0 : p' 0 = 0 ↔ p 0 = 0 := by aesop
-  have hq0 : q' 0 = 0 ↔ q 0 = 0 := by aesop
+  have hp0 : p' 2 = 0 ↔ p 2 = 0 := by aesop
+  have hq0 : q' 2 = 0 ↔ q 2 = 0 := by aesop
   simp_rw [hp0, hq0]
   split_ifs
   · apply P2.mk'_eq_mk' hm0
@@ -253,9 +244,9 @@ def rPoint (pq : P2 × P2) : P2 × P2 := ⟨P2.lift₂ (fun p q hp hq ↦ P2.mk'
   · apply P2.mk'_eq_mk' hm0
     rw [Matrix.smul_vec3]
     apply Matrix.vec3_eq
+    · simp [hm]
+    · simp [hm]
     · simp
-    all_goals
-    simp [hm]
   apply P2.mk'_eq_mk' (show l * m ^ 2 ≠ 0 by simp [hl0, hm0])
   rw [Matrix.smul_vec3]
   apply Matrix.vec3_eq
@@ -297,40 +288,40 @@ theorem rPoint_rPoint (hu : u ≠ 0) {pq : P2 × P2} (hpq : pq ∈ dom u r) :
 
 noncomputable
 def rChord' (p q : Fin 3 → ℂ) : Fin 3 → ℂ :=
-  if 2 * u * p 1 + r ^ 2 * p 0 - u ^ 2 * p 0 = 0 then -- all sorts of edge cases
-    if p 1 = 0 then
-      ![q 0, q 1, - q 2]
-    else if q 0 = 0 then
-      ![2 * p 1 * p 2 * p 0, p 2 * (p 0 ^ 2 - p 2 ^ 2), p 1 * (p 0 ^ 2 + p 2 ^ 2)]
+  if 2 * u * p 0 + r ^ 2 * p 2 - u ^ 2 * p 2 = 0 then -- all sorts of edge cases
+    if p 0 = 0 then
+      ![q 0, - q 1, q 2]
+    else if q 2 = 0 then
+      ![p 1 * (p 2 ^ 2 - p 1 ^ 2), p 0 * (p 2 ^ 2 + p 1 ^ 2), 2 * p 0 * p 1 * p 2]
     else
-      ![0, p 2, -p 1]
+      ![p 1, -p 0, 0]
   else -- the only part I had on my notebook
-    ![(2 * u * p 1 + r ^ 2 * p 0 - u ^ 2 * p 0) * q 0,
-      2 * p 1 * q 0 - (2 * u * p 1 + r ^ 2 * p 0 - u ^ 2 * p 0) * q 1,
-      2 * p 2 * q 0 - (2 * u * p 1 + r ^ 2 * p 0 - u ^ 2 * p 0) * q 2]
+    ![2 * p 0 * q 2 - (2 * u * p 0 + r ^ 2 * p 2 - u ^ 2 * p 2) * q 0,
+      2 * p 1 * q 2 - (2 * u * p 0 + r ^ 2 * p 2 - u ^ 2 * p 2) * q 1,
+      (2 * u * p 0 + r ^ 2 * p 2 - u ^ 2 * p 2) * q 2]
 
 theorem rChord'_ne_zero (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq : q ≠ 0)
     (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom u r) : rChord' u r p q ≠ 0 := by
   obtain ⟨ho, hi, hpq⟩ := mem_dom u r hp hq |>.mp h
   unfold rChord'
-  by_cases! hxy : 2 * u * p 1 + r ^ 2 * p 0 - u ^ 2 * p 0 = 0
-  · have h0' : p 1 ^ 2 + p 2 ^ 2 = 0 := by linear_combination ho + p 0 * hxy
+  by_cases! hxy : 2 * u * p 0 + r ^ 2 * p 2 - u ^ 2 * p 2 = 0
+  · have h0' : p 0 ^ 2 + p 1 ^ 2 = 0 := by linear_combination ho + p 2 * hxy
     simp_rw [hxy]
-    by_cases! hp1 : p 1 = 0
+    by_cases! hp1 : p 0 = 0
     · suffices q 0 = 0 → q 1 = 0 → q 2 ≠ 0 by simpa [hp1]
       intro hq0 hq1
       clear h
       contrapose! hq with hq2
       ext n; fin_cases n <;> assumption
-    have hp2 : p 2 ≠ 0 := by
+    have hp2 : p 1 ≠ 0 := by
       contrapose! hp1
       simpa [hp1] using h0'
-    have hp0 : p 0 ≠ 0 := by grind
-    by_cases! hq0 : q 0 = 0
+    have hp0 : p 2 ≠ 0 := by grind
+    by_cases! hq0 : q 2 = 0
     · simp [hp1, hq0, hp2, hp0]
     · simp [hp1, hq0]
-  by_cases! hq0 : q 0 = 0
-  · suffices q 1 = 0 → q 2 ≠ 0 by simpa [hxy, hq0]
+  by_cases! hq0 : q 2 = 0
+  · suffices q 0 = 0 → q 1 ≠ 0 by simpa [hxy, hq0]
     intro hq0 hq1
     clear h
     contrapose! hq with hq2
@@ -342,44 +333,44 @@ theorem rChord'_rChord' (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq 
     ∃ l : ℂ, rChord' u r p (rChord' u r p q) = l • q := by
   obtain ⟨ho, hi, hpq⟩ := mem_dom u r hp hq |>.mp h
   unfold rChord'
-  by_cases h0 : 2 * u * p 1 + r ^ 2 * p 0 - u ^ 2 * p 0 = 0
-  · have h0' : p 1 ^ 2 + p 2 ^ 2 = 0 := by linear_combination ho + p 0 * h0
+  by_cases h0 : 2 * u * p 0 + r ^ 2 * p 2 - u ^ 2 * p 2 = 0
+  · have h0' : p 0 ^ 2 + p 1 ^ 2 = 0 := by linear_combination ho + p 2 * h0
     simp_rw [h0]
-    by_cases! hp1 : p 1 = 0
+    by_cases! hp1 : p 0 = 0
     · use 1
       ext n
       fin_cases n
       all_goals
       simp [hp1]
-    have hp2 : p 2 ≠ 0 := by
+    have hp2 : p 1 ≠ 0 := by
       contrapose! hp1
       simpa [hp1] using h0'
-    have hp0 : p 0 ≠ 0 := by grind
-    by_cases! hq0 : q 0 = 0
-    · have hp0 : p 0 ≠ 0 := by grind
-      have hq12 : p 1 * q 1 + p 2 * q 2 = 0 := by simpa [hq0] using hpq
+    have hp0 : p 2 ≠ 0 := by grind
+    by_cases! hq0 : q 2 = 0
+    · have hp0 : p 2 ≠ 0 := by grind
+      have hq12 : p 0 * q 0 + p 1 * q 1 = 0 := by simpa [hq0] using hpq
       simp [hp1, hq0, hp0, hp2]
-      have hq1 : q 1 ≠ 0 := by
+      have hq1 : q 0 ≠ 0 := by
         clear h
         contrapose! hq with hq1
-        have hq2 : q 2 = 0 := by simpa [hq1, hp2] using hq12
+        have hq2 : q 1 = 0 := by simpa [hq1, hp2] using hq12
         ext n; fin_cases n <;> assumption
-      use p 2 / q 1
+      use p 1 / q 0
       ext n
       fin_cases n
-      · simp [hq0]
       · simp [hq1]
       · simp
         grind
-    use 2 * p 1 * p 2 * p 0 / q 0
+      · simp [hq0]
+    use 2 * p 0 * p 1 * p 2 / q 2
     ext n
     fin_cases n
     · simp [hp1, hq0]
-    · simp [hp1, hq0]
       grind
     · simp [hp1, hq0]
       grind
-  · use (2 * u * p 1 + (r ^ 2) * p 0 - u ^ 2 * p 0) ^ 2
+    · simp [hp1, hq0]
+  · use (2 * u * p 0 + (r ^ 2) * p 2 - u ^ 2 * p 2) ^ 2
     ext n
     fin_cases n
     all_goals
@@ -388,10 +379,10 @@ theorem rChord'_rChord' (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq 
 
 theorem rChord'_eq_self (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq : q ≠ 0)
     (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom u r) :
-    (∃ l : ℂ, rChord' u r p q = l • q) ↔ p 1 ^ 2 + p 2 ^ 2 = p 0 ^ 2 := by
-  by_cases! hxy : 2 * u * p 1 + r ^ 2 * p 0 - u ^ 2 * p 0 = 0
+    (∃ l : ℂ, rChord' u r p q = l • q) ↔ p 0 ^ 2 + p 1 ^ 2 = p 2 ^ 2 := by
+  by_cases! hxy : 2 * u * p 0 + r ^ 2 * p 2 - u ^ 2 * p 2 = 0
   · sorry
-  trans rChord' u r p q = (2 * u * p 1 + r ^ 2 * p 0 - u ^ 2 * p 0) • q
+  trans rChord' u r p q = (2 * u * p 0 + r ^ 2 * p 2 - u ^ 2 * p 2) • q
   · sorry
   · simp only [rChord', Fin.isValue, hxy, ↓reduceIte]
     constructor
@@ -407,8 +398,8 @@ def rChord (pq : P2 × P2) : P2 × P2 :=
   ⟨pq.1, P2.lift₂ (fun p q hp hq ↦ P2.mk' (rChord' u r p q)) (by
     intro p q p' q' hp hq hp' hq' ⟨l, hl0, hl⟩ ⟨m, hm0, hm⟩
     unfold rChord'
-    have hxy : 2 * u * p' 1 + r ^ 2 * p' 0 - u ^ 2 * p' 0 = 0 ↔
-        2 * u * p 1 + r ^ 2 * p 0 - u ^ 2 * p 0 = 0 := by
+    have hxy : 2 * u * p' 0 + r ^ 2 * p' 2 - u ^ 2 * p' 2 = 0 ↔
+        2 * u * p 0 + r ^ 2 * p 2 - u ^ 2 * p 2 = 0 := by
       rw [hl]
       conv_lhs =>
         rw [← mul_left_inj' hl0]
@@ -416,17 +407,17 @@ def rChord (pq : P2 × P2) : P2 × P2 :=
       · simp only [Pi.smul_apply, smul_eq_mul]
         ring
       · simp
-    have hp1 : p' 1 = 0 ↔ p 1 = 0 := by aesop
-    have hq0 : q' 0 = 0 ↔ q 0 = 0 := by aesop
+    have hp1 : p' 0 = 0 ↔ p 0 = 0 := by aesop
+    have hq0 : q' 2 = 0 ↔ q 2 = 0 := by aesop
     simp_rw [hxy, hp1, hq0]
     split_ifs
     · apply P2.mk'_eq_mk' hm0
       rw [Matrix.smul_vec3]
       apply Matrix.vec3_eq
       · simp [hm]
-      · simp [hm]
       · simp_rw [hm, Pi.smul_apply, smul_eq_mul]
         ring
+      · simp [hm]
     · apply P2.mk'_eq_mk' (mul_ne_zero hl0 (mul_ne_zero hl0 hl0))
       rw [Matrix.smul_vec3]
       apply Matrix.vec3_eq
@@ -436,9 +427,9 @@ def rChord (pq : P2 × P2) : P2 × P2 :=
     · apply P2.mk'_eq_mk' hl0
       rw [Matrix.smul_vec3]
       apply Matrix.vec3_eq
+      · simp [hl, Pi.smul_apply]
+      · simp [hl, Pi.smul_apply]
       · simp
-      · simp [hl, Pi.smul_apply]
-      · simp [hl, Pi.smul_apply]
     · apply P2.mk'_eq_mk' (mul_ne_zero hl0 hm0)
       rw [Matrix.smul_vec3]
       apply Matrix.vec3_eq
@@ -471,6 +462,8 @@ theorem mapsTo_rChord (hu : u ≠ 0) : Set.MapsTo (rChord u r) (dom u r) (dom u 
   · simp
     grind
 
+
+/-
 noncomputable
 abbrev ch := (1 - r ^ 2 - u ^ 2) / (2 * r * u)
 
@@ -478,7 +471,7 @@ noncomputable
 def elliptic := (WeierstrassCurve.mk 0 (-ch u r) 0 (-1) (ch u r)).toProjective
 
 theorem equation_elliptic_iff (p : Fin 3 → ℂ) :
-    (elliptic u r).Equation p ↔ p 1 ^ 2 * p 2 = (p 0 ^ 2 - p 2 ^ 2) * (p 0 - ch u r * p 2) := by
+    (elliptic u r).Equation p ↔ p 0 ^ 2 * p 1 = (p 2 ^ 2 - p 1 ^ 2) * (p 2 - ch u r * p 1) := by
   rw [elliptic, WeierstrassCurve.Projective.equation_iff]
   grind
 
@@ -509,48 +502,48 @@ theorem nonsingular_d' (hu : u ≠ 0) (hr : r ≠ 0) : (elliptic u r).Nonsingula
 
 noncomputable
 def toElliptic' (p q : Fin 3 → ℂ) : Fin 3 → ℂ :=
-  if q 0 = 0 then
-    if p 0 = 0 then
+  if q 2 = 0 then
+    if p 2 = 0 then
       ![0, 1, 0] -- doesn't feel right
     else
       -- The sign on i might be wrong
-      ![(p 1 - u * p 0), p 2 * Complex.I * (-2 * r * u) ^ (-2⁻¹ : ℂ) , r * p 0]
+      ![(p 0 - u * p 2), p 1 * Complex.I * (-2 * r * u) ^ (-2⁻¹ : ℂ) , r * p 2]
   else
-    ![(p 1 - u * p 0) * p 0 * q 0,
-      p 2 * (q 2 * p 1 - q 1 * p 2) * (-2 * r * u) ^ (-2⁻¹ : ℂ),
-      r * p 0 ^ 2 * q 0]
+    ![(p 0 - u * p 2) * p 2 * q 2,
+      p 1 * (q 1 * p 0 - q 0 * p 1) * (-2 * r * u) ^ (-2⁻¹ : ℂ),
+      r * p 2 ^ 2 * q 2]
 
 theorem equation_toElliptic' (hu : u ≠ 0) (hr : r ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq : q ≠ 0)
     (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom u r) :
     (elliptic u r).Equation (toElliptic' u r p q) := by
   obtain ⟨ho, hi, hpq⟩ := mem_dom u r hp hq |>.mp h
-  by_cases hq0 : q 0 = 0
-  · by_cases hp0 : p 0 = 0
+  by_cases hq0 : q 2 = 0
+  · by_cases hp0 : p 2 = 0
     · simp [equation_elliptic_iff, toElliptic', hq0, hp0]
-    have hq1 : q 1 ≠ 0 := by
+    have hq1 : q 0 ≠ 0 := by
       clear h
       contrapose! hq with hq1
-      have hq2 : q 2 = 0 := by simpa [hq1, hq0] using hi
+      have hq2 : q 1 = 0 := by simpa [hq1, hq0] using hi
       ext n; fin_cases n <;> assumption
-    have h1 : ((p 1 - u * p 0) ^ 2 - (r * p 0) ^ 2) = -p 2 ^ 2 := by grind
-    have h2 : (p 1 - u * p 0 - ch u r * (r * p 0)) = - p 0 / (2 * u)  := by
+    have h1 : ((p 0 - u * p 2) ^ 2 - (r * p 2) ^ 2) = -p 1 ^ 2 := by grind
+    have h2 : (p 0 - u * p 2 - ch u r * (r * p 2)) = - p 2 / (2 * u)  := by
       unfold ch
       field_simp
       grind
-    suffices (p 2 * Complex.I * (-2 * r * u) ^ (-2⁻¹ : ℂ)) ^ 2 * (r * p 0) =
-        -(p 2 ^ 2 * (-p 0 / (2 * u))) by
+    suffices (p 1 * Complex.I * (-2 * r * u) ^ (-2⁻¹ : ℂ)) ^ 2 * (r * p 2) =
+        -(p 1 ^ 2 * (-p 2 / (2 * u))) by
       simpa [equation_elliptic_iff, toElliptic', hq0, hp0, h1, h2]
     rw [mul_pow _ ((-2 * r * u) ^ (-2⁻¹ : ℂ)), sqrt_ru]
     field_simp
     simp
-  have h : (((p 1 - u * p 0) * p 0 * q 0) ^ 2 - (r * p 0 ^ 2 * q 0) ^ 2) *
-      ((p 1 - u * p 0) * p 0 * q 0 - ch u r * (r * p 0 ^ 2 * q 0)) =
-      - p 2 ^ 2 * p 0 ^ 2 * q 0 * (q 2 * p 1 - q 1 * p 2) ^ 2 / (2 * u) := by
+  have h : (((p 0 - u * p 2) * p 2 * q 2) ^ 2 - (r * p 2 ^ 2 * q 2) ^ 2) *
+      ((p 0 - u * p 2) * p 2 * q 2 - ch u r * (r * p 2 ^ 2 * q 2)) =
+      - p 1 ^ 2 * p 2 ^ 2 * q 2 * (q 1 * p 0 - q 0 * p 1) ^ 2 / (2 * u) := by
     unfold ch
     field_simp
     grind
-  suffices (p 2 * (q 2 * p 1 - q 1 * p 2) * (-2 * r * u) ^ (-2⁻¹ : ℂ)) ^ 2 * (r * p 0 ^ 2 * q 0) =
-      -(p 2 ^ 2 * p 0 ^ 2 * q 0 * (q 2 * p 1 - q 1 * p 2) ^ 2) / (2 * u) by
+  suffices (p 1 * (q 1 * p 0 - q 0 * p 1) * (-2 * r * u) ^ (-2⁻¹ : ℂ)) ^ 2 * (r * p 2 ^ 2 * q 2) =
+      -(p 1 ^ 2 * p 2 ^ 2 * q 2 * (q 1 * p 0 - q 0 * p 1) ^ 2) / (2 * u) by
     simpa [equation_elliptic_iff, toElliptic', h, hq0]
   rw [mul_pow _ ((-2 * r * u) ^ (-2⁻¹ : ℂ)), sqrt_ru]
   field_simp
@@ -574,3 +567,4 @@ theorem toElliptic'_ne_zero (hu : u ≠ 0) (hr : r ≠ 0) {p q : Fin 3 → ℂ} 
   rw [mul_pow _ ((-2 * r * u) ^ (-2⁻¹ : ℂ)), sqrt_ru]
   field_simp
   sorry-/
+-/
