@@ -129,6 +129,7 @@ def fabc (hu : u ≠ 0) (hr : r ≠ 0) (p : (elliptic u r).Point) : P2 :=
       · suffices fa u r (.some hxy) ≠ 0 by simp [this]
         have hx0 : x = 0 := by simpa [hur, hu, hr] using hx2
         simp [fa, hx0, hur]
+      have hur1 : (u + r) ^ 2 - 1 ≠ 0 := by grind
       rw [add_eq_zero_iff_eq_neg, ← eq_div_iff (by simpa using hur), sub_sq] at hx2
       have hx2' : (r * x) ^ 2 + u ^ 2 = 2 * (r * x) * u -(4 * u * r * x) / (u + r) ^ 2 := by
         linear_combination hx2
@@ -143,7 +144,7 @@ def fabc (hu : u ≠ 0) (hr : r ≠ 0) (p : (elliptic u r).Point) : P2 :=
       rw [nonsingular_elliptic u hr] at hxy
       obtain ⟨heq, hs⟩ := hxy
       rw [hx', mul_comm (r ^ 2) (y ^ 2), ← eq_div_iff_mul_eq (by simpa using hr)] at heq
-      have hy : y ^ 2 = (x * (u - r) * k u r * Complex.I / (r * (u + r))) ^ 2 := by
+      have hy : (r * (u + r)) ^ 2 * y ^ 2 = (x * (u - r) * k u r * Complex.I) ^ 2 := by
         rw [heq]
         field_simp
         simp [k_sq]
@@ -156,20 +157,24 @@ def fabc (hu : u ≠ 0) (hr : r ≠ 0) (p : (elliptic u r).Point) : P2 :=
         rw [hx2']
         field_simp
         ring
-
-      --have hy : y = (x * (u - r) * k u r * Complex.I / (r * (u + r))) := by sorry
       suffices fa u r (.some hxy) ≠ 0 by simp [this]
       by_contra! hfa
       have hfa : 2 * r ^ 2 * ((u + r) ^ 2 - 1) * (r * x - u) * y =
           (r * x + u) * (2 * r * x * (u - r) * ((u + r) ^ 2 - 1) / (u + r)) := by
         simpa [fa, hur, hx3, neg_add_eq_zero] using hfa
-      have hfa : r * (r * x - u) * y * (u + r) =
-          (r * x + u) * (x * (u - r))  := by sorry
+      have hfa : (r * x - u) * (r * (u + r) * y) = (r * x + u) * x * (u - r) := by
+        convert congr($hfa * ((u + r) / (2 * r * ((u + r) ^ 2 - 1)))) using 1 <;> field_simp
 
-      field_simp at hfa
-
-
-
+      /-have hfa : (r * x - u) ^ 2 * ((r * (u + r)) ^ 2 * y ^ 2) =
+          (r * x + u) ^ 2 * ((u - r) ^ 2 * x ^ 2) := by
+        convert congr($hfa ^ 2) using 1 <;> ring
+      rw [hy] at hfa
+      simp_rw [mul_pow] at hfa
+      rw [k_sq, Complex.I_sq] at hfa
+      have hfa : -(r * x - u) ^ 2 * ((u + r) ^ 2 - 1) * ((u - r) ^ 2 * x ^ 2) =
+          (r * x + u) ^ 2 * ((u - r) ^ 2 * x ^ 2) := by
+        convert hfa using 1
+        ring-/
 
       sorry
     suffices fa u r (.some hxy) ≠ 0 by simp [this]
@@ -201,7 +206,7 @@ theorem innerCircle_fxyz (hu : u ≠ 0) (hr : r ≠ 0) (p : (elliptic u r).Point
       simp [fa, fb, hxur]
       ring
     rw [k_sq]
-    grind
+    sorry --grind
 
 
 variable {u r} in
@@ -280,7 +285,17 @@ def w (hu : u ≠ 0) (hr : r ≠ 0) : (elliptic u r).Point :=
   )
 /-
 def xsorry : ℂ := sorry
+
+
+(u^2 *(r^2 * x^2 + (2 - u^2 - r^2) * x + u^2 + 2 * r * y))/(r^2 * x - u^2)^2
+
+
 def ysorry : ℂ := sorry
+
+ -(u^2 ?)/(r (-u^2 + r^2 x)^3)
+
+?= (-u^4 - 2 u^2 x + r^2 u^2 x + 2 u^4 x - 3 r^2 u^2 x^2 + r^4 x^3 - 2 r^2 * ( x * (r ^ 2 * x ^ 2 + (1 - u ^ 2 - r ^ 2) * x + u ^ 2)))  - 2 r u^2 y - r^3 u^2 y + r u^4 y - 2 r^3 x y + r^5 x y - r^3 u^2 x y
+
 
 variable {u r} in
 theorem nonsingular_w_sub (hu : u ≠ 0) (hr : r ≠ 0) {x y : ℂ}
@@ -333,3 +348,36 @@ theorem fxyz_o_sub (hu : u ≠ 0) (hr : r ≠ 0) (p : (elliptic u r).Point) :
     · field_simp
     · field_simp
       ring
+
+
+
+/-
+
+Special points
+
+       | elliptic           | xyz                                     | abc                     |
+-------|--------------------|-----------------------------------------|-------------------------|
+Two intersections at infinity. Each has two tangent lines coincide
+o - G⁺ = G⁺  (reflect chord)
+o - G⁻ = G⁻
+-------|--------------------|-----------------------------------------|-------------------------|
+G⁺, G⁻ | (-u / r,           | [1 : ∓i : 0]                            | [1 : ∓i : 0]            |
+       |  ±i * u * k / r^2) |                                         |                         |
+-------|--------------------|-----------------------------------------|-------------------------|
+H⁺ = w - G⁺  (reflect point)
+H⁻ = w - G⁻
+-------|--------------------|-----------------------------------------|-------------------------|
+H⁺, H⁻ | (u * (±2 * i * k + (u+r)^2 - 2) / (r * (u+r)^2), <...±...>)  |
+       |                    |                                         |
+       |                    | [u^2 - r^2 : ∓i(u^2 - r^2) : 2 * u]     | [1 : ∓i : 0]
+-------|--------------------|-----------------------------------------|-------------------------|
+L⁺ = o - H⁺  (reflect chord)
+L⁻ = o - H⁻
+-------|--------------------|-----------------------------------------|-------------------------|
+L⁺, L⁻ | (u * (∓2 * i * k + (u+r)^2 - 2) / (r * (u+r)^2), <...±...>)  |
+       |                    |                                         |
+       |                    | [u^2 - r^2 : ∓i(u^2 - r^2) : 2 * u]     |
+-------|--------------------|-----------------------------------------|-------------------------|
+
+
+-/

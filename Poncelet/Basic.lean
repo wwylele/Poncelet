@@ -216,8 +216,7 @@ theorem rPoint'_eq_self (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq 
         obtain ⟨l, hl⟩ := this
         obtain hl0 := congrFun hl 0
         simp [hp0, hu, hq2] at hl0-/
-      ·
-        sorry
+      · sorry
     · sorry
   trans rPoint' u r p q = q 2 ^ 2 • p
   · sorry
@@ -349,7 +348,7 @@ theorem rChord'_rChord' (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq 
     by_cases! hq0 : q 2 = 0
     · have hp0 : p 2 ≠ 0 := by grind
       have hq12 : p 0 * q 0 + p 1 * q 1 = 0 := by simpa [hq0] using hpq
-      simp [hp1, hq0, hp0, hp2]
+      suffices ∃ l, ![p 1, -p 0, 0] = l • q by simpa [hp1, hq0, hp0, hp2]
       have hq1 : q 0 ≠ 0 := by
         clear h
         contrapose! hq with hq1
@@ -387,11 +386,8 @@ theorem rChord'_eq_self (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq 
   · simp only [rChord', Fin.isValue, hxy, ↓reduceIte]
     constructor
     · intro h
-
       sorry
-    ·
-
-      sorry
+    · sorry
 
 noncomputable
 def rChord (pq : P2 × P2) : P2 × P2 :=
