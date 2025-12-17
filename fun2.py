@@ -94,6 +94,12 @@ def run(u, r, k):
         return (2*r*((u+r)**2-1) * (u-r*x) * y +  (r*x+u) * (r*r*(u+r)*x*x + 2*r*(1-r*(u+r))*x + (u+r)*u*u)) / \
                ((r*x+u) * ((r*x-u)**2*(u+r)**2 + 4*u*r*x))
     
+    def paformula2 (xy):
+        x, y = xy
+        return (u+r)**2 * \
+                (2*r*((u+r)**2-1) * (u-r*x) * y +  (r*x+u) * (r*r*(u+r)*x*x + 2*r*(1-r*(u+r))*x + (u+r)*u*u)) / \
+               ((r*x+u) * ( ((u+r)**2*(r*x-u)+2*u)**2 + (2*u*k)**2) )
+    
     def pbformula (xy):
         x, y = xy
         return k * (-2*r*(r*x+u)*y + (u - r*x)* (r*r*(u+r)*x*x + 2*r*(1-r*(r+u))*x + (u+r)*u*u)) / \
@@ -125,7 +131,7 @@ def run(u, r, k):
         else:
             print("pxformula/pyformula has zero divisor!!!")
 
-        assert pqlist[i][2] == paformula(xylist[i])
+        assert pqlist[i][2] == paformula2(xylist[i])
         assert pqlist[i][3] == pbformula(xylist[i])
     '''fig, ax = plt.subplots()
     outer = plt.Circle((float(u), 0), float(r), edgecolor = 'black', fill = False)
