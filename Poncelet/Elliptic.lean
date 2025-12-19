@@ -100,6 +100,11 @@ theorem SingularAbc.a_eq_zero {x y : ℂ} (h : SingularAbc u r x y) :
     = 0
   := congr($h 0)
 
+theorem SingularAbc.y_eq {x y : ℂ} (h : SingularAbc u r x y) :
+    2 * r ^ 2 * ((u + r) ^ 2 - 1) * (r * x - u) * y =
+    (r * x + u) * (r ^ 2 * (u + r) * x ^ 2 + 2 * r * (1 - r * (u + r)) * x + (u + r) * u ^ 2) := by
+  simpa [neg_add_eq_zero] using h.a_eq_zero
+
 theorem SingularAbc.b_eq_zero {x y : ℂ} (h : SingularAbc u r x y) :
     k u r * ((2 * r ^ 2 * (r * x + u) * y +
     (r * x - u) * (r ^ 2 * (u + r) * x ^ 2 + 2 * r * (1 - r * (u + r)) * x + (u + r) * u ^ 2)))
@@ -137,26 +142,72 @@ theorem SingularAbc.k_ne_zero (hr : r ≠ 0) {x y : ℂ} (h : SingularAbc u r x 
   obtain hx := (h.x_relation u hr hxy)
   grind
 
-theorem SingularAbc.fxyz_eq {x y : ℂ} (h : SingularAbc u r x y)
-    (hxy : ((elliptic u r)).Nonsingular x y) :
-    fxyzRaw u r (.some hxy) = sorry :=
-  sorry
+variable {u r} in
+theorem SingularAbc.fxyz_eq (hu : u ≠ 0) (hr : r ≠ 0) {x y : ℂ} (h : SingularAbc u r x y)
+    (hxy : ((elliptic u r)).Nonsingular x y) (hur : u + r ≠ 0) :
+    fxyzRaw u r (.some hxy) = ![
+      2 * r * x * ((u + r) ^ 2 - 1) / (u + r) ^ 2 * (u ^ 2 - r ^ 2),
+      2 * r * x * ((u + r) ^ 2 - 1) / (u + r) ^ 2 *
+        ((r * (u + r) ^ 2 * x - u * ((u + r) ^ 2 - 2)) / (2 * u * k u r) * (u ^ 2 - r ^ 2)),
+      2 * r * x * ((u + r) ^ 2 - 1) / (u + r) ^ 2 * (2 * u)] := by
+  suffices
+    r ^ 2 * (u + r) * x ^ 2 + 2 * r * (1 - r ^ 2 - r * u) * x + u ^ 2 * (u + r) =
+      2 * r * x * ((u + r) ^ 2 - 1) / (u + r) ^ 2 * (u ^ 2 - r ^ 2) ∧
+    -(2 * r ^ 2 * k u r * y) =
+      2 * r * x * ((u + r) ^ 2 - 1) / (u + r) ^ 2 *
+        ((r * (u + r) ^ 2 * x - u * ((u + r) ^ 2 - 2)) / (2 * u * k u r) * (u ^ 2 - r ^ 2)) ∧
+    (r * x + u) ^ 2 = 2 * r * x * ((u + r) ^ 2 - 1) / (u + r) ^ 2 * (2 * u) by
+    simpa [fxyzRaw]
+  obtain hx := h.c_factor_eq_zero u hr hxy
+  refine ⟨?_, ?_, ?_⟩
+  · field_simp
+    grind
+  · obtain hk := h.k_ne_zero u hr hxy
+    obtain hy := h.y_eq
+    have hrxu : r * x - u ≠ 0 := by grind
+    field_simp
+    rw [k_sq]
+    rw [← mul_left_inj' hrxu]
+    rw [← mul_left_inj' hr]
+    suffices -(2 * r ^ 2 * ((u + r) ^ 2 - 1) * (r * x - u) * y) * u * (u + r) ^ 2 =
+      x * ((u + r) ^ 2 - 1) *
+      (r * x * (u + r) ^ 2 - u * ((u + r) ^ 2 - 2)) * (u ^ 2 - r ^ 2) * (r * x - u) * r by
+      convert this using 1
+      ring
+    rw [hy]
+    simp_rw [neg_mul, neg_eq_iff_add_eq_zero]
+    suffices
+      - (r + u) * (r^4 * x + r^3 * u * x - r^2 * u^2 * x - r^2 * x - r * u^3 * x - u^2) *
+        ((r * x - u) ^ 2 * (u + r) ^ 2 + 4 * u * r * x) = 0 by
+      convert this using 1
+      ring
+    simp [hx]
+  · field_simp
+    grind
 
-/-variable {u r} in
+variable {u r} in
 theorem SingularAbc.x_eq_zero_of_casePos (hu : u ≠ 0) (hr : r ≠ 0) {x y : ℂ}
-    (h : SingularAbc u r x y) (hxy : ((elliptic u r)).Nonsingular x y) (huv : u + r = 0) :
+    (h : SingularAbc u r x y) (hxy : ((elliptic u r)).Nonsingular x y) (hur : u + r = 0) :
     x = 0 := by
-  simpa [huv, hu, hr] using h.c_factor_eq_zero u hr hxy
+  simpa [hur, hu, hr] using h.c_factor_eq_zero u hr hxy
 
 
 variable {u r} in
 theorem SingularAbc.y_eq_zero_of_casePos (hu : u ≠ 0) (hr : r ≠ 0) {x y : ℂ}
-    (h : SingularAbc u r x y) (hxy : ((elliptic u r)).Nonsingular x y) (huv : u + r = 0) :
+    (h : SingularAbc u r x y) (hxy : ((elliptic u r)).Nonsingular x y) (hur : u + r = 0) :
     y = 0 := by
-  obtain hx := h.x_eq_zero_of_casePos hu hr hxy huv
+  obtain hx := h.x_eq_zero_of_casePos hu hr hxy hur
   rw [nonsingular_elliptic u hr] at hxy
   obtain ⟨heq, hs⟩ := hxy
-  simpa [hx, hr] using heq-/
+  simpa [hx, hr] using heq
+
+variable {u r} in
+theorem SingularAbc.fxyz_eq_of_casePos (hu : u ≠ 0) (hr : r ≠ 0) {x y : ℂ} (h : SingularAbc u r x y)
+    (hxy : ((elliptic u r)).Nonsingular x y) (hur : u + r = 0) :
+  fxyzRaw u r (.some hxy) = ![0, 0, u ^ 2] := by
+  obtain hx := h.x_eq_zero_of_casePos hu hr hxy hur
+  obtain hy := h.y_eq_zero_of_casePos hu hr hxy hur
+  simp [fxyzRaw, hx, hy, hur]
 
 open Classical in
 noncomputable
@@ -229,7 +280,6 @@ theorem innerCircle_abc (hu : u ≠ 0) (hr : r ≠ 0) (p : (elliptic u r).Point)
     rw [k_sq]
     grind
 
-
 variable {u r} in
 theorem incidence_xyz_abc (hu : u ≠ 0) (hr : r ≠ 0) (p : (elliptic u r).Point) :
     Incidence (fxyz u hr p) (fabc hu hr p) := by
@@ -240,16 +290,29 @@ theorem incidence_xyz_abc (hu : u ≠ 0) (hr : r ≠ 0) (p : (elliptic u r).Poin
     simp [fabcRaw, fxyzRaw]
   | @some x y hxy =>
     by_cases hsingular : SingularAbc u r x y
-    ·
-      suffices (r ^ 2 * (u + r) * x ^ 2 + 2 * r * (1 - r ^ 2 - r * u) * x + u ^ 2 * (u + r)) *
-        (2 * u * k u r * ((u ^ 2 - r ^ 2) ^ 2 + 4 * u ^ 2)) +
-        -(2 * r ^ 2 * k u r * y * ((r * (u + r) ^ 2 * x - u * ((u + r) ^ 2 - 2)) * ((u ^ 2 - r ^ 2) ^ 2 - 4 * u ^ 2))) =
-        (r * x + u) ^ 2 * (8 * u ^ 2 * k u r * (u ^ 2 - r ^ 2)) by
+    · by_cases hur : u + r = 0
+      · have hur2 : u ^ 2 - r ^ 2 = 0 := by grind
+        simp [hsingular.fxyz_eq_of_casePos hu hr hxy hur, fabcRaw, hsingular, hur2]
+      simp_rw [hsingular.fxyz_eq hu hr hxy hur]
+      suffices
+        2 * r * x * ((u + r) ^ 2 - 1) / (u + r) ^ 2 * ((u ^ 2 - r ^ 2) * fabcRaw u r (.some hxy) 0 +
+          ((r * (u + r) ^ 2 * x - u * ((u + r) ^ 2 - 2)) / (2 * u * k u r) * (u ^ 2 - r ^ 2)) *
+          fabcRaw u r (.some hxy) 1) =
+        2 * r * x * ((u + r) ^ 2 - 1) / (u + r) ^ 2 * ((2 * u) * fabcRaw u r (.some hxy) 2) by
+        simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Fin.isValue, Matrix.cons_val_zero,
+          Matrix.cons_val_one, Matrix.cons_val]
         convert this using 1
-        · simp [fxyzRaw, fabcRaw, hsingular]
-        · simp [fxyzRaw, fabcRaw, hsingular]
-
-      sorry
+        · ring
+        · ring
+      congrm(_ * ?_)
+      obtain hk := hsingular.k_ne_zero u hr hxy
+      suffices (u ^ 2 - r ^ 2) *
+        (u ^ 2 * 2 ^ 2 * k u r ^ 2 * ((u ^ 2 - r ^ 2) ^ 2 + u ^ 2 * 4) +
+        (r * (u + r) ^ 2 * x - u * ((u + r) ^ 2 - 2)) ^ 2 * ((u ^ 2 - r ^ 2) ^ 2 - u ^ 2 * 4)) =
+         u ^ 4 * (u ^ 2 - r ^ 2) * 2 ^ 2 * k u r ^ 2 * 8 by
+        simpa [fabcRaw, hsingular, field]
+      rw [← hsingular.x_relation u hr hxy]
+      ring
     rw [nonsingular_elliptic u hr] at hxy
     obtain ⟨heq, hs⟩ := hxy
     suffices (r ^ 2 * (u + r) * x ^ 2 + 2 * r * (1 - r ^ 2 - r * u) * x + u ^ 2 * (u + r)) *
