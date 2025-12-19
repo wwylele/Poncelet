@@ -39,41 +39,37 @@ theorem nonsingular_elliptic (hr : r ≠ 0) (x y : ℂ) :
   field_simp
   grind
 
-def fx (p : (elliptic u r).Point) : ℂ := match p with
-| .zero => u + r
-| .some (x := x) _ =>
-  r ^ 2 * (u + r) * x ^ 2 + 2 * r * (1 - r ^ 2 - r * u) * x + u ^ 2 * (u + r)
-
 noncomputable
-def fy (p : (elliptic u r).Point) : ℂ := match p with
-| .zero => 0
-| .some (y := y) _ => -2 * r ^ 2 * k u r * y
-
-def fz (p : (elliptic u r).Point) : ℂ := match p with
-| .zero => 1
-| .some (x := x) _ => (r * x + u) ^ 2
+def fxyzRaw (p : (elliptic u r).Point) : Fin 3 → ℂ := match p with
+| .zero => ![u + r, 0, 1]
+| .some (x := x) (y := y) _ =>
+  ![r ^ 2 * (u + r) * x ^ 2 + 2 * r * (1 - r ^ 2 - r * u) * x + u ^ 2 * (u + r),
+    -2 * r ^ 2 * k u r * y,
+    (r * x + u) ^ 2]
 
 variable {r} in
 noncomputable
 def fxyz (hr : r ≠ 0) (p : (elliptic u r).Point) : P2 :=
-  P2.mk ![fx u r p, fy u r p, fz u r p] <| by
+  P2.mk (fxyzRaw u r p) <| by
   cases p with
   | zero =>
-    simp [fz]
+    simp [fxyzRaw]
   | @some x y hxy =>
     by_cases! hx : r * x + u ≠ 0
-    · simp [fz, hx]
-    suffices fy u r (.some hxy) ≠ 0 by simp [this]
-    unfold fy
+    · simp [fxyzRaw, hx]
+    suffices fxyzRaw u r (.some hxy) 1 ≠ 0 by
+      contrapose! this
+      simp [this]
+    suffices (¬r = 0 ∧ ¬k u r = 0) ∧ ¬y = 0 by simpa [fxyzRaw]
     grind
 
 variable {r} in
 theorem outerCircle_fxyz (hr : r ≠ 0) (p : (elliptic u r).Point) :
     OuterCircle u r (fxyz u hr p) := by
-  suffices (fx u r p - u * fz u r p) ^ 2 + fy u r p ^ 2 = r ^ 2 * fz u r p ^ 2 by
-    simpa [OuterCircle, fxyz]
+  change (fxyzRaw u r p 0 - u * fxyzRaw u r p 2) ^ 2 + fxyzRaw u r p 1 ^ 2 =
+    r ^ 2 * fxyzRaw u r p 2 ^ 2
   cases p with
-  | zero => simp [fx, fy, fz]
+  | zero => simp [fxyzRaw]
   | @some x y hxy =>
     rw [nonsingular_elliptic u hr] at hxy
     obtain ⟨heq, hs⟩ := hxy
@@ -83,115 +79,139 @@ theorem outerCircle_fxyz (hr : r ≠ 0) (p : (elliptic u r).Point) :
       (2 * r) ^ 2 * (k u r) ^ 2 * (r ^ 2 * y ^ 2) =
       r ^ 2 * ((r * x + u) ^ 2) ^ 2 by
       convert this using 1
-      simp [fx, fy, fz]
+      simp [fxyzRaw]
       ring
     rw [heq, k_sq]
     ring
 
 noncomputable
-def fa (p : (elliptic u r).Point) : ℂ := match p with
-| .zero => 1
-| .some (x := x) (y := y) _ =>
-  if x = 0 ∧ u + r = 0 then
-    1
-  else
+def fabcNormal (x y : ℂ) : Fin 3 → ℂ :=
+  ![-2 * r ^ 2 * ((u + r) ^ 2 - 1) * (r * x - u) * y +
+    (r * x + u) * (r ^ 2 * (u + r) * x ^ 2 + 2 * r * (1 - r * (u + r)) * x + (u + r) * u ^ 2),
+    -k u r * (2 * r ^ 2 * (r * x + u) * y +
+    (r * x - u) * (r ^ 2 * (u + r) * x ^ 2 + 2 * r * (1 - r * (u + r)) * x + (u + r) * u ^ 2)),
+    (r * x + u) * ((r * x - u) ^ 2 * (u + r) ^ 2 + 4 * u * r * x)]
+
+def SingularAbc (x y : ℂ) := fabcNormal u r x y = 0
+
+theorem SingularAbc.a_eq_zero {x y : ℂ} (h : SingularAbc u r x y) :
     -2 * r ^ 2 * ((u + r) ^ 2 - 1) * (r * x - u) * y +
     (r * x + u) * (r ^ 2 * (u + r) * x ^ 2 + 2 * r * (1 - r * (u + r)) * x + (u + r) * u ^ 2)
+    = 0
+  := congr($h 0)
 
+theorem SingularAbc.b_eq_zero {x y : ℂ} (h : SingularAbc u r x y) :
+    k u r * ((2 * r ^ 2 * (r * x + u) * y +
+    (r * x - u) * (r ^ 2 * (u + r) * x ^ 2 + 2 * r * (1 - r * (u + r)) * x + (u + r) * u ^ 2)))
+    = 0
+  := by
+  simpa [fabcNormal] using congr($h 1)
+
+variable {r} in
+theorem SingularAbc.c_factor_eq_zero (hr : r ≠ 0) {x y : ℂ} (h : SingularAbc u r x y)
+    (hxy : ((elliptic u r)).Nonsingular x y) :
+    (r * x - u) ^ 2 * (u + r) ^ 2 + 4 * u * r * x = 0 := by
+  suffices r * x + u ≠ 0 by
+    simpa [fabcNormal, this] using congr($h 2)
+  obtain ha := h.a_eq_zero
+  rw [nonsingular_elliptic u hr] at hxy
+  obtain ⟨heq, hs⟩ := hxy
+  grind
+
+variable {r} in
+theorem SingularAbc.x_relation (hr : r ≠ 0) {x y : ℂ} (h : SingularAbc u r x y)
+    (hxy : ((elliptic u r)).Nonsingular x y) :
+    -(2 * u * k u r) ^ 2 = (r * (u + r) ^ 2 * x - u * ((u + r) ^ 2 - 2)) ^ 2 := by
+  simp_rw [mul_pow, k_sq]
+  obtain h' := h.c_factor_eq_zero u hr hxy
+  grind
+
+variable {r} in
+theorem SingularAbc.k_ne_zero (hr : r ≠ 0) {x y : ℂ} (h : SingularAbc u r x y)
+    (hxy : ((elliptic u r)).Nonsingular x y) :
+    k u r ≠ 0 := by
+  by_contra! hk
+  have hur : (u + r) ^ 2 = 1 := by
+    obtain hk2 := congr($hk ^ 2)
+    simpa [k_sq, sub_eq_zero] using hk2
+  obtain hx := (h.x_relation u hr hxy)
+  grind
+
+theorem SingularAbc.fxyz_eq {x y : ℂ} (h : SingularAbc u r x y)
+    (hxy : ((elliptic u r)).Nonsingular x y) :
+    fxyzRaw u r (.some hxy) = sorry :=
+  sorry
+
+/-variable {u r} in
+theorem SingularAbc.x_eq_zero_of_casePos (hu : u ≠ 0) (hr : r ≠ 0) {x y : ℂ}
+    (h : SingularAbc u r x y) (hxy : ((elliptic u r)).Nonsingular x y) (huv : u + r = 0) :
+    x = 0 := by
+  simpa [huv, hu, hr] using h.c_factor_eq_zero u hr hxy
+
+
+variable {u r} in
+theorem SingularAbc.y_eq_zero_of_casePos (hu : u ≠ 0) (hr : r ≠ 0) {x y : ℂ}
+    (h : SingularAbc u r x y) (hxy : ((elliptic u r)).Nonsingular x y) (huv : u + r = 0) :
+    y = 0 := by
+  obtain hx := h.x_eq_zero_of_casePos hu hr hxy huv
+  rw [nonsingular_elliptic u hr] at hxy
+  obtain ⟨heq, hs⟩ := hxy
+  simpa [hx, hr] using heq-/
+
+open Classical in
 noncomputable
-def fb (p : (elliptic u r).Point) : ℂ := match p with
-| .zero => -k u r
+def fabcRaw (p : (elliptic u r).Point) : Fin 3 → ℂ := match p with
+| .zero => ![1, -k u r, u + r]
 | .some (x := x) (y := y) _ =>
-  if x = 0 ∧ u + r = 0 then
-    -k u r
+  if SingularAbc u r x y then
+    ![2 * u * k u r * ((u ^ 2 - r ^ 2) ^ 2 + 4 * u ^ 2),
+      (r * (u + r) ^ 2 * x - u * ((u + r) ^ 2 - 2)) * ((u ^ 2 - r ^ 2) ^ 2 - 4 * u ^ 2),
+      8 * u ^ 2 * k u r * (u ^ 2 - r ^ 2)]
   else
-    -k u r * (
-    2 * r ^ 2 * (r * x + u) * y +
-    (r * x - u) * (r ^ 2 * (u + r) * x ^ 2 + 2 * r * (1 - r * (u + r)) * x + (u + r) * u ^ 2))
-
-noncomputable
-def fc (p : (elliptic u r).Point) : ℂ := match p with
-| .zero => u + r
-| .some (x := x) _ => (r * x + u) * ((r * x - u) ^ 2 * (u + r) ^ 2 + 4 * u * r * x)
+    fabcNormal u r x y
 
 variable {u r} in
 noncomputable
 def fabc (hu : u ≠ 0) (hr : r ≠ 0) (p : (elliptic u r).Point) : P2 :=
-    P2.mk ![fa u r p, fb u r p, fc u r p] <| by
+    P2.mk (fabcRaw u r p) <| by
   cases p with
   | zero =>
-    simp [fa, fb, fc]
+    simp [fabcRaw]
   | @some x y hxy =>
-    by_cases! hx : r * x + u ≠ 0
-    · by_cases! hx2 : (r * x - u) ^ 2 * (u + r) ^ 2 + 4 * u * r * x ≠ 0
-      · simp [fc, hx, hx2]
-      by_cases hur : u + r = 0
-      · suffices fa u r (.some hxy) ≠ 0 by simp [this]
-        have hx0 : x = 0 := by simpa [hur, hu, hr] using hx2
-        simp [fa, hx0, hur]
-      have hur1 : (u + r) ^ 2 - 1 ≠ 0 := by grind
-      rw [add_eq_zero_iff_eq_neg, ← eq_div_iff (by simpa using hur), sub_sq] at hx2
-      have hx2' : (r * x) ^ 2 + u ^ 2 = 2 * (r * x) * u -(4 * u * r * x) / (u + r) ^ 2 := by
-        linear_combination hx2
-      have hx' : r ^ 2 * x ^ 2 + (1 - u ^ 2 - r ^ 2) * x + u ^ 2 =
-          x * (1 - u ^ 2 - r ^ 2 + 2 * u * r * (1 - 2 / (u + r) ^ 2)) := by
-        linear_combination hx2
-      have hx' : r ^ 2 * x ^ 2 + (1 - u ^ 2 - r ^ 2) * x + u ^ 2 =
-          x * (u - r) ^ 2 / (u + r) ^ 2 * -((u + r) ^ 2 - 1) := by
-        rw [hx']
-        field_simp
-        ring
-      rw [nonsingular_elliptic u hr] at hxy
-      obtain ⟨heq, hs⟩ := hxy
-      rw [hx', mul_comm (r ^ 2) (y ^ 2), ← eq_div_iff_mul_eq (by simpa using hr)] at heq
-      have hy : (r * (u + r)) ^ 2 * y ^ 2 = (x * (u - r) * k u r * Complex.I) ^ 2 := by
-        rw [heq]
-        field_simp
-        simp [k_sq]
-      have hx3 : r ^ 2 * (u + r) * x ^ 2 + 2 * r * (1 - r * (u + r)) * x + (u + r) * u ^ 2 =
-          2 * r * x * (u - r) * ((u + r) ^ 2 - 1) / (u + r) := by
-        suffices ((r * x) ^ 2 + u ^ 2) * (u + r) + 2 * r * (1 - r * (u + r)) * x =
-            2 * r * x * (u - r) * ((u + r) ^ 2 - 1) / (u + r) by
-          convert this using 1
-          ring
-        rw [hx2']
-        field_simp
-        ring
-      suffices fa u r (.some hxy) ≠ 0 by simp [this]
-      by_contra! hfa
-      have hfa : 2 * r ^ 2 * ((u + r) ^ 2 - 1) * (r * x - u) * y =
-          (r * x + u) * (2 * r * x * (u - r) * ((u + r) ^ 2 - 1) / (u + r)) := by
-        simpa [fa, hur, hx3, neg_add_eq_zero] using hfa
-      have hfa : (r * x - u) * (r * (u + r) * y) = (r * x + u) * x * (u - r) := by
-        convert congr($hfa * ((u + r) / (2 * r * ((u + r) ^ 2 - 1)))) using 1 <;> field_simp
-
-      /-have hfa : (r * x - u) ^ 2 * ((r * (u + r)) ^ 2 * y ^ 2) =
-          (r * x + u) ^ 2 * ((u - r) ^ 2 * x ^ 2) := by
-        convert congr($hfa ^ 2) using 1 <;> ring
-      rw [hy] at hfa
-      simp_rw [mul_pow] at hfa
-      rw [k_sq, Complex.I_sq] at hfa
-      have hfa : -(r * x - u) ^ 2 * ((u + r) ^ 2 - 1) * ((u - r) ^ 2 * x ^ 2) =
-          (r * x + u) ^ 2 * ((u - r) ^ 2 * x ^ 2) := by
-        convert hfa using 1
-        ring-/
-
-      sorry
-    suffices fa u r (.some hxy) ≠ 0 by simp [this]
-    unfold fa
-    grind
+    by_cases h0 : SingularAbc u r x y
+    · obtain hk := h0.k_ne_zero u hr hxy
+      by_cases hur : u ^ 2 - r ^ 2 = 0
+      · suffices fabcRaw u r (Point.some hxy) 0 ≠ 0 by
+          contrapose! this
+          simp [this]
+        simp [fabcRaw, h0, hk, hu, hur]
+      · suffices fabcRaw u r (Point.some hxy) 2 ≠ 0 by
+          contrapose! this
+          simp [this]
+        simp [fabcRaw, h0, hk, hu, hur]
+    · suffices fabcNormal u r x y ≠ 0 by simpa [fabcRaw, h0]
+      exact h0
 
 variable {u r} in
-theorem innerCircle_fxyz (hu : u ≠ 0) (hr : r ≠ 0) (p : (elliptic u r).Point) :
+theorem innerCircle_abc (hu : u ≠ 0) (hr : r ≠ 0) (p : (elliptic u r).Point) :
     InnerCircle (fabc hu hr p) := by
-  suffices fa u r p ^ 2 + fb u r p ^ 2 = fc u r p ^ 2 by
-    simpa [InnerCircle, fabc]
+  change fabcRaw u r p 0 ^ 2 + fabcRaw u r p 1 ^ 2 = fabcRaw u r p 2 ^ 2
   cases p with
   | zero =>
-    simp [fa, fb, fc, k_sq]
+    simp [fabcRaw, k_sq]
   | @some x y hxy =>
-    by_cases hxur : x = 0 ∧ u + r = 0
-    · simp [fa, fb, fc, hxur, k_sq]
+    by_cases hsingular : SingularAbc u r x y
+    · suffices
+        (2 * u * k u r) ^ 2 * ((u ^ 2 - r ^ 2) ^ 2 + 4 * u ^ 2) ^ 2 +
+        (r * (u + r) ^ 2 * x - u * ((u + r) ^ 2 - 2)) ^ 2 * ((u ^ 2 - r ^ 2) ^ 2 - 4 * u ^ 2) ^ 2 =
+        (2 * u * k u r) ^ 2 * (4 * u * (u ^ 2 - r ^ 2)) ^ 2 by
+        convert this using 1
+        · simp [fabcRaw, hsingular]
+          ring
+        · simp [fabcRaw, hsingular]
+          ring
+      rw [← hsingular.x_relation u hr hxy]
+      ring
     rw [nonsingular_elliptic u hr] at hxy
     obtain ⟨heq, hs⟩ := hxy
     suffices
@@ -203,11 +223,49 @@ theorem innerCircle_fxyz (hu : u ≠ 0) (hr : r ≠ 0) (p : (elliptic u r).Point
         (r ^ 2 * (u + r) * x ^ 2 + 2 * r * (1 - r * (r + u)) * x + (u + r) * u ^ 2))) ^ 2 =
       ((r * x + u) * ((r * x - u) ^ 2 * (u + r) ^ 2 + 4 * u * r * x)) ^ 2 by
       convert this using 1
-      simp [fa, fb, hxur]
-      ring
+      · simp [fabcRaw, hsingular, fabcNormal]
+        ring
+      · simp [fabcRaw, hsingular, fabcNormal]
     rw [k_sq]
-    sorry --grind
+    grind
 
+
+variable {u r} in
+theorem incidence_xyz_abc (hu : u ≠ 0) (hr : r ≠ 0) (p : (elliptic u r).Point) :
+    Incidence (fxyz u hr p) (fabc hu hr p) := by
+  change fxyzRaw u r p 0 * fabcRaw u r p 0 + fxyzRaw u r p 1 * fabcRaw u r p 1 =
+    fxyzRaw u r p 2 * fabcRaw u r p 2
+  cases p with
+  | zero =>
+    simp [fabcRaw, fxyzRaw]
+  | @some x y hxy =>
+    by_cases hsingular : SingularAbc u r x y
+    ·
+      suffices (r ^ 2 * (u + r) * x ^ 2 + 2 * r * (1 - r ^ 2 - r * u) * x + u ^ 2 * (u + r)) *
+        (2 * u * k u r * ((u ^ 2 - r ^ 2) ^ 2 + 4 * u ^ 2)) +
+        -(2 * r ^ 2 * k u r * y * ((r * (u + r) ^ 2 * x - u * ((u + r) ^ 2 - 2)) * ((u ^ 2 - r ^ 2) ^ 2 - 4 * u ^ 2))) =
+        (r * x + u) ^ 2 * (8 * u ^ 2 * k u r * (u ^ 2 - r ^ 2)) by
+        convert this using 1
+        · simp [fxyzRaw, fabcRaw, hsingular]
+        · simp [fxyzRaw, fabcRaw, hsingular]
+
+      sorry
+    rw [nonsingular_elliptic u hr] at hxy
+    obtain ⟨heq, hs⟩ := hxy
+    suffices (r ^ 2 * (u + r) * x ^ 2 + 2 * r * (1 - r ^ 2 - r * u) * x + u ^ 2 * (u + r)) *
+      (-(2 * r ^ 2 * ((u + r) ^ 2 - 1) * (r * x - u) * y) +
+        (r * x + u) * (r ^ 2 * (u + r) * x ^ 2 + 2 * r * (1 - r * (u + r)) * x + (u + r) * u ^ 2)) +
+        2 * r ^ 2 * k u r ^ 2 * y *
+      ((2 * r ^ 2 * (r * x + u) * y +
+          (r * x - u) * (r ^ 2 * (u + r) * x ^ 2 +
+            2 * r * (1 - r * (u + r)) * x + (u + r) * u ^ 2))) =
+      (r * x + u) ^ 2 * ((r * x + u) * ((r * x - u) ^ 2 * (u + r) ^ 2 + 4 * u * r * x)) by
+      convert this using 1
+      · simp [fxyzRaw, fabcRaw, hsingular, fabcNormal]
+        ring
+      · simp [fxyzRaw, fabcRaw, hsingular, fabcNormal]
+    rw [k_sq]
+    grind
 
 variable {u r} in
 def o (hu : u ≠ 0) (hr : r ≠ 0) : (elliptic u r).Point :=
@@ -320,7 +378,7 @@ theorem fxyz_o_sub (hu : u ≠ 0) (hr : r ≠ 0) (p : (elliptic u r).Point) :
     fxyz u hr (o hu hr - p) = fxyz u hr p := by
   have hp0 : fxyz u hr (o hu hr) = fxyz u hr 0 := by
     suffices P2.mk ![u ^ 2 * (u + r), 0, u ^ 2] _ = P2.mk ![u + r, 0, 1] _ by
-      simpa [o, fxyz, fx, fy, fz]
+      simpa [o, fxyz, fxyzRaw]
     rw [P2.mk_eq_mk]
     use u ^ 2
     simpa using hu
@@ -340,7 +398,7 @@ theorem fxyz_o_sub (hu : u ≠ 0) (hr : r ≠ 0) (p : (elliptic u r).Point) :
     use u ^ 2 / (r ^ 2 * x ^ 2)
     refine ⟨by simp [hr, hu, hx0], ?_⟩
     rw [o_sub hu hr hxy hxo]
-    simp only [fx, fy, fz, smul_eq_mul, Matrix.smul_cons, Matrix.smul_empty,
+    simp only [fxyzRaw, smul_eq_mul, Matrix.smul_cons, Matrix.smul_empty,
       Matrix.vecCons_inj, and_true]
     refine ⟨?_, ?_, ?_⟩
     · field_simp
@@ -381,4 +439,47 @@ L⁺, L⁻ | (u * (∓2 * i * k + (u+r)^2 - 2) / (r * (u+r)^2), <...±...>)|
        |                    |                                       |  4 * u * (u^2 - r^2)]
 -------|--------------------|---------------------------------------|-------------------------|
 
+Special parameter: u + r = 0, k = i
+
+       | elliptic           | xyz                                   | abc                     |
+-------|--------------------|---------------------------------------|-------------------------|
+G⁺ = w, 2 * w = o
+G⁻ = -w
+-------|--------------------|---------------------------------------|-------------------------|
+G⁺, G⁻ | (1, ±1 / u)        | [1 : ∓i : 0]                          | [1 : ∓i : 0]
+-------|--------------------|---------------------------------------|-------------------------|
+H⁺ = w - G⁺ = 0
+H⁻ = w - G⁻ = 2 * w = o
+-------|--------------------|---------------------------------------|-------------------------|
+H⁺, H⁻ | ∞, (0, 0)          | [0 : 0 : 1]                           | [1 : ∓i : 0]
+-------|--------------------|---------------------------------------|-------------------------|
+L⁺ = o - H⁺ = o = H⁻
+L⁻ = o - H⁻ = 0 = H⁺
+-------|--------------------|---------------------------------------|-------------------------|
+L⁺, L⁻ | (0, 0), ∞          | [0 : 0 : 1]                           | [1 : ±i : 0]
+-------|--------------------|---------------------------------------|-------------------------|
+
+Special parameter: u = r
+
+       | elliptic           | xyz                                   | abc                     |
+-------|--------------------|---------------------------------------|-------------------------|
+o - G⁺ = G⁺
+o - G⁻ = G⁻
+-------|--------------------|---------------------------------------|-------------------------|
+G⁺, G⁻ | (-1, ±i * k / u)   | [1 : ∓i : 0]                          | [1 : ∓i : 0]            |
+-------|--------------------|---------------------------------------|-------------------------|
+H⁺ = w - G⁺
+H⁻ = w - G⁻
+-------|--------------------|---------------------------------------|-------------------------|
+H⁺, H⁻ | (u * (±2 * i * k + (u+r)^2 - 2) / (r * (u+r)^2), 0)        |
+       |                    |                                       |
+       |                    | [0 : 0 : 1]                           | [1 : ∓i : 0]
+-------|--------------------|---------------------------------------|-------------------------|
+L⁺ = o - H⁺  (reflect chord)
+L⁻ = o - H⁻
+-------|--------------------|---------------------------------------|-------------------------|
+L⁺, L⁻ | (u * (∓2 * i * k + (u+r)^2 - 2) / (r * (u+r)^2), 0)        |
+       |                    |                                       |
+       |                    | [0 : 0 : 1]                           | [1 : ±i : 0]
+-------|--------------------|---------------------------------------|-------------------------|
 -/
