@@ -850,7 +850,7 @@ theorem f_o_sub (hu : u ≠ 0) (hr : r ≠ 0) (p : (elliptic u r).Point) :
     have hoxyeq' : Point.some hxy = o hu hr - Point.some hoxy := by
       simp [← hoxyeq]
     rw [hoxyeq']
-    rw [← (rChord_injOn u r hu).eq_iff (mapsTo_f hu hr (by simp))
+    rw [← (rChord_bijOn u r hu).injOn.eq_iff (mapsTo_f hu hr (by simp))
       (mapsTo_rChord u r hu (mapsTo_f hu hr (by simp)))]
     rw [rChord_rChord u r hu (mapsTo_f hu hr (by simp))]
     exact (hosxy.f_o_sub hu hr hoxy hoo).symm
@@ -894,10 +894,7 @@ theorem f_o_sub (hu : u ≠ 0) (hr : r ≠ 0) (p : (elliptic u r).Point) :
   simp only [fxyzRaw, neg_mul, Fin.isValue, Matrix.cons_val_zero, fabcNormal, Matrix.cons_val,
     Matrix.cons_val_one, mul_neg, sub_neg_eq_add, Matrix.smul_cons, smul_eq_mul, Matrix.smul_empty,
     Matrix.vecCons_inj, and_true]
-  refine ⟨?_, ?_, ?_⟩
-  · field
-  · field
-  · field
+  exact ⟨by field, by field, by field⟩
 
 variable {u r} in
 noncomputable
@@ -907,6 +904,11 @@ def w (hu : u ≠ 0) (hr : r ≠ 0) : (elliptic u r).Point :=
   refine ⟨?_, Or.inr (by simp [hu, hr])⟩
   field
   )
+
+variable {u r} in
+theorem f_w_sub (hu : u ≠ 0) (hr : r ≠ 0) (p : (elliptic u r).Point) :
+    f hu hr (w hu hr - p) = rPoint u r (f hu hr p) := by sorry
+
 /-
 def xsorry : ℂ := sorry
 

@@ -195,7 +195,7 @@ theorem rPoint'_ne_zero (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq 
       ext n; fin_cases n <;> assumption
     · simp [hp0, hq0] at h0
 
-theorem rPoint'_eq_self (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq : q ≠ 0)
+/-theorem rPoint'_eq_self (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq : q ≠ 0)
     (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom u r) :
     (∃ l : ℂ, rPoint' u r p q = l • p) ↔
     (2 * u * q 0 * q 2 + u ^ 2 * q 1 ^ 2) * q 1 = (1 + u ^ 2 - r ^ 2) * q 2 ^ 2 * q 1 := by
@@ -211,14 +211,7 @@ theorem rPoint'_eq_self (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq 
         contrapose! hq
         ext n; fin_cases n <;> assumption
       simp [hq0, hp0, hu]
-      /-suffices (∃ l, ![2 * u * q 1, (u ^ 2 - r ^ 2) * q 1, (r ^ 2 - u ^ 2) * q 0] = l • p) ↔
-        u * q 0 = 0 by simpa [hq0, hp0]
 
-      apply iff_of_false
-      · by_contra!
-        obtain ⟨l, hl⟩ := this
-        obtain hl0 := congrFun hl 0
-        simp [hp0, hu, hq2] at hl0-/
       · sorry
     · sorry
   trans rPoint' u r p q = q 2 ^ 2 • p
@@ -227,7 +220,7 @@ theorem rPoint'_eq_self (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq 
   unfold rPoint'
   constructor
   · sorry
-  · sorry
+  · sorry-/
 
 noncomputable
 def rPoint (pq : P2 × P2) : P2 × P2 := ⟨P2.lift₂ (fun p q hp hq ↦ P2.mk' (rPoint' u r p q)) (by
@@ -287,6 +280,13 @@ theorem rPoint_rPoint (hu : u ≠ 0) {pq : P2 × P2} (hpq : pq ∈ dom u r) :
   refine Prod.ext_iff.mpr ⟨?_, rfl⟩
   rw [P2.mk_eq_mk']
   exact rPoint'_rPoint' u r hu hp hq hpq
+
+theorem rPoint_bijOn (hu : u ≠ 0) : Set.BijOn (rPoint u r) (dom u r) (dom u r) := by
+  refine ⟨mapsTo_rPoint u r hu, ?_, ?_⟩
+  · intro p hp q hq h
+    simpa [rPoint_rPoint, hu, hp, hq] using congr(rPoint u r $h)
+  · intro p hp
+    exact ⟨rPoint u r p, mapsTo_rPoint u r hu hp, rPoint_rPoint u r hu hp⟩
 
 noncomputable
 def rChord' (p q : Fin 3 → ℂ) : Fin 3 → ℂ :=
@@ -379,7 +379,7 @@ theorem rChord'_rChord' (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq 
     simp [h0]
     ring
 
-theorem rChord'_eq_self (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq : q ≠ 0)
+/-theorem rChord'_eq_self (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq : q ≠ 0)
     (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom u r) :
     (∃ l : ℂ, rChord' u r p q = l • q) ↔ p 0 ^ 2 + p 1 ^ 2 = p 2 ^ 2 := by
   by_cases! hxy : 2 * u * p 0 + r ^ 2 * p 2 - u ^ 2 * p 2 = 0
@@ -390,7 +390,7 @@ theorem rChord'_eq_self (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq 
     constructor
     · intro h
       sorry
-    · sorry
+    · sorry-/
 
 noncomputable
 def rChord (pq : P2 × P2) : P2 × P2 :=
@@ -473,6 +473,9 @@ theorem rChord_rChord (hu : u ≠ 0) {pq : P2 × P2} (hpq : pq ∈ dom u r) :
   rw [P2.mk_eq_mk']
   exact rChord'_rChord' u r hu hp hq hpq
 
-theorem rChord_injOn (hu : u ≠ 0) : Set.InjOn (rChord u r) (dom u r) := by
-  intro p hp q hq h
-  simpa [rChord_rChord, hu, hp, hq] using congr(rChord u r $h)
+theorem rChord_bijOn (hu : u ≠ 0) : Set.BijOn (rChord u r) (dom u r) (dom u r) := by
+  refine ⟨mapsTo_rChord u r hu, ?_, ?_⟩
+  · intro p hp q hq h
+    simpa [rChord_rChord, hu, hp, hq] using congr(rChord u r $h)
+  · intro p hp
+    exact ⟨rChord u r p, mapsTo_rChord u r hu hp, rChord_rChord u r hu hp⟩
