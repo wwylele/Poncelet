@@ -47,6 +47,9 @@ theorem mk'_eq_mk' {p q : Fin 3 → ℂ} {l : ℂ} (hl : l ≠ 0) (h : p = l •
   · obtain hq := (smul_ne_zero_iff.mp (h ▸ hp)).2
     simpa [mk', hp, hq, mk_eq_mk'] using ⟨l, h⟩
 
+theorem mk'_smul {s : ℂ} (h : s ≠ 0) (p : Fin 3 → ℂ) :
+    mk' (s • p) = mk' p := mk'_eq_mk' h rfl
+
 def lift {α : Sort*} (f : (p : Fin 3 → ℂ) → p ≠ 0 → α)
     (h : ∀ p q, (hp : p ≠ 0) → (hq : q ≠ 0) → (∃ (l : ℂ), l ≠ 0 ∧ p = l • q) → f p hp = f q hq)
     (p : P2) : α :=
@@ -458,109 +461,18 @@ theorem mapsTo_rChord (hu : u ≠ 0) : Set.MapsTo (rChord u r) (dom u r) (dom u 
   · simp
     grind
 
+theorem rChord_rChord (hu : u ≠ 0) {pq : P2 × P2} (hpq : pq ∈ dom u r) :
+    rChord u r (rChord u r pq) = pq := by
+  obtain ⟨p, q⟩ := pq
+  induction p with | mk p hp
+  induction q with | mk q hq
+  obtain hmem := mapsTo_rChord u r hu hpq
+  rw [rChord_mk u r hu hp hq hpq] at ⊢ hmem
+  rw [rChord_mk u r hu _ _ hmem]
+  refine Prod.ext_iff.mpr ⟨rfl, ?_⟩
+  rw [P2.mk_eq_mk']
+  exact rChord'_rChord' u r hu hp hq hpq
 
-/-
-noncomputable
-abbrev ch := (1 - r ^ 2 - u ^ 2) / (2 * r * u)
-
-noncomputable
-def elliptic := (WeierstrassCurve.mk 0 (-ch u r) 0 (-1) (ch u r)).toProjective
-
-theorem equation_elliptic_iff (p : Fin 3 → ℂ) :
-    (elliptic u r).Equation p ↔ p 0 ^ 2 * p 1 = (p 2 ^ 2 - p 1 ^ 2) * (p 2 - ch u r * p 1) := by
-  rw [elliptic, WeierstrassCurve.Projective.equation_iff]
-  grind
-
-theorem sqrt_ru : ((-2 * r * u) ^ (-2⁻¹ : ℂ)) ^ 2 = -(2 * r * u) ⁻¹ := by
-  simp [← Complex.cpow_mul_nat, Complex.cpow_neg_one]
-
-noncomputable
-def d' : Fin 3 → ℂ :=
-  ![-(r ^ 2 + u ^ 2), (r ^ 2 - u ^ 2) * (-2 * r * u) ^ (-2⁻¹ : ℂ), 2 * r * u]
-
-theorem equation_d' (hu : u ≠ 0) (hr : r ≠ 0) : (elliptic u r).Equation (d' u r) := by
-  suffices ((r ^ 2 - u ^ 2) * (-2 * r * u) ^ (-2⁻¹ : ℂ)) ^ 2 * (2 * r * u) =
-      ((-u ^ 2 - r ^ 2) ^ 2 - (2 * r * u) ^ 2) * (-u ^ 2 - r ^ 2 - ch u r * (2 * r * u)) by
-    simpa [equation_elliptic_iff, d']
-  rw [mul_pow _ ((-2 * r * u) ^ (-2⁻¹ : ℂ)), sqrt_ru]
-  field_simp
-  ring
-
-theorem d'_ne_zero (hu : u ≠ 0) (hr : r ≠ 0) : d' u r ≠ 0 := by
-  by_contra!
-  obtain h := congrFun this 2
-  simp [d', hu, hr] at h
-
-theorem nonsingular_d' (hu : u ≠ 0) (hr : r ≠ 0) : (elliptic u r).Nonsingular (d' u r) := by
-  simp_rw [WeierstrassCurve.Projective.nonsingular_iff, equation_d' u r hu hr]
-  simp [elliptic, d']
-  grind
-
-noncomputable
-def toElliptic' (p q : Fin 3 → ℂ) : Fin 3 → ℂ :=
-  if q 2 = 0 then
-    if p 2 = 0 then
-      ![0, 1, 0] -- doesn't feel right
-    else
-      -- The sign on i might be wrong
-      ![(p 0 - u * p 2), p 1 * Complex.I * (-2 * r * u) ^ (-2⁻¹ : ℂ) , r * p 2]
-  else
-    ![(p 0 - u * p 2) * p 2 * q 2,
-      p 1 * (q 1 * p 0 - q 0 * p 1) * (-2 * r * u) ^ (-2⁻¹ : ℂ),
-      r * p 2 ^ 2 * q 2]
-
-theorem equation_toElliptic' (hu : u ≠ 0) (hr : r ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq : q ≠ 0)
-    (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom u r) :
-    (elliptic u r).Equation (toElliptic' u r p q) := by
-  obtain ⟨ho, hi, hpq⟩ := mem_dom u r hp hq |>.mp h
-  by_cases hq0 : q 2 = 0
-  · by_cases hp0 : p 2 = 0
-    · simp [equation_elliptic_iff, toElliptic', hq0, hp0]
-    have hq1 : q 0 ≠ 0 := by
-      clear h
-      contrapose! hq with hq1
-      have hq2 : q 1 = 0 := by simpa [hq1, hq0] using hi
-      ext n; fin_cases n <;> assumption
-    have h1 : ((p 0 - u * p 2) ^ 2 - (r * p 2) ^ 2) = -p 1 ^ 2 := by grind
-    have h2 : (p 0 - u * p 2 - ch u r * (r * p 2)) = - p 2 / (2 * u)  := by
-      unfold ch
-      field_simp
-      grind
-    suffices (p 1 * Complex.I * (-2 * r * u) ^ (-2⁻¹ : ℂ)) ^ 2 * (r * p 2) =
-        -(p 1 ^ 2 * (-p 2 / (2 * u))) by
-      simpa [equation_elliptic_iff, toElliptic', hq0, hp0, h1, h2]
-    rw [mul_pow _ ((-2 * r * u) ^ (-2⁻¹ : ℂ)), sqrt_ru]
-    field_simp
-    simp
-  have h : (((p 0 - u * p 2) * p 2 * q 2) ^ 2 - (r * p 2 ^ 2 * q 2) ^ 2) *
-      ((p 0 - u * p 2) * p 2 * q 2 - ch u r * (r * p 2 ^ 2 * q 2)) =
-      - p 1 ^ 2 * p 2 ^ 2 * q 2 * (q 1 * p 0 - q 0 * p 1) ^ 2 / (2 * u) := by
-    unfold ch
-    field_simp
-    grind
-  suffices (p 1 * (q 1 * p 0 - q 0 * p 1) * (-2 * r * u) ^ (-2⁻¹ : ℂ)) ^ 2 * (r * p 2 ^ 2 * q 2) =
-      -(p 1 ^ 2 * p 2 ^ 2 * q 2 * (q 1 * p 0 - q 0 * p 1) ^ 2) / (2 * u) by
-    simpa [equation_elliptic_iff, toElliptic', h, hq0]
-  rw [mul_pow _ ((-2 * r * u) ^ (-2⁻¹ : ℂ)), sqrt_ru]
-  field_simp
-
-theorem toElliptic'_ne_zero (hu : u ≠ 0) (hr : r ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq : q ≠ 0)
-    (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom u r) :
-    toElliptic' u r p q ≠ 0 := by
-  obtain ⟨ho, hi, hpq⟩ := mem_dom u r hp hq |>.mp h
-  unfold toElliptic'
-
-
-  sorry
-
-/-theorem nonsingular_toElliptic' (hu : u ≠ 0) (hr : r ≠ 0) {p q : Fin 3 → ℂ}
-    (hp : p ≠ 0) (hq : q ≠ 0) (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom u r) :
-    (elliptic u r).Nonsingular (toElliptic' u r p q) := by
-  obtain ⟨ho, hi, hpq⟩ := mem_dom u r hp hq |>.mp h
-
-  simp_rw [WeierstrassCurve.Projective.nonsingular_iff, equation_toElliptic' u r hu hr hp hq h]
-  simp [elliptic, toElliptic', hu, hr, - neg_mul]
-  rw [mul_pow _ ((-2 * r * u) ^ (-2⁻¹ : ℂ)), sqrt_ru]
-  field_simp
-  sorry-/
--/
+theorem rChord_injOn (hu : u ≠ 0) : Set.InjOn (rChord u r) (dom u r) := by
+  intro p hp q hq h
+  simpa [rChord_rChord, hu, hp, hq] using congr(rChord u r $h)
