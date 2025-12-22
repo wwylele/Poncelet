@@ -126,6 +126,27 @@ theorem fabcNormal_onCircle (hr : r ≠ 0) {x y : ℂ} (hxy : (elliptic u r).Non
   rw [k_sq]
   grind
 
+variable {r} in
+theorem presingular (hr : r ≠ 0) {x y : ℂ} (hxy : (elliptic u r).Nonsingular x y)
+    (h : (r * x - u) ^ 2 * (u + r) ^ 2 + 4 * u * r * x = 0) :
+    (2 * r ^ 2 * ((u + r) ^ 2 - 1) * (r * x - u) * y) ^ 2 =
+    ((r * x + u) *
+      (r ^ 2 * (u + r) * x ^ 2 + 2 * r * (1 - r * (u + r)) * x + (u + r) * u ^ 2)) ^ 2 := by
+  suffices (2 * r * ((u + r) ^ 2 - 1) * (r * x - u)) ^ 2 * (r ^ 2 * y ^ 2) =
+    ((r * x + u) *
+      (r ^ 2 * (u + r) * x ^ 2 + 2 * r * (1 - r * (u + r)) * x + (u + r) * u ^ 2)) ^ 2 by
+    linear_combination this
+  rw [nonsingular_elliptic u hr] at hxy
+  obtain ⟨heq, hs⟩ := hxy
+  rw [heq]
+  suffices ((r * x - u) ^ 2 * (u + r) ^ 2 + 4 * u * r * x) *
+      ( (4*r^6*x^3 - 4*r^6*x^2 + 8*r^5*u*x^3 - 8*r^5*u*x^2 + 4*r^4* u^2* x^3 - 8* r^4* u^2* x^2 +
+      4* r^4* u^2* x - r^4 *x^4 - 4* r^4* x^3 + 8* r^4* x^2 - 8* r^3* u^3* x^2 + 8* r^3* u^3* x -
+      4* r^3* u* x^3 + 8* r^3* u* x^2 - 4* r^2* u^4* x^2 + 4* r^2* u^4* x + 2* r^2* u^2* x^2 -
+      4* r^2* u^2* x - 4 *r^2* x^2 - 4 *r* u^3* x - u^4)) = 0 by
+    linear_combination this
+  simp [h]
+
 def SingularAbc (x y : ℂ) := fabcNormal u r x y = 0
 
 variable {r} in
@@ -806,6 +827,7 @@ theorem f_o_sub (hu : u ≠ 0) (hr : r ≠ 0) (p : (elliptic u r).Point) :
       simpa [rChord, f, fxyz_o_sub hu hr, ho]
     rw [← P2.mk'_eq]
     simpa using f_o_sub_1 r hu (-1)
+  have hx0 : x ≠ 0 := (eq_o_iff hu hr hxy).ne.mp ho
   -- check case when p is SingularAbc
   by_cases hsxy : SingularAbc u r x y
   · exact hsxy.f_o_sub hu hr hxy ho
@@ -841,9 +863,41 @@ theorem f_o_sub (hu : u ≠ 0) (hr : r ≠ 0) (p : (elliptic u r).Point) :
   suffices P2.mk (fabcNormal u r ox oy) _ =
       P2.mk' (rChord' u r (fxyzRaw u r (Point.some hxy)) (fabcNormal u r x y)) by
     simpa [fabc, fxyz, fabcRaw, hsxy, hosxy]
-  unfold rChord'
-  sorry
-
+  rw [o_sub hu hr hxy ho, Point.some.injEq] at hoxyeq
+  have hdeno : (r * x - u) ^ 2 * (u + r) ^ 2 + 4 * u * r * x ≠ 0 := by
+    by_contra! h
+    obtain ha | ha := eq_or_eq_neg_of_sq_eq_sq _ _ <| presingular u hr hxy h
+    · contrapose! hsxy
+      refine SingularAbc.mk u hr hxy ?_ (by simp [h])
+      linear_combination -ha
+    · contrapose! hosxy
+      rw [← hoxyeq.1, ← hoxyeq.2]
+      refine SingularAbc.mk u hr (nonsingular_o_sub hu hr hxy) ?_ ?_
+      · field_simp
+        linear_combination u ^3 * ha
+      · field_simp
+        linear_combination u ^ 3 * (u + r * x) * h
+  have hne : 2 * u * fxyzRaw u r (Point.some hxy) 0 + r ^ 2 * fxyzRaw u r (Point.some hxy) 2 -
+      u ^ 2 * fxyzRaw u r (Point.some hxy) 2 ≠ 0 := by
+    suffices 2 * u * (r ^ 2 * (u + r) * x ^ 2 + 2 * r * (1 - r ^ 2 - r * u) * x + u ^ 2 * (u + r))
+        + r ^ 2 * (r * x + u) ^ 2 - u ^ 2 * (r * x + u) ^ 2 ≠ 0 by
+      simpa [fxyzRaw]
+    contrapose! hdeno
+    linear_combination hdeno
+  rw [← P2.mk'_eq]
+  rw [← hoxyeq.1, ← hoxyeq.2]
+  have hl : (r ^ 3 * x ^ 3 * ((r * x - u) ^ 2 * (u + r) ^ 2 + 4 * u * r * x)) / u ^ 3 ≠ 0 := by
+    simp [hu, hr, hx0, hdeno]
+  symm
+  apply P2.mk'_eq_mk' hl
+  simp only [rChord', Fin.isValue, hne, ↓reduceIte]
+  simp only [fxyzRaw, neg_mul, Fin.isValue, Matrix.cons_val_zero, fabcNormal, Matrix.cons_val,
+    Matrix.cons_val_one, mul_neg, sub_neg_eq_add, Matrix.smul_cons, smul_eq_mul, Matrix.smul_empty,
+    Matrix.vecCons_inj, and_true]
+  refine ⟨?_, ?_, ?_⟩
+  · field
+  · field
+  · field
 
 variable {u r} in
 noncomputable
