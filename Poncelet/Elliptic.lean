@@ -897,47 +897,395 @@ theorem f_o_sub (hu : u ≠ 0) (hr : r ≠ 0) (p : (elliptic u r).Point) :
   exact ⟨by field, by field, by field⟩
 
 variable {u r} in
-noncomputable
-def w (hu : u ≠ 0) (hr : r ≠ 0) : (elliptic u r).Point :=
-  .some (show (elliptic u r).Nonsingular (u ^ 2 / r ^ 2) (u ^ 2 / r ^ 3) by
+theorem nonsingular_w (hu : u ≠ 0) (hr : r ≠ 0) :
+    (elliptic u r).Nonsingular (u ^ 2 / r ^ 2) (u ^ 2 / r ^ 3) := by
   rw [nonsingular_elliptic u hr]
   refine ⟨?_, Or.inr (by simp [hu, hr])⟩
   field
-  )
+
+variable {u r} in
+noncomputable
+def w (hu : u ≠ 0) (hr : r ≠ 0) : (elliptic u r).Point := .some (nonsingular_w hu hr)
+
+
+variable {u r} in
+theorem slope_w (hu : u ≠ 0) (hr : r ≠ 0) :
+    (elliptic u r).slope (u ^ 2 / r ^ 2) (u ^ 2 / r ^ 2) (u ^ 2 / r ^ 3) (u ^ 2 / r ^ 3) =
+    (2 + u ^ 2 - r ^ 2) / (2 * r) := by
+  unfold elliptic
+  rw [slope_of_Y_ne rfl (by simp [self_eq_neg, hu, hr])]
+  simp
+  field
+
+variable {u r} in
+theorem addX_w_w (hu : u ≠ 0) (hr : r ≠ 0) :
+    (elliptic u r).addX (u ^ 2 / r ^ 2) (u ^ 2 / r ^ 2)
+      ((elliptic u r).slope (u ^ 2 / r ^ 2) (u ^ 2 / r ^ 2) (u ^ 2 / r ^ 3) (u ^ 2 / r ^ 3))
+      = (r ^ 2 - u ^ 2) ^ 2 / (4 * r ^ 2) := by
+  rw [slope_w hu hr]
+  unfold addX elliptic
+  simp
+  field
+
+variable {u r} in
+theorem addY_w_w (hu : u ≠ 0) (hr : r ≠ 0) :
+    (elliptic u r).addY (u ^ 2 / r ^ 2) (u ^ 2 / r ^ 2) (u ^ 2 / r ^ 3)
+      ((elliptic u r).slope (u ^ 2 / r ^ 2) (u ^ 2 / r ^ 2) (u ^ 2 / r ^ 3) (u ^ 2 / r ^ 3))
+      = (r ^ 2 - u ^ 2) * ((r ^ 2 - u ^ 2) ^ 2 - 2 * (r ^ 2 + u ^ 2)) / (8 * r ^ 3) := by
+  rw [slope_w hu hr]
+  unfold addY elliptic
+  simp
+  field
+
+variable {u r} in
+theorem nonsingular_2w (hu : u ≠ 0) (hr : r ≠ 0) :
+    (elliptic u r).Nonsingular ((r ^ 2 - u ^ 2) ^ 2 / (4 * r ^ 2))
+    ((r ^ 2 - u ^ 2) * ((r ^ 2 - u ^ 2) ^ 2 - 2 * (r ^ 2 + u ^ 2)) / (8 * r ^ 3)) := by
+  rw [← addX_w_w hu hr, ← addY_w_w hu hr]
+  apply nonsingular_add (nonsingular_w hu hr) (nonsingular_w hu hr)
+  simp [elliptic, self_eq_neg, hu, hr]
+
+
+variable {u r} in
+theorem two_w (hu : u ≠ 0) (hr : r ≠ 0) :
+    w hu hr + w hu hr = .some (nonsingular_2w hu hr) := by
+  unfold w
+  rw [Point.add_self_of_Y_ne (by simp [elliptic, self_eq_neg, hu, hr])]
+  congr
+  · apply addX_w_w hu hr
+  · apply addY_w_w hu hr
+
+variable {u r} in
+theorem slope_w_sub (hu : u ≠ 0) (hr : r ≠ 0) {x : ℂ} (hx : x ≠ u ^ 2 / r ^ 2)
+    (y : ℂ) : (elliptic u r).slope (u ^ 2 / r ^ 2) x (u ^ 2 / r ^ 3) (-y) =
+    (u ^ 2 + r ^ 3 * y) / (u ^ 2 * r - r ^ 3 * x) := by
+  rw [slope_of_X_ne hx.symm]
+  have : u ^ 2 - r ^ 2 * x ≠ 0 := by grind
+  field
+/-
+variable {u r} in
+theorem addX_w_sub (hu : u ≠ 0) (hr : r ≠ 0) {x y : ℂ} (hxy : (elliptic u r).Nonsingular x y)
+    (hx : x ≠ u ^ 2 / r ^ 2) (hx0 : x ≠ 0) :
+    (elliptic u r).addX (u ^ 2 / r ^ 2) x
+      ((elliptic u r).slope (u ^ 2 / r ^ 2) x (u ^ 2 / r ^ 3) (-y)) =
+    u ^ 2 * (x + r * y) ^ 2 / (x * (r ^ 2 * x - u ^ 2) ^ 2) := by
+  have : r ^ 2 * x - u ^ 2 ≠ 0 := by grind
+  have : u ^ 2 - r ^ 2 * x ≠ 0 := by grind
+  rw [slope_w_sub hu hr hx]
+  simp only [addX, elliptic, zero_mul, add_zero]
+  rw [nonsingular_elliptic u hr] at hxy
+  obtain ⟨heq, hnonsingular⟩ := hxy
+  field_simp
+  linear_combination r^2 * (r ^ 2 * x - u ^ 2) ^ 3 * heq-/
+
+variable {u r} in
+theorem addX_w_sub (hu : u ≠ 0) (hr : r ≠ 0) {x y : ℂ} (hxy : (elliptic u r).Nonsingular x y)
+    (hx : x ≠ u ^ 2 / r ^ 2) :
+    (elliptic u r).addX (u ^ 2 / r ^ 2) x
+      ((elliptic u r).slope (u ^ 2 / r ^ 2) x (u ^ 2 / r ^ 3) (-y)) =
+    u ^ 2 * (r ^ 2 * x ^ 2 + (2 - r ^ 2 - u ^ 2) * x + u ^ 2 + 2 * r * y)
+      / (r ^ 2 * x - u ^ 2) ^ 2 := by
+  have : r ^ 2 * x - u ^ 2 ≠ 0 := by grind
+  have : u ^ 2 - r ^ 2 * x ≠ 0 := by grind
+  rw [slope_w_sub hu hr hx]
+  simp only [addX, elliptic, zero_mul, add_zero]
+  rw [nonsingular_elliptic u hr] at hxy
+  obtain ⟨heq, hnonsingular⟩ := hxy
+  field_simp
+  linear_combination  r ^ 4 * (r ^ 2 * x - u ^ 2) ^ 2 * heq
+/-
+variable {u r} in
+theorem addY_w_sub (hu : u ≠ 0) (hr : r ≠ 0) {x y : ℂ} (hxy : (elliptic u r).Nonsingular x y)
+    (hx : x ≠ u ^ 2 / r ^ 2) (hx0 : x ≠ 0) :
+    (elliptic u r).addY (u ^ 2 / r ^ 2) x (u ^ 2 / r ^ 3)
+      ((elliptic u r).slope (u ^ 2 / r ^ 2) x (u ^ 2 / r ^ 3) (-y)) =
+      u ^ 2 * (x + r * y) *
+      (r^2 * (1 + u^2 -r^2) * x^2 + u^2 * (1 - u^2 + r^2) * x + r * y * (r^2 * x + u^2))
+      / (r * x * (r ^ 2 * x - u ^ 2) ^ 3) := by
+  have : r ^ 2 * x - u ^ 2 ≠ 0 := by grind
+  have : u ^ 2 - r ^ 2 * x ≠ 0 := by grind
+  rw [addY, negAddY, addX_w_sub hu hr hxy hx hx0]
+  rw [slope_w_sub hu hr hx]
+  simp only [negY, neg_add_rev, elliptic, zero_mul, sub_zero]
+  rw [nonsingular_elliptic u hr] at hxy
+  obtain ⟨heq, hnonsingular⟩ := hxy
+  field_simp
+  linear_combination r ^ 4 * (u ^ 2 - r ^ 2 * x) * (r * y + x) * heq-/
+
+variable {u r} in
+theorem addY_w_sub (hu : u ≠ 0) (hr : r ≠ 0) {x y : ℂ} (hxy : (elliptic u r).Nonsingular x y)
+    (hx : x ≠ u ^ 2 / r ^ 2) :
+    (elliptic u r).addY (u ^ 2 / r ^ 2) x (u ^ 2 / r ^ 3)
+      ((elliptic u r).slope (u ^ 2 / r ^ 2) x (u ^ 2 / r ^ 3) (-y)) =
+      u ^ 2 *
+        (r ^ 4 * x ^ 3 + r ^ 2 * (2 + u ^ 2 - 2 * r ^ 2) * x ^ 2
+          + u ^ 2 * (2 - 2 * u ^ 2 + r ^ 2) * x + u ^ 4
+          + (r ^ 2 * (2 + u ^ 2 - r ^ 2) * x + u ^ 2 * (2 - u ^ 2 + r ^ 2)) * r * y)
+      / (r * (r ^ 2 * x - u ^ 2) ^ 3) := by
+  have : r ^ 2 * x - u ^ 2 ≠ 0 := by grind
+  have : u ^ 2 - r ^ 2 * x ≠ 0 := by grind
+  rw [addY, negAddY, addX_w_sub hu hr hxy hx]
+  rw [slope_w_sub hu hr hx]
+  simp only [negY, neg_add_rev, elliptic, zero_mul, sub_zero]
+  rw [nonsingular_elliptic u hr] at hxy
+  obtain ⟨heq, hnonsingular⟩ := hxy
+  field_simp
+  linear_combination (-2) * r^4 * (r^2*x - u^2) * heq
+
+variable {u r} in
+theorem nonsingular_w_sub (hu : u ≠ 0) (hr : r ≠ 0) {x y : ℂ} (hxy : (elliptic u r).Nonsingular x y)
+    (hx : x ≠ u ^ 2 / r ^ 2) :
+    (elliptic u r).Nonsingular
+      (u ^ 2 * (r ^ 2 * x ^ 2 + (2 - r ^ 2 - u ^ 2) * x + u ^ 2 + 2 * r * y)
+      / (r ^ 2 * x - u ^ 2) ^ 2)
+    (u ^ 2 *
+        (r ^ 4 * x ^ 3 + r ^ 2 * (2 + u ^ 2 - 2 * r ^ 2) * x ^ 2
+          + u ^ 2 * (2 - 2 * u ^ 2 + r ^ 2) * x + u ^ 4
+          + (r ^ 2 * (2 + u ^ 2 - r ^ 2) * x + u ^ 2 * (2 - u ^ 2 + r ^ 2)) * r * y)
+      / (r * (r ^ 2 * x - u ^ 2) ^ 3)) := by
+  have hnegy : (elliptic u r).negY x y = -y := by simp [elliptic]
+  have : ¬(u ^ 2 / r ^ 2 = x ∧
+      u ^ 2 / r ^ 3 = (elliptic u r).negY x ((elliptic u r).negY x y)) := by
+    simp [hx.symm]
+  convert (elliptic u r).nonsingular_add (nonsingular_w hu hr) ((nonsingular_neg _ _).mpr hxy) this
+      using 1
+  · simp_rw [hnegy]
+    rw [addX_w_sub hu hr hxy hx]
+  · simp_rw [hnegy]
+    rw [addY_w_sub hu hr hxy hx]
+
+variable {u r} in
+theorem w_sub (hu : u ≠ 0) (hr : r ≠ 0) {x y : ℂ} (hxy : (elliptic u r).Nonsingular x y)
+    (hx : x ≠ u ^ 2 / r ^ 2) :
+    w hu hr - .some hxy = .some (nonsingular_w_sub hu hr hxy hx) := by
+  have hxy' : (elliptic u r).Nonsingular x (-y) := by
+    simpa [elliptic] using (WeierstrassCurve.Affine.nonsingular_neg _ _).mpr hxy
+  have hneg : - Point.some hxy = .some hxy' := by simp [elliptic]
+  rw [sub_eq_add_neg, hneg]
+  unfold w
+  rw [Point.add_of_X_ne hx.symm]
+  rw [Point.some.injEq]
+  rw [addX_w_sub hu hr hxy hx]
+  rw [addY_w_sub hu hr hxy hx]
+  simp
+
+variable {u r} in
+theorem nonsingular_neg_w (hu : u ≠ 0) (hr : r ≠ 0) :
+    (elliptic u r).Nonsingular (u ^ 2 / r ^ 2) (-u ^ 2 / r ^ 3)  := by
+  convert (WeierstrassCurve.Affine.nonsingular_neg _ _).mpr (nonsingular_w hu hr) using 1
+  simp [elliptic, neg_div]
+
+variable {u r} in
+theorem neg_w (hu : u ≠ 0) (hr : r ≠ 0) :
+    -w hu hr = .some (nonsingular_neg_w hu hr) := by
+  simp [w, elliptic, neg_div]
+
+variable {u r} in
+theorem fabcNormal_w (hu : u ≠ 0) (hr : r ≠ 0) :
+    fabcNormal u r (u ^ 2 / r ^ 2) (u ^ 2 / r ^ 3) = ![
+    u ^ 3 * ((u ^ 2 - r ^ 2) ^ 2 + 4 * u * r) / r ^ 3,
+    -k u r * u ^ 3 * ((u ^ 2 - r ^ 2) ^ 2 + 4 * u * r) / r ^ 3,
+    (u + r) * u ^ 3 * ((u ^ 2 - r ^ 2) ^ 2 + 4 * u * r) / r ^ 3] := by
+  unfold fabcNormal
+  congrm ![$(by field), $(by field), $(by field)]
+
+variable {u r} in
+@[simp]
+theorem fabc_w (hu : u ≠ 0) (hr : r ≠ 0) :
+    fabc hu hr (w hu hr) = P2.mk ![1, -k u r, u + r] (by simp) := by
+  unfold fabc
+  rw [P2.mk_eq_mk']
+  by_cases hs : SingularAbc u r (u ^ 2 / r ^ 2) (u ^ 2 / r ^ 3)
+  · obtain h := hs.c_factor_eq_zero u hr (nonsingular_w hu hr)
+    have h : (u ^ 2 - r ^ 2) ^ 2 = -4 * u * r := by
+      field_simp at h
+      grind
+    suffices (r * (u + r) ^ 2 * (u ^ 2 / r ^ 2) - u * ((u + r) ^ 2 - 2)) *
+        (-(4 * u * r) - 4 * u ^ 2) = -(2 * u * k u r * (-(4 * u * r) + 4 * u ^ 2) * k u r) ∧
+        8 * u ^ 2 * k u r * (u ^ 2 - r ^ 2) =
+        2 * u * k u r * (-(4 * u * r) + 4 * u ^ 2) * (u + r) by
+      simpa [fabcRaw, w, hs, h]
+    constructor
+    · have : -(2 * u * k u r * (-(4 * u * r) + 4 * u ^ 2) * k u r) =
+        -(2 * u * (-(4 * u * r) + 4 * u ^ 2) * (k u r ^ 2)) := by ring
+      rw [this, k_sq]
+      field_simp
+      linear_combination -h
+    · ring
+  simp [fabcRaw, w, hs, fabcNormal_w hu hr]
+  grind
+
+variable {u r} in
+theorem fabcNormal_neg_w (hu : u ≠ 0) (hr : r ≠ 0) :
+    fabcNormal u r (u ^ 2 / r ^ 2) (-u ^ 2 / r ^ 3) = ![
+    u ^ 3 * ((u - r) * (u + r) ^ 2 * (u + 3 * r) + 4 * r ^ 2) / r ^ 3,
+    -k u r * u ^ 3 * ((u ^ 2 - r ^ 2) ^ 2 - 4 * r ^ 2) / r ^ 3,
+    u ^ 3 * (u + r) * ((u ^ 2 - r ^ 2) ^ 2 + 4 * u * r) / r ^ 3] := by
+  unfold fabcNormal
+  congrm ![$(by field), $(by field), $(by field)]
+
+
+variable {u r} in
+theorem not_singularAbc_neg_w (hu : u ≠ 0) (hr : r ≠ 0) :
+    ¬ SingularAbc u r (u ^ 2 / r ^ 2) (-u ^ 2 / r ^ 3) := by
+  by_contra! h
+  obtain ha := h.a_eq_zero
+  obtain hc := h.c_factor_eq_zero u hr (nonsingular_neg_w hu hr)
+  field_simp at ha hc
+  grind
+
+variable {u r} in
+theorem fabc_neg_w_ne_zero (hu : u ≠ 0) (hr : r ≠ 0) :
+    ![(u - r) * (u + r) ^ 2 * (u + 3 * r) + 4 * r ^ 2,
+      -k u r * ((u ^ 2 - r ^ 2) ^ 2 - 4 * r ^ 2),
+      (u + r) * ((u ^ 2 - r ^ 2) ^ 2 + 4 * u * r)] ≠ 0 := by
+  obtain h := not_singularAbc_neg_w hu hr
+  contrapose! h
+  unfold SingularAbc fabcNormal
+  obtain h := congr((u ^ 3 / r ^ 3) • $h)
+  simp_rw [Matrix.smul_vec3, smul_zero, smul_eq_mul] at h
+  refine Eq.trans ?_ h
+  congrm ![$(by field), $(by field), $(by field)]
+
+variable {u r} in
+theorem fabc_neg_w (hu : u ≠ 0) (hr : r ≠ 0) :
+    fabc hu hr (-w hu hr) = P2.mk ![
+      (u - r) * (u + r) ^ 2 * (u + 3 * r) + 4 * r ^ 2,
+      -k u r * ((u ^ 2 - r ^ 2) ^ 2 - 4 * r ^ 2),
+      (u + r) * ((u ^ 2 - r ^ 2) ^ 2 + 4 * u * r)] (fabc_neg_w_ne_zero hu hr) := by
+  rw [neg_w]
+  simp only [fabc, fabcRaw, not_singularAbc_neg_w hu hr, ↓reduceIte, fabcNormal_neg_w hu hr]
+  rw [P2.mk_eq_mk']
+  use u ^ 3 / r ^ 3
+  simp_rw [Matrix.smul_vec3, smul_eq_mul]
+  congrm ![?_, ?_, ?_]
+  · ring
+  · ring
+  · ring
+
+variable {r} in
+theorem fabcNormal_2w (hr : r ≠ 0) :
+    fabcNormal u r ((r ^ 2 - u ^ 2) ^ 2 / (4 * r ^ 2))
+    ((r ^ 2 - u ^ 2) * ((r ^ 2 - u ^ 2) ^ 2 - 2 * (r ^ 2 + u ^ 2)) / (8 * r ^ 3)) =
+    ![(u + r) * ((u - r) * (u + r) ^ 2 * (u + 3 * r) + 4 * r ^ 2) *
+      (((u ^ 2 - r ^ 2) ^ 2 - 4 * u * r) ^ 2 + 16 * u * r * (u - r) ^ 2) /
+      (64 * r ^ 3),
+    -k u r * (u + r) * ((u ^ 2 - r ^ 2) ^ 2 - 4 * r ^ 2) *
+      (((u ^ 2 - r ^ 2) ^ 2 - 4 * u * r) ^ 2 + 16 * u * r * (u - r) ^ 2) /
+      (64 * r ^ 3),
+    (u + r) ^ 2 * ((u ^ 2 - r ^ 2) ^ 2 + 4 * u * r) *
+      (((u ^ 2 - r ^ 2) ^ 2 - 4 * u * r) ^ 2 + 16 * u * r * (u - r) ^ 2) /
+      (64 * r ^ 3)] := by
+  unfold fabcNormal
+  congrm ![$(by field), $(by field), $(by field)]
+
+variable {u r} in
+theorem fabc_2w (hu : u ≠ 0) (hr : r ≠ 0) :
+    fabc hu hr (w hu hr + w hu hr) = P2.mk ![
+      (u - r) * (u + r) ^ 2 * (u + 3 * r) + 4 * r ^ 2,
+      -k u r * ((u ^ 2 - r ^ 2) ^ 2 - 4 * r ^ 2),
+      (u + r) * ((u ^ 2 - r ^ 2) ^ 2 + 4 * u * r)] (fabc_neg_w_ne_zero hu hr) := by
+  rw [two_w]
+  by_cases hsxy : SingularAbc u r ((r ^ 2 - u ^ 2) ^ 2 / (4 * r ^ 2))
+      ((r ^ 2 - u ^ 2) * ((r ^ 2 - u ^ 2) ^ 2 - 2 * (r ^ 2 + u ^ 2)) / (8 * r ^ 3))
+  · obtain hc := hsxy.c_factor_eq_zero u hr (nonsingular_2w hu hr)
+    field_simp at hc
+    have hc : (u + r) ^ 2 *
+        (((u ^ 2 - r ^ 2) ^ 2 - 4 * u * r) ^ 2 + 16 * u * r * (u - r) ^ 2) = 0 := by
+      linear_combination hc
+    obtain hc | hc : u + r = 0 ∨
+      ((u ^ 2 - r ^ 2) ^ 2 - 4 * u * r) ^ 2 + 16 * u * r * (u - r) ^ 2 = 0 := by simpa using hc
+    · have hr : r = -u := (neg_eq_of_add_eq_zero_right hc).symm
+      simp only [fabc, fabcRaw, hsxy, ↓reduceIte]
+      suffices P2.mk ![2 * u * k u (-u) * (4 * u ^ 2), -(u * 2 * (4 * u ^ 2)), 0] _ =
+          P2.mk ![4 * u ^ 2, k u (-u) * (4 * u ^ 2), 0] _ by
+        simpa [hr]
+      symm
+      rw [P2.mk_eq_mk']
+      use -k u (-u) / (2 * u)
+      simp_rw [Matrix.smul_vec3, smul_eq_mul, mul_zero]
+      congrm ![?_ ,?_, 0]
+      · field_simp
+        simp [k_sq]
+      · field_simp
+    have hk : k u r ≠ 0 := by
+      grind
+    have hur : u - r ≠ 0 := by
+      grind
+    suffices P2.mk
+      ![2 * u * k u r * ((u ^ 2 - r ^ 2) ^ 2 + 4 * u ^ 2),
+        (r * (u + r) ^ 2 * ((r ^ 2 - u ^ 2) ^ 2 / (4 * r ^ 2)) - u * ((u + r) ^ 2 - 2)) *
+          ((u ^ 2 - r ^ 2) ^ 2 - 4 * u ^ 2),
+        8 * u ^ 2 * k u r * (u ^ 2 - r ^ 2)] _ =
+      P2.mk
+        ![(u - r) * (u + r) ^ 2 * (u + 3 * r) + 4 * r ^ 2,
+          -(k u r * ((u ^ 2 - r ^ 2) ^ 2 - 4 * r ^ 2)),
+          (u + r) * ((u ^ 2 - r ^ 2) ^ 2 + 4 * u * r)] _ by
+      simpa [fabc, fabcRaw, hsxy]
+    symm
+    rw [P2.mk_eq_mk']
+    use ((u ^ 2 - r ^ 2) ^ 2 + 4 * u * r) / (8 * u ^ 2 * k u r * (u - r))
+    simp_rw [Matrix.smul_vec3, smul_eq_mul]
+    congrm ![?_, ?_, ?_]
+    · field_simp
+      grind
+    · field_simp
+      rw [k_sq]
+      grind
+    · field
+  simp only [fabc, fabcRaw, hsxy, ↓reduceIte, fabcNormal_2w u hr]
+  rw [P2.mk_eq_mk']
+  use (u + r) * (((u ^ 2 - r ^ 2) ^ 2 - 4 * u * r) ^ 2 + 16 * u * r * (u - r) ^ 2) /
+      (64 * r ^ 3)
+  simp_rw [Matrix.smul_vec3, smul_eq_mul]
+  congrm ![?_, ?_, ?_]
+  · ring
+  · ring
+  · ring
+
+variable {u r} in
+theorem fabc_w_sub (hu : u ≠ 0) (hr : r ≠ 0) (p : (elliptic u r).Point) :
+    fabc hu hr (w hu hr - p) = fabc hu hr p := by
+  cases p with
+  | zero =>
+    change fabc hu hr (w hu hr - 0) = fabc hu hr Point.zero
+    simp
+  | @some x y hxy =>
+  by_cases hpw : .some hxy = w hu hr
+  · simp [hpw]
+  by_cases hpnw : .some hxy = -w hu hr
+  · simp_rw [hpnw, sub_neg_eq_add, fabc_2w, fabc_neg_w]
+
+
+  rw [nonsingular_elliptic u hr] at hxy
+  obtain ⟨heq, hnonsingular⟩ := hxy
+  have hx : x ≠ u ^ 2 / r ^ 2 := by
+    unfold w at hpw hpnw
+    by_contra! h
+    have h1 : y ≠ u ^ 2 / r ^ 3 := by simpa [h] using hpw
+    have h2 : y ≠ -(u ^ 2 / r ^ 3) := by simpa [elliptic, h] using hpnw
+    simp_rw [h] at heq
+    field_simp at heq
+    have hy : (r ^ 3 * y) ^ 2 = (u ^ 2) ^ 2 := by linear_combination heq
+    obtain hy | hy := eq_or_eq_neg_of_sq_eq_sq _ _ hy
+    · contrapose! h1
+      field_simp
+      linear_combination hy
+    · contrapose! h2
+      field_simp
+      linear_combination hy
+  rw [w_sub hu hr hxy hx]
+  --unfold fabc
+ /- have hx0 : x ≠ 0 := by
+    exact (eq_o_iff hu hr hxy).ne.mp
+    sorry-/
+  sorry
 
 variable {u r} in
 theorem f_w_sub (hu : u ≠ 0) (hr : r ≠ 0) (p : (elliptic u r).Point) :
     f hu hr (w hu hr - p) = rPoint u r (f hu hr p) := by sorry
 
-/-
-def xsorry : ℂ := sorry
 
-
-(u^2 *(r^2 * x^2 + (2 - u^2 - r^2) * x + u^2 + 2 * r * y))/(r^2 * x - u^2)^2
-
-
-def ysorry : ℂ := sorry
-
- -(u^2 ?)/(r (-u^2 + r^2 x)^3)
-
-
-variable {u r} in
-theorem nonsingular_w_sub (hu : u ≠ 0) (hr : r ≠ 0) {x y : ℂ}
-    (h : (elliptic u r).Nonsingular x y) :
-    (elliptic u r).Nonsingular xsorry ysorry := by sorry
-
-
-theorem w_sub (hu : u ≠ 0) (hr : r ≠ 0) {x y : ℂ} (h : (elliptic u r).Nonsingular x y)
-    (hw : Point.some h ≠ o hu hr) (hwneg : Point.some h ≠ -o hu hr) :
-    w hu hr - Point.some h = Point.some (nonsingular_w_sub hu hr h) := by
-  rw [nonsingular_elliptic u hr] at h
-  obtain ⟨heq, hs⟩ := h
-  rw [sub_eq_iff_eq_add]
-  have hx : xsorry ≠ x := by sorry
-  rw [WeierstrassCurve.Affine.Point.add_of_X_ne hx]
-  obtain hslope := WeierstrassCurve.Affine.slope_of_X_ne hx
-  simp [w, hx, elliptic]
-  sorry-/
 
 /-
 
