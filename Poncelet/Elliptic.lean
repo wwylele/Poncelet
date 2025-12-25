@@ -201,6 +201,42 @@ theorem SingularAbc.c_factor_eq_zero (hr : r ≠ 0) {x y : ℂ} (h : SingularAbc
   grind
 
 variable {r} in
+theorem SingularAbc.y_eq_reduced_aux (hr : r ≠ 0) {x y : ℂ} (h : SingularAbc u r x y)
+    (hxy : ((elliptic u r)).Nonsingular x y) :
+    r * (u + r) * (r * x - u) * y * ((u + r) ^ 2 - 1) =
+    (u - r) * x * (r * x + u) * ((u + r) ^ 2 - 1) := by
+  have h : r * (u + r) * (r * x - u) * y * ((u + r) ^ 2 - 1) * 2 * r =
+    (u - r) * x * (r * x + u) * ((u + r) ^ 2 - 1) * 2 * r := by
+    linear_combination (u + r) * (h.y_eq u r) + (r * x + u) * h.c_factor_eq_zero u hr hxy
+  simpa [hr] using h
+
+variable {u r} in
+theorem SingularAbc.xy_linear (hu : u ≠ 0) (hr : r ≠ 0) {x y : ℂ} (h : SingularAbc u r x y)
+    (hxy : ((elliptic u r)).Nonsingular x y) :
+    -2 * r ^ 2 * (u + r) * y = (u - r) * (r * ((u + r) ^ 2 - 2) * x - u * (u + r) ^ 2) := by
+  by_cases h0 : (u + r) ^ 2 - 1 = 0
+  · have h0' : (u + r) ^ 2 = 1 := by simpa [sub_eq_zero] using h0
+    obtain hc := h.c_factor_eq_zero u hr hxy
+    rw [h0'] at hc
+    have hc' : (r * x + u) ^ 2 = 0 := by linear_combination hc
+    have hc' : r * x + u = 0 := by simpa using hc'
+    rw [nonsingular_elliptic u hr] at hxy
+    obtain ⟨heq, hs⟩ := hxy
+    have heq' : r ^ 2 * y ^ 2 = x * ((r * x + u) ^ 2 - ((u + r) ^ 2 - 1) * x) := by
+      linear_combination heq
+    have hy : y = 0 := by simpa [hc', h0', hr] using heq'
+    suffices r * (1 - 2) * x - u = 0 by simp [hy, h0', this]
+    linear_combination -hc'
+  · have : -2 * r ^ 2 * (u + r) * y * ((u + r) ^ 2 - 1) * 2 * u ^ 2 =
+      (u - r) * (r * ((u + r) ^ 2 - 2) * x - u * (u + r) ^ 2) * ((u + r) ^ 2 - 1) * 2 * u ^ 2 := by
+      linear_combination
+        r * ((r * (u + r) ^ 2 * x + 4 * u - u * (u + r) ^ 2) * h.y_eq_reduced_aux u hr hxy
+        - r * (u + r) * y * ((u + r) ^ 2 - 1) * h.c_factor_eq_zero u hr hxy +
+        (u - r) * x * ((u + r) ^ 2 - 1) * h.c_factor_eq_zero u hr hxy)
+        + (u - r) * ((u + r) ^ 2 - 1) * 2 * u * h.c_factor_eq_zero u hr hxy
+    simpa [hu, -neg_mul, h0] using this
+
+variable {r} in
 theorem SingularAbc.x_relation (hr : r ≠ 0) {x y : ℂ} (h : SingularAbc u r x y)
     (hxy : ((elliptic u r)).Nonsingular x y) :
     -(2 * u * k u r) ^ 2 = (r * (u + r) ^ 2 * x - u * ((u + r) ^ 2 - 2)) ^ 2 := by

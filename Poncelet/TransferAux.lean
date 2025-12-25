@@ -4,7 +4,7 @@ import Poncelet.Elliptic
 open WeierstrassCurve.Affine
 
 variable {u r} in
-theorem fabc_w_sub_c_eq_zero (hu : u ≠ 0) (hr : r ≠ 0) {x y wx wy: ℂ}
+theorem fabc_w_sub_c_eq_zero (hu : u ≠ 0) (hr : r ≠ 0) {x y wx wy : ℂ}
     (hxy : (elliptic u r).Nonsingular x y) (hwxy : (elliptic u r).Nonsingular wx wy)
     (hpw : .some hxy ≠ w hu hr) (hpnw : .some hxy ≠ -w hu hr)
     (hwxyeq : w hu hr - .some hxy = .some hwxy)
@@ -25,28 +25,14 @@ theorem fabc_w_sub_c_eq_zero (hu : u ≠ 0) (hr : r ≠ 0) {x y wx wy: ℂ}
   rw [w_sub hu hr hxy hx, Point.some.injEq] at hwxyeq
   rw [← hwxyeq.1, ← hwxyeq.2]
   unfold fabcNormal
-
   have hdeno : -2 * r ^ 2 * ((u + r) ^ 2 - 1) * (r * x - u) * y +
       (r * x + u) *
       (r ^ 2 * (u + r) * x ^ 2 + 2 * r * (1 - r * (u + r)) * x + (u + r) * u ^ 2) ≠ 0 := by
     contrapose! hsxy with hdeno
     apply SingularAbc.mk u hr hxy hdeno hc
-
-  have hdeno' : (-(2 * r ^ 2 * ((u + r) ^ 2 - 1) * y * (r * x - u)) +
-      (r * x + u) * (r * x * (r * (u + r) * x + 2 * (1 - r * (u + r))) + u ^ 2 * (u + r))) ≠ 0 := by
-    contrapose! hdeno
-    linear_combination hdeno
-
-  have hdeno'' :(-(2 * r ^ 2 * y * ((u + r) ^ 2 - 1) * (r * x - u)) +
-        (r * x + u) *
-        (r * x * (r * x * (u + r) + 2 * (1 - r * (u + r))) + u ^ 2 * (u + r))) ≠ 0 := by
-    contrapose! hdeno
-    linear_combination hdeno
-  have hdeno''' :(-(r ^ 2 * 2 * y * ((u + r) ^ 2 - 1) * (r * x - u)) +
-      (r * x + u) * (r * x * (r * x * (u + r) + 2 * (1 - r * (u + r))) + u ^ 2 * (u + r))) ≠ 0 := by
-    contrapose! hdeno
-    linear_combination hdeno
-
+  set deno := -2 * r ^ 2 * ((u + r) ^ 2 - 1) * (r * x - u) * y +
+      (r * x + u) *
+      (r ^ 2 * (u + r) * x ^ 2 + 2 * r * (1 - r * (u + r)) * x + (u + r) * u ^ 2)
   use (-2 * r ^ 2 * ((u + r) ^ 2 - 1) *
       (r * (u ^ 2 * (r ^ 2 * x ^ 2 + (2 - r ^ 2 - u ^ 2) * x + u ^ 2 + 2 * r * y) /
       (r ^ 2 * x - u ^ 2) ^ 2) - u) *
@@ -64,13 +50,11 @@ theorem fabc_w_sub_c_eq_zero (hu : u ≠ 0) (hr : r ≠ 0) {x y wx wy: ℂ}
       (u ^ 2 * (r ^ 2 * x ^ 2 + (2 - r ^ 2 - u ^ 2) * x + u ^ 2 + 2 * r * y) /
       (r ^ 2 * x - u ^ 2) ^ 2) +
       (u + r) * u ^ 2)) /
-      (-2 * r ^ 2 * ((u + r) ^ 2 - 1) * (r * x - u) * y +
-      (r * x + u) *
-      (r ^ 2 * (u + r) * x ^ 2 + 2 * r * (1 - r * (u + r)) * x + (u + r) * u ^ 2))
+      deno
   obtain ⟨heq, hnonsingular⟩ := (nonsingular_elliptic u hr _ _).mp hxy
   simp_rw [Matrix.smul_vec3, smul_eq_mul]
   congrm ![?_, ?_, ?_]
-  · field
+  · field_simp
   · field_simp
     linear_combination -8 * k u r * u * r ^3 * (
       -x^5*u^5*r^6 - 2*x^5*u^4*r^7 + 2*x^5*u^2*r^9 + x^5*u*r^10 + 2*x^4*u^7*r^4
@@ -126,7 +110,7 @@ theorem fabc_w_sub_c_eq_zero (hu : u ≠ 0) (hr : r ≠ 0) {x y wx wy: ℂ}
       + 4*x*y*u^2*r^4 + 2*u^7 + 2*x^2*u^4*r + 4*y*u^5*r + 2*x^2*u^2*r^3 + 4*x*u^5)* heq
 
 variable {u r} in
-theorem fabc_w_sub_c_ne_zero (hu : u ≠ 0) (hr : r ≠ 0) {x y wx wy: ℂ}
+theorem fabc_w_sub_c_ne_zero (hu : u ≠ 0) (hr : r ≠ 0) {x y wx wy : ℂ}
     (hxy : (elliptic u r).Nonsingular x y) (hwxy : (elliptic u r).Nonsingular wx wy)
     (hpw : .some hxy ≠ w hu hr) (hpnw : .some hxy ≠ -w hu hr)
     (hwxyeq : w hu hr - .some hxy = .some hwxy)
@@ -141,13 +125,13 @@ theorem fabc_w_sub_c_ne_zero (hu : u ≠ 0) (hr : r ≠ 0) {x y wx wy: ℂ}
   have : u ^ 2 - r ^ 2 * x ≠ 0 := by
     contrapose! this
     linear_combination -this
-
   have hinf1' : r * x + u ≠ 0 := by
     contrapose! hc
     simp [hc]
   have hinf2' : (u + r) ^ 2 * (r * x - u) ^ 2 + r * u * x * 4 ≠ 0 := by
     contrapose! hc
     linear_combination (r * x + u) * hc
+  set inf2 := (u + r) ^ 2 * (r * x - u) ^ 2 + r * u * x * 4
   obtain ⟨heq, hnonsingular⟩ := (nonsingular_elliptic u hr _ _).mp hxy
   suffices P2.mk (fabcNormal u r wx wy) _ = P2.mk (fabcNormal u r x y) _ by
     simpa [fabc, fabcRaw, hsxy, hwsxy]
@@ -161,7 +145,7 @@ theorem fabc_w_sub_c_ne_zero (hu : u ≠ 0) (hr : r ≠ 0) {x y wx wy: ℂ}
     (r ^ 2 * x - u ^ 2) ^ 2) ^ 2 * (u + r) ^ 2 +
       r * u * (x * (r ^ 2 * x + (2 - r ^ 2 - u ^ 2)) + u ^ 2 + r * 2 * y) *
       (r ^ 2 * x - u ^ 2) ^ 2 * 4))  /
-      ((r ^ 2 * x - u ^ 2) ^ 6  * (r * x + u) * ((u + r) ^ 2 * (r * x - u) ^ 2 + r * u * x * 4))
+      ((r ^ 2 * x - u ^ 2) ^ 6  * (r * x + u) * inf2)
   simp_rw [Matrix.smul_vec3, smul_eq_mul]
   congrm ![?_, ?_, ?_]
   · field_simp
@@ -204,4 +188,5 @@ theorem fabc_w_sub_c_ne_zero (hu : u ≠ 0) (hr : r ≠ 0) {x y wx wy: ℂ}
       2*x^3*u^4*r^2 + 4*x*y*u^5*r^2 - 9*x*u^6*r^2 - 4*x*y*u^4*r^3 + x*u^5*r^3 +
       10*x^3*u^2*r^4 + 4*x*y*u^3*r^4 + 2*u^8 + 2*x^2*u^5*r + 4*y*u^6*r - 8*x^2*u^4*r^2 +
       2*x^2*u^3*r^3 + 4*x*u^6) * heq
-  · field
+  · field_simp
+    ring

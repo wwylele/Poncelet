@@ -476,12 +476,42 @@ theorem fabc_2w (hu : u ≠ 0) (hr : r ≠ 0) :
   · ring
 
 variable {u r} in
-theorem fabc_w_sub_singularAbc (hu : u ≠ 0) (hr : r ≠ 0) {x y : ℂ}
-    (hxy : (elliptic u r).Nonsingular x y) (hpw : .some hxy ≠ w hu hr) (hpnw : .some hxy ≠ -w hu hr)
+theorem fabc_w_sub_singularAbc (hu : u ≠ 0) (hr : r ≠ 0) {x y wx wy : ℂ}
+    (hxy : (elliptic u r).Nonsingular x y) (hwxy : (elliptic u r).Nonsingular wx wy)
+    (hpw : .some hxy ≠ w hu hr) (hpnw : .some hxy ≠ -w hu hr)
+    (hwxyeq : w hu hr - .some hxy = .some hwxy)
     (hsxy : SingularAbc u r x y) :
-    fabc hu hr (w hu hr - .some hxy) = fabc hu hr (.some hxy) := by
+    fabc hu hr (.some hwxy) = fabc hu hr (.some hxy) := by
   obtain hx := x_not_at_w hu hr hxy hpw hpnw
-  simp [fabc, fabcRaw, hsxy]
+  have : r ^ 2 * x - u ^ 2 ≠ 0 := by
+    contrapose! hx
+    field_simp
+    linear_combination hx
+  have : u ^ 2 - r ^ 2 * x ≠ 0 := by
+    contrapose! this
+    linear_combination -this
+
+  rw [w_sub hu hr hxy hx, Point.some.injEq] at hwxyeq
+  obtain ⟨hwx, hwy⟩ := hwxyeq
+  by_cases hwsxy : SingularAbc u r wx wy
+  · suffices P2.mk ![2 * u * k u r * ((u ^ 2 - r ^ 2) ^ 2 + 4 * u ^ 2),
+        (r * (u + r) ^ 2 * wx - u * ((u + r) ^ 2 - 2)) * ((u ^ 2 - r ^ 2) ^ 2 - 4 * u ^ 2),
+        8 * u ^ 2 * k u r * (u ^ 2 - r ^ 2)] _ =
+      P2.mk ![2 * u * k u r * ((u ^ 2 - r ^ 2) ^ 2 + 4 * u ^ 2),
+        (r * (u + r) ^ 2 * x - u * ((u + r) ^ 2 - 2)) * ((u ^ 2 - r ^ 2) ^ 2 - 4 * u ^ 2),
+        8 * u ^ 2 * k u r * (u ^ 2 - r ^ 2)] _ by
+      simpa [fabc, fabcRaw, hsxy, hwsxy]
+    rw [← hwx, ← hwy] at hwsxy
+    obtain hc := hsxy.c_factor_eq_zero u hr hxy
+    obtain hwc := hwsxy.c_factor_eq_zero u hr (nonsingular_w_sub hu hr hxy hx)
+    field_simp at hwc
+
+    congrm(P2.mk ![_, ?_, _] _)
+    simp [hr]
+
+    sorry
+
+  --simp [fabc, fabcRaw, hsxy]
 
   sorry
 
@@ -497,8 +527,6 @@ theorem fabc_w_sub (hu : u ≠ 0) (hr : r ≠ 0) (p : (elliptic u r).Point) :
   · simp [hpw]
   by_cases hpnw : .some hxy = -w hu hr
   · simp_rw [hpnw, sub_neg_eq_add, fabc_2w, fabc_neg_w]
-  by_cases hsxy : SingularAbc u r x y
-  · exact fabc_w_sub_singularAbc hu hr hxy hpw hpnw hsxy
   have : ∃ (wx wy : ℂ) (hwxy : (elliptic u r).Nonsingular wx wy),
       w hu hr - .some hxy = .some hwxy := by
     cases h : w hu hr - .some hxy with
@@ -513,13 +541,14 @@ theorem fabc_w_sub (hu : u ≠ 0) (hr : r ≠ 0) (p : (elliptic u r).Point) :
     by_contra!
     simp [this] at hwxyeq
   rw [hwxyeq]
+  by_cases hsxy : SingularAbc u r x y
+  · exact fabc_w_sub_singularAbc hu hr hxy hwxy hpw hpnw hwxyeq hsxy
   by_cases hwsxy : SingularAbc u r wx wy
-  · have hwxyeq' : Point.some hxy = w hu hr - Point.some hwxy := by
+  · have hwxyeq' : w hu hr - Point.some hwxy = Point.some hxy := by
       simp [← hwxyeq]
-    rw [hwxyeq']
     by_cases hww2 : Point.some hwxy = -w hu hr
-    · simp_rw [hww2, sub_neg_eq_add, fabc_2w, fabc_neg_w]
-    exact (fabc_w_sub_singularAbc hu hr hwxy hww hww2 hwsxy).symm
+    · simp_rw [← hwxyeq', hww2, sub_neg_eq_add, fabc_2w, fabc_neg_w]
+    exact (fabc_w_sub_singularAbc hu hr hwxy hxy (by simp [← hwxyeq]) hww2 hwxyeq' hwsxy).symm
   obtain hx := x_not_at_w hu hr hxy hpw hpnw
   have : r ^ 2 * x - u ^ 2 ≠ 0 := by
     contrapose! hx
