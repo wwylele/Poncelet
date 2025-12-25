@@ -796,6 +796,54 @@ theorem x_not_at_w (hu : u ≠ 0) (hr : r ≠ 0) {x y : ℂ} (hxy : (elliptic u 
   · contrapose! h2
     field_simp
     linear_combination hy
+/-
+def placeholder : ℂ := sorry
+
+variable {u r} in
+theorem SingularAbc.wx_eq (hu : u ≠ 0) (hr : r ≠ 0) {x y : ℂ}
+    (h : SingularAbc u r x y)
+    (hxy : (elliptic u r).Nonsingular x y)
+    (hx : x ≠ u ^ 2 / r ^ 2) :
+    u ^ 2 * (r ^ 2 * x ^ 2 + (2 - r ^ 2 - u ^ 2) * x + u ^ 2 + 2 * r * y)
+      / (r ^ 2 * x - u ^ 2) ^ 2 = placeholder := by
+  have : r ^ 2 * x - u ^ 2 ≠ 0 := by
+    contrapose! hx
+    field_simp
+    linear_combination hx
+  field_simp
+  obtain hx := h.c_factor_eq_zero u hr hxy
+  have h1 : (r ^ 2 * (u + r) ^ 2 * x +
+    4 * u * r - 2 * u * r * (u + r) ^ 2 + u ^ 2 * (u + r) ^ 2) ≠ 0 := by sorry
+  rw [← mul_right_inj' h1, ← mul_right_inj' h1]
+  have h2 : r * (u + r)  ≠ 0 := by sorry
+  rw [← mul_right_inj' h2]
+
+  suffices
+    (r ^ 2 * (u + r) ^ 2 * x + 4 * u * r - 2 * u * r * (u + r) ^ 2 + u ^ 2 * (u + r) ^ 2) ^ 2 *
+    ((u ^ 2 * (r * (u + r) * x * (r ^ 2 * x + (2 - r ^ 2 - u ^ 2)) + r * (u + r) * u ^ 2 -
+      -2 * r ^ 2 * (u + r) * y))) =
+    ((r ^ 2 * (u + r) ^ 2 * x + 4 * u * r - 2 * u * r * (u + r) ^ 2 + u ^ 2 * (u + r) ^ 2)
+      * (r ^ 2 * x - u ^ 2)) ^ 2 *
+    r * (u + r) * (placeholder) by
+    linear_combination this
+
+  have : (r ^ 2 * (u + r) ^ 2 * x + 4 * u * r - 2 * u * r * (u + r) ^ 2 + u ^ 2 * (u + r) ^ 2)
+      * (r ^ 2 * x - u ^ 2) = - u ^ 2 * ((u ^ 2 - r ^ 2) ^ 2 + 4 * u * r) := by
+    linear_combination r ^ 2 * hx
+  rw [this]
+  rw [h.xy_linear hu hr hxy]
+
+  suffices (u + r) * u^4 * (
+    -2 * (u - r) * r * x * (u + r)^3 * ((u ^ 2 - r ^ 2) ^ 2 - 2 * (u ^ 2 + r ^ 2))
+       + u * ((u ^ 2 - r ^ 2) ^ 2 - 4 * r ^ 2)
+       * ((u - r) * (u + 3 * r) * (u + r) ^ 2 + 4 * r ^ 2))
+    = (-u ^ 2 * ((u ^ 2 - r ^ 2) ^ 2 + 4 * u * r)) ^ 2 * r * (u + r) * placeholder by
+    linear_combination this - (- u^2 * x^2 * (u + r)^3 * r^5 * hx
+      - (-2) * u^3 * (u + r) * x * r^3 * (u^2*r + 2*u*r^2 + r^3 - 2*u - 4*r) * hx
+      - (-1) * u^3 * r * (3*u^6 + 4*u^5*r - 6*u^4*r^2 - 11*u^3*r^3 - 2*u^2*r^4 +
+      3*u*r^5 + r^6 - 8*u^4 + 16*u^2*r^2 + 8*u*r^3 - 16*u*r) * hx)
+
+  sorry-/
 
 /-
 

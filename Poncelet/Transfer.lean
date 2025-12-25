@@ -491,10 +491,10 @@ theorem fabc_w_sub_singularAbc (hu : u ≠ 0) (hr : r ≠ 0) {x y wx wy : ℂ}
     contrapose! this
     linear_combination -this
 
-  rw [w_sub hu hr hxy hx, Point.some.injEq] at hwxyeq
-  obtain ⟨hwx, hwy⟩ := hwxyeq
   by_cases hwsxy : SingularAbc u r wx wy
-  · suffices P2.mk ![2 * u * k u r * ((u ^ 2 - r ^ 2) ^ 2 + 4 * u ^ 2),
+  · rw [w_sub hu hr hxy hx, Point.some.injEq] at hwxyeq
+    obtain ⟨hwx, hwy⟩ := hwxyeq
+    suffices P2.mk ![2 * u * k u r * ((u ^ 2 - r ^ 2) ^ 2 + 4 * u ^ 2),
         (r * (u + r) ^ 2 * wx - u * ((u + r) ^ 2 - 2)) * ((u ^ 2 - r ^ 2) ^ 2 - 4 * u ^ 2),
         8 * u ^ 2 * k u r * (u ^ 2 - r ^ 2)] _ =
       P2.mk ![2 * u * k u r * ((u ^ 2 - r ^ 2) ^ 2 + 4 * u ^ 2),
@@ -505,15 +505,16 @@ theorem fabc_w_sub_singularAbc (hu : u ≠ 0) (hr : r ≠ 0) {x y wx wy : ℂ}
     obtain hc := hsxy.c_factor_eq_zero u hr hxy
     obtain hwc := hwsxy.c_factor_eq_zero u hr (nonsingular_w_sub hu hr hxy hx)
     field_simp at hwc
-
-    congrm(P2.mk ![_, ?_, _] _)
+    congrm P2.mk ![_, ?_, _] _
     simp [hr]
 
     sorry
+  have hk : k u r ≠ 0 := hsxy.k_ne_zero u hr hxy
+  by_cases hur : u ^ 2 - r ^ 2 = 0
+  ·
+    sorry
+  exact fabc_w_sub_singularAbc_not_singularAbc hu hr hxy hwxy hpw hpnw hwxyeq hsxy hwsxy hur
 
-  --simp [fabc, fabcRaw, hsxy]
-
-  sorry
 
 variable {u r} in
 theorem fabc_w_sub (hu : u ≠ 0) (hr : r ≠ 0) (p : (elliptic u r).Point) :
