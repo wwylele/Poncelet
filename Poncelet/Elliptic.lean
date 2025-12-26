@@ -14,7 +14,7 @@ noncomputable
 def elliptic := (WeierstrassCurve.mk 0
   ((1 - cf.u ^ 2 - cf.r ^ 2) / cf.r ^ 2) 0 (cf.u ^ 2 / cf.r ^ 2) 0).toAffine
 
-theorem equation_elliptic (x y : ℂ) :
+theorem equation_elliptic (x y : cf.K) :
     (elliptic cf).Equation x y ↔
     cf.r ^ 2 * y ^ 2 = x * (cf.r ^ 2 * x ^ 2 + (1 - cf.u ^ 2 - cf.r ^ 2) * x + cf.u ^ 2) := by
   obtain _ := cf.hr
@@ -23,7 +23,7 @@ theorem equation_elliptic (x y : ℂ) :
   ring_nf
 
 @[grind =]
-theorem nonsingular_elliptic (x y : ℂ) :
+theorem nonsingular_elliptic (x y : cf.K) :
     (elliptic cf).Nonsingular x y ↔
     cf.r ^ 2 * y ^ 2 = x * (cf.r ^ 2 * x ^ 2 + (1 - cf.u ^ 2 - cf.r ^ 2) * x + cf.u ^ 2) ∧ (
       3 * cf.r ^ 2 * x ^ 2 + 2 * (1 - cf.u ^ 2 - cf.r ^ 2) * x + cf.u ^ 2 ≠ 0
@@ -36,7 +36,7 @@ theorem nonsingular_elliptic (x y : ℂ) :
   grind
 
 noncomputable
-def fxyzRaw (p : (elliptic cf).Point) : Fin 3 → ℂ := match p with
+def fxyzRaw (p : (elliptic cf).Point) : Fin 3 → cf.K := match p with
 | .zero => ![cf.u + cf.r, 0, 1]
 | .some (x := x) (y := y) _ =>
   ![cf.r ^ 2 * (cf.u + cf.r) * x ^ 2 + 2 * cf.r * (1 - cf.r ^ 2 - cf.r * cf.u) * x
@@ -51,7 +51,7 @@ theorem fxyzRaw_zero : fxyzRaw cf .zero = ![cf.u + cf.r, 0, 1] := by simp [fxyzR
 theorem fxyzRaw_zero' : fxyzRaw cf 0 = ![cf.u + cf.r, 0, 1] := fxyzRaw_zero cf
 
 noncomputable
-def fxyz (p : (elliptic cf).Point) : P2 :=
+def fxyz (p : (elliptic cf).Point) : P2 cf.K :=
   P2.mk (fxyzRaw cf p) <| by
   cases p with
   | zero =>
@@ -93,7 +93,7 @@ theorem outerCircle_fxyz (p : (elliptic cf).Point) :
     ring
 
 noncomputable
-def fabcNormal (x y : ℂ) : Fin 3 → ℂ :=
+def fabcNormal (x y : cf.K) : Fin 3 → cf.K :=
   ![-2 * cf.r ^ 2 * ((cf.u + cf.r) ^ 2 - 1) * (cf.r * x - cf.u) * y +
     (cf.r * x + cf.u) * (cf.r ^ 2 * (cf.u + cf.r) * x ^ 2 +
       2 * cf.r * (1 - cf.r * (cf.u + cf.r)) * x + (cf.u + cf.r) * cf.u ^ 2),
@@ -102,7 +102,7 @@ def fabcNormal (x y : ℂ) : Fin 3 → ℂ :=
       2 * cf.r * (1 - cf.r * (cf.u + cf.r)) * x + (cf.u + cf.r) * cf.u ^ 2)),
     (cf.r * x + cf.u) * ((cf.r * x - cf.u) ^ 2 * (cf.u + cf.r) ^ 2 + 4 * cf.u * cf.r * x)]
 
-theorem fabcNormal_onCircle {x y : ℂ} (hxy : (elliptic cf).Nonsingular x y) :
+theorem fabcNormal_onCircle {x y : cf.K} (hxy : (elliptic cf).Nonsingular x y) :
     fabcNormal cf x y 0 ^ 2 + fabcNormal cf x y 1 ^ 2 = fabcNormal cf x y 2 ^ 2 := by
   rw [nonsingular_elliptic cf] at hxy
   obtain ⟨heq, hs⟩ := hxy
@@ -121,7 +121,7 @@ theorem fabcNormal_onCircle {x y : ℂ} (hxy : (elliptic cf).Nonsingular x y) :
   rw [cf.k_sq]
   grind
 
-theorem presingular {x y : ℂ} (hxy : (elliptic cf).Nonsingular x y)
+theorem presingular {x y : cf.K} (hxy : (elliptic cf).Nonsingular x y)
     (h : (cf.r * x - cf.u) ^ 2 * (cf.u + cf.r) ^ 2 + 4 * cf.u * cf.r * x = 0) :
     (2 * cf.r ^ 2 * ((cf.u + cf.r) ^ 2 - 1) * (cf.r * x - cf.u) * y) ^ 2 =
     ((cf.r * x + cf.u) *
@@ -146,9 +146,9 @@ theorem presingular {x y : ℂ} (hxy : (elliptic cf).Nonsingular x y)
     linear_combination this
   simp [h]
 
-def SingularAbc (x y : ℂ) := fabcNormal cf x y = 0
+def SingularAbc (x y : cf.K) := fabcNormal cf x y = 0
 
-theorem SingularAbc.mk {x y : ℂ} (hxy : (elliptic cf).Nonsingular x y)
+theorem SingularAbc.mk {x y : cf.K} (hxy : (elliptic cf).Nonsingular x y)
     (ha : -2 * cf.r ^ 2 * ((cf.u + cf.r) ^ 2 - 1) * (cf.r * x - cf.u) * y +
       (cf.r * x + cf.u) * (cf.r ^ 2 * (cf.u + cf.r) * x ^ 2 +
       2 * cf.r * (1 - cf.r * (cf.u + cf.r)) * x + (cf.u + cf.r) * cf.u ^ 2) = 0)
@@ -164,26 +164,26 @@ theorem SingularAbc.mk {x y : ℂ} (hxy : (elliptic cf).Nonsingular x y)
   rw [ha, hc] at h
   simpa using h
 
-theorem SingularAbc.a_eq_zero {x y : ℂ} (h : SingularAbc cf x y) :
+theorem SingularAbc.a_eq_zero {x y : cf.K} (h : SingularAbc cf x y) :
     -2 * cf.r ^ 2 * ((cf.u + cf.r) ^ 2 - 1) * (cf.r * x - cf.u) * y +
     (cf.r * x + cf.u) * (cf.r ^ 2 * (cf.u + cf.r) * x ^ 2 +
     2 * cf.r * (1 - cf.r * (cf.u + cf.r)) * x + (cf.u + cf.r) * cf.u ^ 2)
     = 0
   := congr($h 0)
 
-theorem SingularAbc.y_eq {x y : ℂ} (h : SingularAbc cf x y) :
+theorem SingularAbc.y_eq {x y : cf.K} (h : SingularAbc cf x y) :
     2 * cf.r ^ 2 * ((cf.u + cf.r) ^ 2 - 1) * (cf.r * x - cf.u) * y =
     (cf.r * x + cf.u) * (cf.r ^ 2 * (cf.u + cf.r) * x ^ 2 +
     2 * cf.r * (1 - cf.r * (cf.u + cf.r)) * x + (cf.u + cf.r) * cf.u ^ 2) := by
   simpa [neg_add_eq_zero] using h.a_eq_zero
 
-theorem SingularAbc.b_eq_zero {x y : ℂ} (h : SingularAbc cf x y) :
+theorem SingularAbc.b_eq_zero {x y : cf.K} (h : SingularAbc cf x y) :
     cf.k * ((2 * cf.r ^ 2 * (cf.r * x + cf.u) * y +
     (cf.r * x - cf.u) * (cf.r ^ 2 * (cf.u + cf.r) * x ^ 2 +
     2 * cf.r * (1 - cf.r * (cf.u + cf.r)) * x + (cf.u + cf.r) * cf.u ^ 2))) = 0 := by
   simpa [fabcNormal] using congr($h 1)
 
-theorem SingularAbc.y_eq' {x y : ℂ} (h : SingularAbc cf x y) :
+theorem SingularAbc.y_eq' {x y : cf.K} (h : SingularAbc cf x y) :
     cf.k * (2 * cf.r ^ 2 * (cf.r * x + cf.u) * y) =
     -(cf.k * ((cf.r * x - cf.u) *
       (cf.r ^ 2 * (cf.u + cf.r) * x ^ 2 +
@@ -191,7 +191,7 @@ theorem SingularAbc.y_eq' {x y : ℂ} (h : SingularAbc cf x y) :
   apply eq_of_sub_eq_zero
   linear_combination h.b_eq_zero
 
-theorem SingularAbc.rx_add_u_ne_zero {x y : ℂ} (h : SingularAbc cf x y)
+theorem SingularAbc.rx_add_u_ne_zero {x y : cf.K} (h : SingularAbc cf x y)
     (hxy : ((elliptic cf)).Nonsingular x y) : cf.r * x + cf.u ≠ 0 := by
   obtain _ := cf.hr
   obtain ha := h.a_eq_zero
@@ -199,14 +199,14 @@ theorem SingularAbc.rx_add_u_ne_zero {x y : ℂ} (h : SingularAbc cf x y)
   obtain ⟨heq, hs⟩ := hxy
   grind
 
-theorem SingularAbc.c_factor_eq_zero {x y : ℂ} (h : SingularAbc cf x y)
+theorem SingularAbc.c_factor_eq_zero {x y : cf.K} (h : SingularAbc cf x y)
     (hxy : (elliptic cf).Nonsingular x y) :
     (cf.r * x - cf.u) ^ 2 * (cf.u + cf.r) ^ 2 + 4 * cf.u * cf.r * x = 0 := by
   suffices cf.r * x + cf.u ≠ 0 by
     simpa [fabcNormal, this] using congr($h 2)
   exact h.rx_add_u_ne_zero cf hxy
 
-theorem SingularAbc.c_factor_add {x1 y1 x2 y2 : ℂ}
+theorem SingularAbc.c_factor_add {x1 y1 x2 y2 : cf.K}
     (h1 : SingularAbc cf x1 y1) (h2 : SingularAbc cf x2 y2)
     (hxy1 : (elliptic cf).Nonsingular x1 y1) (hxy2 : (elliptic cf).Nonsingular x2 y2)
     (h : x1 ≠ x2) (hur : cf.u + cf.r ≠ 0) :
@@ -245,7 +245,7 @@ theorem SingularAbc.c_factor_add {x1 y1 x2 y2 : ℂ}
   rw [← mul_left_inj' cf.hr]
   linear_combination hxx
 
-theorem SingularAbc.y_eq_reduced_aux {x y : ℂ} (h : SingularAbc cf x y)
+theorem SingularAbc.y_eq_reduced_aux {x y : cf.K} (h : SingularAbc cf x y)
     (hxy : (elliptic cf).Nonsingular x y) :
     cf.r * (cf.u + cf.r) * (cf.r * x - cf.u) * y * ((cf.u + cf.r) ^ 2 - 1) =
     (cf.u - cf.r) * x * (cf.r * x + cf.u) * ((cf.u + cf.r) ^ 2 - 1) := by
@@ -254,7 +254,7 @@ theorem SingularAbc.y_eq_reduced_aux {x y : ℂ} (h : SingularAbc cf x y)
     linear_combination (cf.u + cf.r) * (h.y_eq cf) + (cf.r * x + cf.u) * h.c_factor_eq_zero cf hxy
   simpa [cf.hr] using h
 
-theorem SingularAbc.xy_linear {x y : ℂ} (h : SingularAbc cf x y)
+theorem SingularAbc.xy_linear {x y : cf.K} (h : SingularAbc cf x y)
     (hxy : (elliptic cf).Nonsingular x y) :
     -2 * cf.r ^ 2 * (cf.u + cf.r) * y =
     (cf.u - cf.r) * (cf.r * ((cf.u + cf.r) ^ 2 - 2) * x - cf.u * (cf.u + cf.r) ^ 2) := by
@@ -282,7 +282,7 @@ theorem SingularAbc.xy_linear {x y : ℂ} (h : SingularAbc cf x y)
         + (cf.u - cf.r) * ((cf.u + cf.r) ^ 2 - 1) * 2 * cf.u * h.c_factor_eq_zero cf hxy
     simpa [cf.hu, -neg_mul, h0] using this
 
-theorem SingularAbc.x_relation {x y : ℂ} (h : SingularAbc cf x y)
+theorem SingularAbc.x_relation {x y : cf.K} (h : SingularAbc cf x y)
     (hxy : (elliptic cf).Nonsingular x y) :
     -(2 * cf.u * cf.k) ^ 2 =
     (cf.r * (cf.u + cf.r) ^ 2 * x - cf.u * ((cf.u + cf.r) ^ 2 - 2)) ^ 2 := by
@@ -290,7 +290,7 @@ theorem SingularAbc.x_relation {x y : ℂ} (h : SingularAbc cf x y)
   obtain h' := h.c_factor_eq_zero cf hxy
   grind
 
-theorem SingularAbc.k_ne_zero {x y : ℂ} (h : SingularAbc cf x y)
+theorem SingularAbc.k_ne_zero {x y : cf.K} (h : SingularAbc cf x y)
     (hxy : (elliptic cf).Nonsingular x y) :
     cf.k ≠ 0 := by
   by_contra! hk
@@ -300,7 +300,7 @@ theorem SingularAbc.k_ne_zero {x y : ℂ} (h : SingularAbc cf x y)
   obtain hx := (h.x_relation cf hxy)
   grind
 
-theorem SingularAbc.fxyzRaw_eq {x y : ℂ} (h : SingularAbc cf x y)
+theorem SingularAbc.fxyzRaw_eq {x y : cf.K} (h : SingularAbc cf x y)
     (hxy : (elliptic cf).Nonsingular x y) (hur : cf.u + cf.r ≠ 0) :
     fxyzRaw cf (.some hxy) = ![
       2 * cf.r * x * ((cf.u + cf.r) ^ 2 - 1) / (cf.u + cf.r) ^ 2 * (cf.u ^ 2 - cf.r ^ 2),
@@ -349,12 +349,12 @@ theorem SingularAbc.fxyzRaw_eq {x y : ℂ} (h : SingularAbc cf x y)
   · field_simp
     grind
 
-theorem SingularAbc.x_eq_zero_of_casePos {x y : ℂ}
+theorem SingularAbc.x_eq_zero_of_casePos {x y : cf.K}
     (h : SingularAbc cf x y) (hxy : (elliptic cf).Nonsingular x y) (hur : cf.u + cf.r = 0) :
     x = 0 := by
   simpa [hur, cf.hu, cf.hr] using h.c_factor_eq_zero cf hxy
 
-theorem SingularAbc.y_eq_zero_of_casePos {x y : ℂ}
+theorem SingularAbc.y_eq_zero_of_casePos {x y : cf.K}
     (h : SingularAbc cf x y) (hxy : (elliptic cf).Nonsingular x y) (hur : cf.u + cf.r = 0) :
     y = 0 := by
   obtain hx := h.x_eq_zero_of_casePos cf hxy hur
@@ -362,14 +362,14 @@ theorem SingularAbc.y_eq_zero_of_casePos {x y : ℂ}
   obtain ⟨heq, hs⟩ := hxy
   simpa [hx, cf.hr] using heq
 
-theorem SingularAbc.fxyzRaw_eq_of_casePos {x y : ℂ}
+theorem SingularAbc.fxyzRaw_eq_of_casePos {x y : cf.K}
     (h : SingularAbc cf x y) (hxy : (elliptic cf).Nonsingular x y) (hur : cf.u + cf.r = 0) :
   fxyzRaw cf (.some hxy) = ![0, 0, cf.u ^ 2] := by
   obtain hx := h.x_eq_zero_of_casePos cf hxy hur
   obtain hy := h.y_eq_zero_of_casePos cf hxy hur
   simp [fxyzRaw, hx, hy, hur]
 
-theorem SingularAbc.fxyz_eq {x y : ℂ} (h : SingularAbc cf x y)
+theorem SingularAbc.fxyz_eq {x y : cf.K} (h : SingularAbc cf x y)
     (hxy : (elliptic cf).Nonsingular x y) :
     fxyz cf (.some hxy) = P2.mk ![
       2 * cf.u * cf.k * (cf.u ^ 2 - cf.r ^ 2),
@@ -410,7 +410,7 @@ theorem singularAbc_zero_iff : SingularAbc cf 0 0 ↔ cf.u + cf.r = 0 := by
 
 open Classical in
 noncomputable
-def fabcRaw (p : (elliptic cf).Point) : Fin 3 → ℂ := match p with
+def fabcRaw (p : (elliptic cf).Point) : Fin 3 → cf.K := match p with
 | .zero => ![1, -cf.k, cf.u + cf.r]
 | .some (x := x) (y := y) _ =>
   if SingularAbc cf x y then
@@ -427,7 +427,7 @@ theorem fabcRaw_zero : fabcRaw cf .zero = ![1, -cf.k, cf.u + cf.r] := by simp [f
 @[simp]
 theorem fabcRaw_zero' : fabcRaw cf 0 = ![1, -cf.k, cf.u + cf.r] := fabcRaw_zero cf
 
-theorem SingularAbc.fabcRaw_ne_zero {x y : ℂ}
+theorem SingularAbc.fabcRaw_ne_zero {x y : cf.K}
     (h : SingularAbc cf x y) (hxy : (elliptic cf).Nonsingular x y) :
     fabcRaw cf (Point.some hxy) ≠ 0 := by
   obtain hk := h.k_ne_zero cf hxy
@@ -442,7 +442,7 @@ theorem SingularAbc.fabcRaw_ne_zero {x y : ℂ}
     simp [fabcRaw, h, hk, cf.hu, hur]
 
 noncomputable
-def fabc (p : (elliptic cf).Point) : P2 :=
+def fabc (p : (elliptic cf).Point) : P2 cf.K :=
     P2.mk (fabcRaw cf p) <| by
   cases p with
   | zero =>
@@ -453,7 +453,7 @@ def fabc (p : (elliptic cf).Point) : P2 :=
     · suffices fabcNormal cf x y ≠ 0 by simpa [fabcRaw, h0]
       exact h0
 
-theorem SingularAbc.fabc_eq {x y : ℂ}
+theorem SingularAbc.fabc_eq {x y : cf.K}
     (h : SingularAbc cf x y) (hxy : (elliptic cf).Nonsingular x y) :
     fabc cf (.some hxy) = P2.mk ![2 * cf.u * cf.k * ((cf.u ^ 2 - cf.r ^ 2) ^ 2 + 4 * cf.u ^ 2),
       (cf.r * (cf.u + cf.r) ^ 2 * x
@@ -472,7 +472,7 @@ theorem fabc_zero' :
     fabc cf 0 = P2.mk ![1, -cf.k, cf.u + cf.r] (by simp) := fabc_zero cf
 
 theorem innerCircle_fabc (p : (elliptic cf).Point) :
-    InnerCircle (fabc cf p) := by
+    InnerCircle cf (fabc cf p) := by
   change fabcRaw cf p 0 ^ 2 + fabcRaw cf p 1 ^ 2 = fabcRaw cf p 2 ^ 2
   cases p with
   | zero =>
@@ -496,7 +496,7 @@ theorem innerCircle_fabc (p : (elliptic cf).Point) :
     simpa [fabcRaw, hsingular] using fabcNormal_onCircle cf hxy
 
 theorem incidence_fxyz_fabc (p : (elliptic cf).Point) :
-    Incidence (fxyz cf p) (fabc cf p) := by
+    Incidence cf (fxyz cf p) (fabc cf p) := by
   have _ := cf.hu
   have _ := cf.hr
   change fxyzRaw cf p 0 * fabcRaw cf p 0 + fxyzRaw cf p 1 * fabcRaw cf p 1 =
@@ -554,7 +554,7 @@ theorem incidence_fxyz_fabc (p : (elliptic cf).Point) :
     grind
 
 noncomputable
-def f (p : (elliptic cf).Point) : P2 × P2 :=
+def f (p : (elliptic cf).Point) : P2 cf.K × P2 cf.K :=
   ⟨fxyz cf p, fabc cf p⟩
 
 @[simp]
@@ -611,7 +611,7 @@ theorem f_o : f cf (o cf) =
     ⟨P2.mk ![cf.u + cf.r, 0, 1] (by simp), P2.mk ![1, cf.k, cf.u + cf.r] (by simp)⟩ := by
   simp [f]
 
-theorem eq_o_iff {x y : ℂ} (h : (elliptic cf).Nonsingular x y) :
+theorem eq_o_iff {x y : cf.K} (h : (elliptic cf).Nonsingular x y) :
     .some h = o cf  ↔ x = 0 where
   mp h0 := by
     have : x = 0 ∧ y = 0 := by simpa [o] using h0
@@ -622,13 +622,13 @@ theorem eq_o_iff {x y : ℂ} (h : (elliptic cf).Nonsingular x y) :
     obtain ⟨heq, hs⟩ := h
     simpa [h0, cf.hr] using heq
 
-theorem nonsingular_o_sub {x y : ℂ} (h : (elliptic cf).Nonsingular x y) :
+theorem nonsingular_o_sub {x y : cf.K} (h : (elliptic cf).Nonsingular x y) :
     (elliptic cf).Nonsingular (cf.u ^ 2 / (cf.r ^ 2 * x)) (cf.u ^ 2 * y / (cf.r ^ 2 * x ^ 2)) := by
   rw [nonsingular_elliptic cf] at ⊢ h
   obtain _ := cf.hu
   grind
 
-theorem o_sub {x y : ℂ} (h : (elliptic cf).Nonsingular x y)
+theorem o_sub {x y : cf.K} (h : (elliptic cf).Nonsingular x y)
     (ho : Point.some h ≠ o cf) :
     o cf - Point.some h = Point.some (nonsingular_o_sub cf h) := by
   obtain _ := cf.hu
@@ -729,8 +729,8 @@ theorem two_w :
   · apply addX_w_w cf
   · apply addY_w_w cf
 
-theorem slope_w_sub {x : ℂ} (hx : x ≠ cf.u ^ 2 / cf.r ^ 2)
-    (y : ℂ) : (elliptic cf).slope (cf.u ^ 2 / cf.r ^ 2) x (cf.u ^ 2 / cf.r ^ 3) (-y) =
+theorem slope_w_sub {x : cf.K} (hx : x ≠ cf.u ^ 2 / cf.r ^ 2)
+    (y : cf.K) : (elliptic cf).slope (cf.u ^ 2 / cf.r ^ 2) x (cf.u ^ 2 / cf.r ^ 3) (-y) =
     (cf.u ^ 2 + cf.r ^ 3 * y) / (cf.u ^ 2 * cf.r - cf.r ^ 3 * x) := by
   rw [slope_of_X_ne hx.symm]
   obtain _ := cf.hu
@@ -738,7 +738,7 @@ theorem slope_w_sub {x : ℂ} (hx : x ≠ cf.u ^ 2 / cf.r ^ 2)
   have : cf.u ^ 2 - cf.r ^ 2 * x ≠ 0 := by grind
   field
 
-theorem addX_w_sub {x y : ℂ} (hxy : (elliptic cf).Nonsingular x y)
+theorem addX_w_sub {x y : cf.K} (hxy : (elliptic cf).Nonsingular x y)
     (hx : x ≠ cf.u ^ 2 / cf.r ^ 2) :
     (elliptic cf).addX (cf.u ^ 2 / cf.r ^ 2) x
       ((elliptic cf).slope (cf.u ^ 2 / cf.r ^ 2) x (cf.u ^ 2 / cf.r ^ 3) (-y)) =
@@ -754,7 +754,7 @@ theorem addX_w_sub {x y : ℂ} (hxy : (elliptic cf).Nonsingular x y)
   field_simp
   linear_combination  cf.r ^ 4 * (cf.r ^ 2 * x - cf.u ^ 2) ^ 2 * heq
 
-theorem addY_w_sub {x y : ℂ} (hxy : (elliptic cf).Nonsingular x y)
+theorem addY_w_sub {x y : cf.K} (hxy : (elliptic cf).Nonsingular x y)
     (hx : x ≠ cf.u ^ 2 / cf.r ^ 2) :
     (elliptic cf).addY (cf.u ^ 2 / cf.r ^ 2) x (cf.u ^ 2 / cf.r ^ 3)
       ((elliptic cf).slope (cf.u ^ 2 / cf.r ^ 2) x (cf.u ^ 2 / cf.r ^ 3) (-y)) =
@@ -776,7 +776,7 @@ theorem addY_w_sub {x y : ℂ} (hxy : (elliptic cf).Nonsingular x y)
   field_simp
   linear_combination (-2) * cf.r^4 * (cf.r^2*x - cf.u^2) * heq
 
-theorem nonsingular_w_sub {x y : ℂ} (hxy : (elliptic cf).Nonsingular x y)
+theorem nonsingular_w_sub {x y : cf.K} (hxy : (elliptic cf).Nonsingular x y)
     (hx : x ≠ cf.u ^ 2 / cf.r ^ 2) :
     (elliptic cf).Nonsingular
       (cf.u ^ 2 * (cf.r ^ 2 * x ^ 2 + (2 - cf.r ^ 2 - cf.u ^ 2) * x + cf.u ^ 2 + 2 * cf.r * y)
@@ -798,7 +798,7 @@ theorem nonsingular_w_sub {x y : ℂ} (hxy : (elliptic cf).Nonsingular x y)
   · simp_rw [hnegy]
     rw [addY_w_sub cf hxy hx]
 
-theorem w_sub {x y : ℂ} (hxy : (elliptic cf).Nonsingular x y)
+theorem w_sub {x y : cf.K} (hxy : (elliptic cf).Nonsingular x y)
     (hx : x ≠ cf.u ^ 2 / cf.r ^ 2) :
     w cf - .some hxy = .some (nonsingular_w_sub cf hxy hx) := by
   have hxy' : (elliptic cf).Nonsingular x (-y) := by
@@ -822,7 +822,7 @@ theorem neg_w :
   simp [w, elliptic, neg_div]
 
 
-theorem x_not_at_w {x y : ℂ} (hxy : (elliptic cf).Nonsingular x y)
+theorem x_not_at_w {x y : cf.K} (hxy : (elliptic cf).Nonsingular x y)
     (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf) :
     x ≠ cf.u ^ 2 / cf.r ^ 2 := by
   obtain _ := cf.hr

@@ -7,7 +7,9 @@ open WeierstrassCurve.Affine
 
 variable (cf : Config)
 
-theorem fabc_w_sub_c_eq_zero {x y wx wy : ℂ}
+set_option maxHeartbeats 400000 in
+-- Long Expression
+theorem fabc_w_sub_c_eq_zero {x y wx wy : cf.K}
     (hxy : (elliptic cf).Nonsingular x y) (hwxy : (elliptic cf).Nonsingular wx wy)
     (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
     (hwxyeq : w cf - .some hxy = .some hwxy)
@@ -94,6 +96,7 @@ theorem fabc_w_sub_c_eq_zero {x y wx wy : ℂ}
       - 2*x*cf.u^7 - 2*x*cf.u^6*cf.r - 8*x*y*cf.u^4*cf.r^2 + 4*x*cf.u^5*cf.r^2 - 8*x^3*cf.u*cf.r^4
       - 4*x^2*cf.u^4*cf.r + 4*x^2*cf.u^3*cf.r^2) * heq
   · field_simp
+    unfold deno
     linear_combination 8 * (cf.u + cf.r - 1) * (cf.u + cf.r + 1) * cf.u^2 * cf.r^3 *
       (-x^5*cf.u^3*cf.r^6 - x^5*cf.u^2*cf.r^7 + x^5*cf.u*cf.r^8 + x^5*cf.r^9 + 2*x^4*cf.u^5*cf.r^4
       + 2*x^4*cf.u^4*cf.r^5 - x^4*cf.u^3*cf.r^6 - x^4*cf.u^2*cf.r^7 - x^4*cf.u*cf.r^8 - x^4*cf.r^9
@@ -114,7 +117,7 @@ theorem fabc_w_sub_c_eq_zero {x y wx wy : ℂ}
       + 4*x*y*cf.u^4*cf.r^2 + x*cf.u^5*cf.r^2 + 4*x*y*cf.u^3*cf.r^3 + 3*x*cf.u^4*cf.r^3 - 2*x^3*cf.u*cf.r^4
       + 4*x*y*cf.u^2*cf.r^4 + 2*cf.u^7 + 2*x^2*cf.u^4*cf.r + 4*y*cf.u^5*cf.r + 2*x^2*cf.u^2*cf.r^3 + 4*x*cf.u^5)* heq
 
-theorem fabc_w_sub_c_ne_zero {x y wx wy : ℂ}
+theorem fabc_w_sub_c_ne_zero {x y wx wy : cf.K}
     (hxy : (elliptic cf).Nonsingular x y) (hwxy : (elliptic cf).Nonsingular wx wy)
     (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
     (hwxyeq : w cf - .some hxy = .some hwxy)
@@ -197,7 +200,9 @@ theorem fabc_w_sub_c_ne_zero {x y wx wy : ℂ}
   · field_simp
     ring
 
-theorem fabc_w_sub_singularAbc_not_singularAbc {x y wx wy : ℂ}
+set_option maxHeartbeats 400000 in
+-- Long Expression
+theorem fabc_w_sub_singularAbc_not_singularAbc {x y wx wy : cf.K}
     (hxy : (elliptic cf).Nonsingular x y) (hwxy : (elliptic cf).Nonsingular wx wy)
     (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
     (hwxyeq : w cf - .some hxy = .some hwxy)
@@ -326,7 +331,7 @@ theorem fabc_w_sub_singularAbc_not_singularAbc {x y wx wy : ℂ}
     + 32*cf.u^10*cf.r^3 + 128*x^2*cf.u^7*cf.r^4 - 128*x^2*cf.u^6*cf.r^5 - 128*x*cf.u^10*cf.r) * hc
   · field_simp
 
-theorem fabc_w_sub_singularAbc_not_singularAbc_u_eq_r {x y wx wy : ℂ}
+theorem fabc_w_sub_singularAbc_not_singularAbc_u_eq_r {x y wx wy : cf.K}
     (hxy : (elliptic cf).Nonsingular x y) (hwxy : (elliptic cf).Nonsingular wx wy)
     (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
     (hwxyeq : w cf - .some hxy = .some hwxy)

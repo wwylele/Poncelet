@@ -5,7 +5,7 @@ open WeierstrassCurve.Affine
 
 variable (cf : Config)
 
-theorem fabcNormal_o_sub (x y : ℂ) (hx : x ≠ 0) :
+theorem fabcNormal_o_sub (x y : cf.K) (hx : x ≠ 0) :
     fabcNormal cf (cf.u ^ 2 / (cf.r ^ 2 * x)) (cf.u ^ 2 * y / (cf.r ^ 2 * x ^ 2))
       = (cf.u ^ 3 / (cf.r ^ 3 * x ^ 3)) •
     ![2 * cf.r ^ 2 * ((cf.u + cf.r) ^ 2 - 1) * (cf.r * x - cf.u) * y +
@@ -57,7 +57,7 @@ theorem fxyz_o_sub (p : (elliptic cf).Point) :
     · field
     · field
 
-theorem f_o_sub_1 (i : ℂ) :
+theorem f_o_sub_1 (i : cf.K) :
     P2.mk' ![1, i * cf.k, cf.u + cf.r] =
     P2.mk' (rChord' cf ![cf.u + cf.r, 0, 1] ![1, -i * cf.k, cf.u + cf.r]) := by
   by_cases hur : cf.u + cf.r = 0
@@ -71,7 +71,7 @@ theorem f_o_sub_1 (i : ℂ) :
     simpa [rChord', hur']
   ring
 
-theorem SingularAbc.fabc_o_sub {x y : ℂ}
+theorem SingularAbc.fabc_o_sub {x y : cf.K}
     (h : SingularAbc cf x y) (hxy : (elliptic cf).Nonsingular x y)
     (ho : Point.some hxy ≠ o cf) :
     fabc cf (o cf - .some hxy) = P2.mk ![8 * cf.u ^ 3 * cf.k,
@@ -189,7 +189,7 @@ theorem SingularAbc.fabc_o_sub {x y : ℂ}
     apply eq_of_sub_eq_zero
     linear_combination -4 * (h.c_factor_eq_zero cf hxy)
 
-theorem SingularAbc.f_o_sub {x y : ℂ}
+theorem SingularAbc.f_o_sub {x y : cf.K}
     (hsxy : SingularAbc cf x y) (hxy : (elliptic cf).Nonsingular x y)
     (ho : Point.some hxy ≠ o cf) :
     f cf (o cf - .some hxy) = rChord cf (f cf (.some hxy)) := by
@@ -258,7 +258,7 @@ theorem f_o_sub (p : (elliptic cf).Point) :
   by_cases hsxy : SingularAbc cf x y
   · exact hsxy.f_o_sub cf hxy ho
   -- check case when o - p is SingularAbc
-  have : ∃ (ox oy : ℂ) (hoxy : (elliptic cf).Nonsingular ox oy),
+  have : ∃ (ox oy : cf.K) (hoxy : (elliptic cf).Nonsingular ox oy),
       o cf - .some hxy = .some hoxy := by
     cases h : o cf - .some hxy with
     | zero =>
@@ -499,7 +499,7 @@ theorem fabc_2w :
   · ring
   · ring
 
-theorem fabc_w_sub_singularAbc {x y wx wy : ℂ}
+theorem fabc_w_sub_singularAbc {x y wx wy : cf.K}
     (hxy : (elliptic cf).Nonsingular x y) (hwxy : (elliptic cf).Nonsingular wx wy)
     (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
     (hwxyeq : w cf - .some hxy = .some hwxy)
@@ -610,7 +610,7 @@ theorem fabc_w_sub (p : (elliptic cf).Point) :
   · simp [hpw]
   by_cases hpnw : .some hxy = -w cf
   · simp_rw [hpnw, sub_neg_eq_add, fabc_2w, fabc_neg_w]
-  have : ∃ (wx wy : ℂ) (hwxy : (elliptic cf).Nonsingular wx wy),
+  have : ∃ (wx wy : cf.K) (hwxy : (elliptic cf).Nonsingular wx wy),
       w cf - .some hxy = .some hwxy := by
     cases h : w cf - .some hxy with
     | zero =>
