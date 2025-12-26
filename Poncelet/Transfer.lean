@@ -482,6 +482,8 @@ theorem fabc_w_sub_singularAbc (hu : u ≠ 0) (hr : r ≠ 0) {x y wx wy : ℂ}
     (hwxyeq : w hu hr - .some hxy = .some hwxy)
     (hsxy : SingularAbc u r x y) :
     fabc hu hr (.some hwxy) = fabc hu hr (.some hxy) := by
+  have hadd : .some hxy + .some hwxy = w hu hr := by
+    grind
   obtain hx := x_not_at_w hu hr hxy hpw hpnw
   have : r ^ 2 * x - u ^ 2 ≠ 0 := by
     contrapose! hx
@@ -490,7 +492,6 @@ theorem fabc_w_sub_singularAbc (hu : u ≠ 0) (hr : r ≠ 0) {x y wx wy : ℂ}
   have : u ^ 2 - r ^ 2 * x ≠ 0 := by
     contrapose! this
     linear_combination -this
-
   by_cases hwsxy : SingularAbc u r wx wy
   · rw [w_sub hu hr hxy hx, Point.some.injEq] at hwxyeq
     obtain ⟨hwx, hwy⟩ := hwxyeq
@@ -501,18 +502,69 @@ theorem fabc_w_sub_singularAbc (hu : u ≠ 0) (hr : r ≠ 0) {x y wx wy : ℂ}
         (r * (u + r) ^ 2 * x - u * ((u + r) ^ 2 - 2)) * ((u ^ 2 - r ^ 2) ^ 2 - 4 * u ^ 2),
         8 * u ^ 2 * k u r * (u ^ 2 - r ^ 2)] _ by
       simpa [fabc, fabcRaw, hsxy, hwsxy]
-    rw [← hwx, ← hwy] at hwsxy
-    obtain hc := hsxy.c_factor_eq_zero u hr hxy
-    obtain hwc := hwsxy.c_factor_eq_zero u hr (nonsingular_w_sub hu hr hxy hx)
-    field_simp at hwc
+    obtain hlinear := hsxy.xy_linear hu hr hxy
+    obtain hwlinear := hwsxy.xy_linear hu hr hwxy
     congrm P2.mk ![_, ?_, _] _
-    simp [hr]
-
-    sorry
+    suffices (wx = x ∨ u + r = 0) ∨ (u ^ 2 - r ^ 2) ^ 2 - 4 * u ^ 2 = 0 by
+      simpa [hr]
+    by_cases hur : u + r = 0
+    · simp [hur]
+    by_cases hxwx : x = wx
+    · simp [hxwx]
+    have : x - wx ≠ 0 := by
+      simpa [sub_eq_zero] using hxwx
+    have hslope : -2 * r ^ 2 * (u + r) * (y - wy) = r * (u - r) * ((u + r) ^ 2 - 2) * (x - wx) := by
+      linear_combination hlinear - hwlinear
+    have hslope : (elliptic u r).slope x wx y wy =
+        -(u - r) * ((u + r) ^ 2 - 2) / (2 * r * (u + r)) := by
+      rw [WeierstrassCurve.Affine.slope_of_X_ne hxwx]
+      field_simp
+      rw [← mul_left_inj' hr]
+      linear_combination -hslope
+    rw [WeierstrassCurve.Affine.Point.add_of_X_ne hxwx] at hadd
+    rw [w, Point.some.injEq, addX, hslope] at hadd
+    obtain haddx := hadd.1
+    have haddx : ((r - u) * ((u + r) ^ 2 - 2) / (2 * r * (u + r))) ^ 2
+        - (1 - u ^ 2 - r ^ 2) / r ^ 2 - x - wx = u ^ 2 / r ^ 2 := by
+      simpa [elliptic] using haddx
+    rw [sub_sub _ x _] at haddx
+    have hxx : x + wx = (2 * u  * (u + r) ^ 2 - 4 * u) / ((u + r) ^ 2 * r) :=
+      SingularAbc.c_factor_add u hr hsxy hwsxy hxy hwxy hxwx hur
+    rw [hxx] at haddx
+    field_simp at haddx
+    have : (u + r) ^ 2 * ((u ^ 2 - r ^ 2) ^ 2 - 4 * u ^ 2) = 0 := by
+      linear_combination haddx
+    obtain h | h : u + r = 0 ∨ (u ^ 2 - r ^ 2) ^ 2 - 4 * u ^ 2 = 0 := by simpa using this
+    · simp [h]
+    · simp [h]
   have hk : k u r ≠ 0 := hsxy.k_ne_zero u hr hxy
   by_cases hur : u ^ 2 - r ^ 2 = 0
-  ·
-    sorry
+  · have hur : (u + r) * (u - r) = 0 := by linear_combination hur
+    obtain hur | hur : u + r = 0 ∨ u = r := by simpa [sub_eq_zero] using hur
+    · rw [w_sub hu hr hxy hx, Point.some.injEq] at hwxyeq
+      obtain ⟨hwx, hwy⟩ := hwxyeq
+      obtain hx0 := hsxy.x_eq_zero_of_casePos hu hr hxy hur
+      obtain hy0 := hsxy.y_eq_zero_of_casePos hu hr hxy hur
+      have hr : r = -u := by linear_combination hur
+      suffices P2.mk (fabcNormal u r wx wy) _ =
+        P2.mk ![2 * u * k u r * ((u ^ 2 - r ^ 2) ^ 2 + 4 * u ^ 2),
+          (r * (u + r) ^ 2 * x - u * ((u + r) ^ 2 - 2)) * ((u ^ 2 - r ^ 2) ^ 2 - 4 * u ^ 2),
+          8 * u ^ 2 * k u r * (u ^ 2 - r ^ 2)] _ by
+        simpa [fabc, fabcRaw, hsxy, hwsxy]
+      unfold fabcNormal
+      symm
+      rw [P2.mk_eq_mk']
+      simp_rw [Matrix.smul_vec3, smul_eq_mul]
+      use -2 * u * k u r
+      simp_rw [← hwx, ← hwy, hx0, hy0, hr]
+      congrm ![?_, ?_, ?_]
+      · field
+      · field_simp
+        rw [k_sq]
+        ring
+      · field
+    · exact fabc_w_sub_singularAbc_not_singularAbc_u_eq_r
+        hu hr hxy hwxy hpw hpnw hwxyeq hsxy hwsxy hur
   exact fabc_w_sub_singularAbc_not_singularAbc hu hr hxy hwxy hpw hpnw hwxyeq hsxy hwsxy hur
 
 

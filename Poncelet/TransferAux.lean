@@ -318,3 +318,58 @@ theorem fabc_w_sub_singularAbc_not_singularAbc (hu : u ≠ 0) (hr : r ≠ 0) {x 
     + 64*x*u^6*r^7 - 32*u^13 - 64*u^12*r - 256*x^2*u^9*r^2 + 256*x^2*u^8*r^3
     + 32*u^10*r^3 + 128*x^2*u^7*r^4 - 128*x^2*u^6*r^5 - 128*x*u^10*r) * hc
   · field_simp
+
+variable {u r} in
+theorem fabc_w_sub_singularAbc_not_singularAbc_u_eq_r (hu : u ≠ 0) (hr : r ≠ 0) {x y wx wy : ℂ}
+    (hxy : (elliptic u r).Nonsingular x y) (hwxy : (elliptic u r).Nonsingular wx wy)
+    (hpw : .some hxy ≠ w hu hr) (hpnw : .some hxy ≠ -w hu hr)
+    (hwxyeq : w hu hr - .some hxy = .some hwxy)
+    (hsxy : SingularAbc u r x y) (hwsxy : ¬ SingularAbc u r wx wy) (hur : u = r) :
+    fabc hu hr (.some hwxy) = fabc hu hr (.some hxy) := by
+  obtain hx := x_not_at_w hu hr hxy hpw hpnw
+  have hk : k u r ≠ 0 := hsxy.k_ne_zero u hr hxy
+  have : r ^ 2 * x - u ^ 2 ≠ 0 := by
+    contrapose! hx
+    field_simp
+    linear_combination hx
+  have : u ^ 2 - r ^ 2 * x ≠ 0 := by
+    contrapose! this
+    linear_combination -this
+  rw [w_sub hu hr hxy hx, Point.some.injEq] at hwxyeq
+  obtain ⟨hwx, hwy⟩ := hwxyeq
+  have hur2 : u + r ≠ 0 := by
+    rw [hur]
+    simpa using hr
+  have hy : y = (u - r) * (r * ((u + r) ^ 2 - 2) * x - u * (u + r) ^ 2) /
+      (-2 * r ^ 2 * (u + r)) := by
+    field_simp
+    linear_combination -hsxy.xy_linear hu hr hxy
+  have hy : y = 0 := by simpa [hur] using hy
+  have hdeno : (u ^ 2 - r ^ 2) ^ 2 + u ^ 2 * 4 ≠ 0 := by
+    simpa [hur] using hr
+  obtain hc := hsxy.c_factor_eq_zero u hr hxy
+  simp_rw [hur] at hc
+  suffices P2.mk (fabcNormal u r wx wy) _ =
+      P2.mk ![2 * u * k u r * ((u ^ 2 - r ^ 2) ^ 2 + 4 * u ^ 2),
+      (r * (u + r) ^ 2 * x - u * ((u + r) ^ 2 - 2)) * ((u ^ 2 - r ^ 2) ^ 2 - 4 * u ^ 2),
+      8 * u ^ 2 * k u r * (u ^ 2 - r ^ 2)] _ by
+    simpa [fabc, fabcRaw, hsxy, hwsxy]
+  rw [P2.mk_eq_mk']
+  use fabcNormal u r wx wy 0 / (2 * u * k u r * ((u ^ 2 - r ^ 2) ^ 2 + 4 * u ^ 2))
+  simp_rw [Matrix.smul_vec3, smul_eq_mul]
+  rw [← hwx, ← hwy]
+  unfold fabcNormal
+  simp_rw [hy]
+  simp only [Matrix.cons_val]
+  congrm ![?_, ?_, ?_]
+  · field_simp
+  · field_simp
+    rw [k_sq]
+    simp_rw [hur]
+    linear_combination 16 * r ^ 8 *
+      (x^5*r^4 - 11*x^4*r^4 + 18*x^3*r^4 + 4*x^4*r^2 -
+      6*x^2*r^4 - 18*x^3*r^2 - 3*x*r^4 + 4*x^2*r^2 + r^4 + 4*x^3 + 2*x*r^2) * hc
+  · field_simp
+    simp_rw [hur]
+    linear_combination 16 * r ^ 8 *
+      (x^4*r^2 - 4*x^3*r^2 + 6*x^2*r^2 + 2*x^3 - 4*x*r^2 + r^2 + 2*x) * hc

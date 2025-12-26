@@ -190,15 +190,62 @@ theorem SingularAbc.y_eq' {x y : ℂ} (h : SingularAbc u r x y) :
   linear_combination h.b_eq_zero
 
 variable {r} in
+theorem SingularAbc.rx_add_u_ne_zero (hr : r ≠ 0) {x y : ℂ} (h : SingularAbc u r x y)
+    (hxy : ((elliptic u r)).Nonsingular x y) : r * x + u ≠ 0 := by
+  obtain ha := h.a_eq_zero
+  rw [nonsingular_elliptic u hr] at hxy
+  obtain ⟨heq, hs⟩ := hxy
+  grind
+
+variable {r} in
 theorem SingularAbc.c_factor_eq_zero (hr : r ≠ 0) {x y : ℂ} (h : SingularAbc u r x y)
     (hxy : ((elliptic u r)).Nonsingular x y) :
     (r * x - u) ^ 2 * (u + r) ^ 2 + 4 * u * r * x = 0 := by
   suffices r * x + u ≠ 0 by
     simpa [fabcNormal, this] using congr($h 2)
-  obtain ha := h.a_eq_zero
-  rw [nonsingular_elliptic u hr] at hxy
-  obtain ⟨heq, hs⟩ := hxy
-  grind
+  exact h.rx_add_u_ne_zero u hr hxy
+
+variable {r} in
+theorem SingularAbc.c_factor_add (hr : r ≠ 0) {x1 y1 x2 y2 : ℂ}
+    (h1 : SingularAbc u r x1 y1) (h2 : SingularAbc u r x2 y2)
+    (hxy1 : ((elliptic u r)).Nonsingular x1 y1) (hxy2 : ((elliptic u r)).Nonsingular x2 y2)
+    (h : x1 ≠ x2) (hur : u + r ≠ 0) :
+    x1 + x2 = (2 * u * (u + r) ^ 2 - 4 * u) / ((u + r) ^ 2 * r) := by
+  let p := Polynomial.C ((u + r) ^ 2 * r ^ 2) * Polynomial.X ^ 2
+    + Polynomial.C (4 * u * r - 2 * u * r * (u + r) ^ 2) * Polynomial.X
+    + Polynomial.C ((u + r) ^ 2 * u ^ 2)
+  have hc2 : (u + r) ^ 2 * r ^ 2 ≠ 0 := by simp [hr, hur]
+  have hdeg : p.natDegree = 2 := by
+    unfold p
+    compute_degree <;> grind
+  have hp1 : Polynomial.eval x1 p = 0 := by
+    simp [p]
+    linear_combination h1.c_factor_eq_zero u hr hxy1
+  have hp2 : Polynomial.eval x2 p = 0 := by
+    simp [p]
+    linear_combination h2.c_factor_eq_zero u hr hxy2
+  have hp0 : p ≠ 0 := by
+    contrapose! hdeg
+    simp [hdeg]
+  have hm1 : x1 ∈ p.roots := by
+    simp [hp0, hp1]
+  obtain ⟨t, ht⟩ := Multiset.exists_cons_of_mem hm1
+  have hm2 : x2 ∈ p.roots := by
+    simp [hp0, hp2]
+  have hm2' : x2 ∈ t := by
+    rw [ht] at hm2
+    simpa [h.symm] using hm2
+  obtain ⟨u, hu⟩ := Multiset.exists_cons_of_mem hm2'
+  have hroots : p.roots = {x1, x2} := by
+    symm
+    rw [ht, hu]
+    suffices u = 0 by simpa
+    obtain hcard := Polynomial.card_roots' p
+    simpa [hdeg, ht, hu] using hcard
+  obtain hxx := Polynomial.eq_neg_mul_add_of_roots_quadratic_eq_pair hroots
+  field_simp
+  rw [← mul_left_inj' hr]
+  linear_combination hxx
 
 variable {r} in
 theorem SingularAbc.y_eq_reduced_aux (hr : r ≠ 0) {x y : ℂ} (h : SingularAbc u r x y)
