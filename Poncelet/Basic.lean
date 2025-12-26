@@ -1,7 +1,5 @@
 import Mathlib
 
-variable (u v r : ℂ)
-
 def P2.equiv : Setoid ({p : Fin 3 → ℂ // p ≠ 0}) where
   r p q := ∃ (l : ℂ), l ≠ 0 ∧ p = l • q.val
   iseqv := {
@@ -83,8 +81,18 @@ theorem ind {motive : P2 → Prop} (mk : ∀ p, (hp : p ≠ 0) → motive (mk p 
 
 end P2
 
+structure Config where
+  u : ℂ
+  r : ℂ
+  hu : u ≠ 0
+  hr : r ≠ 0
+  k : ℂ
+  k_sq : k ^ 2 = (u + r) ^ 2 - 1
+
+variable (cf : Config)
+
 def OuterCircle (p : P2) : Prop :=
-  p.lift (fun p hp ↦ (p 0 - u * p 2) ^ 2 + p 1 ^ 2 = r ^ 2 * p 2 ^ 2) fun p q hp hq h ↦ (by
+  p.lift (fun p hp ↦ (p 0 - cf.u * p 2) ^ 2 + p 1 ^ 2 = cf.r ^ 2 * p 2 ^ 2) fun p q hp hq h ↦ (by
     obtain ⟨l, h0, rfl⟩ := h
     simp_rw [Pi.smul_apply, smul_eq_mul]
     conv_rhs =>
@@ -110,12 +118,12 @@ def Incidence (p q : P2) : Prop :=
     congrm ?_ = ?_ <;> ring
   ) p q
 
-def dom : Set (P2 × P2) := {pq | OuterCircle u r pq.1 ∧ InnerCircle pq.2 ∧ Incidence pq.1 pq.2}
+def dom : Set (P2 × P2) := {pq | OuterCircle cf pq.1 ∧ InnerCircle pq.2 ∧ Incidence pq.1 pq.2}
 
 @[simp]
 theorem mem_dom {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq : q ≠ 0) :
-    ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom u r ↔ (
-    (p 0 - u * p 2) ^ 2 + p 1 ^ 2 = r ^ 2 * p 2 ^ 2 ∧
+    ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf ↔ (
+    (p 0 - cf.u * p 2) ^ 2 + p 1 ^ 2 = cf.r ^ 2 * p 2 ^ 2 ∧
     q 0 ^ 2 + q 1 ^ 2 = q 2 ^ 2 ∧
     p 0 * q 0 + p 1 * q 1 = p 2 * q 2) := by rfl
 
@@ -123,18 +131,18 @@ noncomputable
 def rPoint' (p q : Fin 3 → ℂ) : Fin 3 → ℂ :=
   if q 2 = 0 then
     if p 2 = 0 then
-      ![-(r ^ 2 - u ^ 2) * q 1, (r ^ 2 - u ^ 2) * q 0, 2 * u * q 1]
+      ![-(cf.r ^ 2 - cf.u ^ 2) * q 1, (cf.r ^ 2 - cf.u ^ 2) * q 0, 2 * cf.u * q 1]
     else
       ![q 1, -q 0, 0]
   else
-    ![2 * q 0 * p 2 * q 2 + 2 * u * q 1 ^ 2 * p 2 - p 0 * q 2 ^ 2,
-      2 * q 1 * p 2 * q 2 - 2 * u * q 0 * q 1 * p 2  - p 1 * q 2 ^ 2,
+    ![2 * q 0 * p 2 * q 2 + 2 * cf.u * q 1 ^ 2 * p 2 - p 0 * q 2 ^ 2,
+      2 * q 1 * p 2 * q 2 - 2 * cf.u * q 0 * q 1 * p 2  - p 1 * q 2 ^ 2,
       p 2 * q 2 ^ 2]
 
-theorem rPoint'_rPoint' (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq : q ≠ 0)
-    (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom u r) :
-    ∃ l : ℂ, rPoint' u r (rPoint' u r p q) q = l • p := by
-  obtain ⟨ho, hi, hpq⟩ := mem_dom u r hp hq |>.mp h
+theorem rPoint'_rPoint' {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq : q ≠ 0)
+    (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) :
+    ∃ l : ℂ, rPoint' cf (rPoint' cf p q) q = l • p := by
+  obtain ⟨ho, hi, hpq⟩ := mem_dom cf hp hq |>.mp h
   unfold rPoint'
   by_cases! hq0 : q 2 = 0
   · by_cases hp0 : p 2 = 0
@@ -153,17 +161,17 @@ theorem rPoint'_rPoint' (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq 
       use q 1 / p 0
       ext n
       fin_cases n
-      · suffices q 1 = q 1 / p 0 * p 0 by simpa [hp0, hq0, hu, hq2]
+      · suffices q 1 = q 1 / p 0 * p 0 by simpa [hp0, hq0, cf.hu, hq2]
         grind
-      · suffices -q 0 = q 1 / p 0 * p 1 by simpa [hp0, hq0, hu, hq2]
+      · suffices -q 0 = q 1 / p 0 * p 1 by simpa [hp0, hq0, cf.hu, hq2]
         grind
-      · simp [hp0, hq0, hu, hq2]
-    · use 2 * u * q 1 / p 2
+      · simp [hp0, hq0, cf.hu, hq2]
+    · use 2 * cf.u * q 1 / p 2
       ext n
       fin_cases n
-      · suffices (u ^ 2 - r ^ 2) * q 1 = 2 * u * q 1 / p 2 * p 0 by simpa [hp0, hq0]
+      · suffices (cf.u ^ 2 - cf.r ^ 2) * q 1 = 2 * cf.u * q 1 / p 2 * p 0 by simpa [hp0, hq0]
         grind
-      · suffices (r ^ 2 - u ^ 2) * q 0 = 2 * u * q 1 / p 2 * p 1 by simpa [hp0, hq0]
+      · suffices (cf.r ^ 2 - cf.u ^ 2) * q 0 = 2 * cf.u * q 1 / p 2 * p 1 by simpa [hp0, hq0]
         grind
       · simp [hp0, hq0]
   use q 2 ^ 4
@@ -173,14 +181,14 @@ theorem rPoint'_rPoint' (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq 
   simp [hq0]
   ring
 
-theorem rPoint'_ne_zero (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq : q ≠ 0)
-    (hpq : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom u r) : rPoint' u r p q ≠ 0 := by
+theorem rPoint'_ne_zero {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq : q ≠ 0)
+    (hpq : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) : rPoint' cf p q ≠ 0 := by
   unfold rPoint'
   by_contra! h0
   by_cases! hq0 : q 2 = 0
   · by_cases! hp0 : p 2 = 0
-    · obtain ⟨_, _, hq2⟩ : _ ∧ _ ∧ q 1 = 0 := by simpa [hu, hp0, hq0] using h0
-      have hq1 : q 0 = 0 := by simpa [hq2, hq0] using (mem_dom u r hp hq |>.mp hpq).2.1
+    · obtain ⟨_, _, hq2⟩ : _ ∧ _ ∧ q 1 = 0 := by simpa [cf.hu, hp0, hq0] using h0
+      have hq1 : q 0 = 0 := by simpa [hq2, hq0] using (mem_dom cf hp hq |>.mp hpq).2.1
       clear hpq
       contrapose! hq
       ext n; fin_cases n <;> assumption
@@ -223,7 +231,7 @@ theorem rPoint'_ne_zero (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq 
   · sorry-/
 
 noncomputable
-def rPoint (pq : P2 × P2) : P2 × P2 := ⟨P2.lift₂ (fun p q hp hq ↦ P2.mk' (rPoint' u r p q)) (by
+def rPoint (pq : P2 × P2) : P2 × P2 := ⟨P2.lift₂ (fun p q hp hq ↦ P2.mk' (rPoint' cf p q)) (by
   intro p q p' q' hp hq hp' hq' ⟨l, hl0, hl⟩ ⟨m, hm0, hm⟩
   unfold rPoint'
   have hp0 : p' 2 = 0 ↔ p 2 = 0 := by aesop
@@ -250,18 +258,18 @@ def rPoint (pq : P2 × P2) : P2 × P2 := ⟨P2.lift₂ (fun p q hp hq ↦ P2.mk'
   ring
   ) pq.1 pq.2, pq.2⟩
 
-theorem rPoint_mk (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq : q ≠ 0)
-    (hpq : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom u r) :
-    rPoint u r ⟨P2.mk p hp, P2.mk q hq⟩ =
-    ⟨P2.mk (rPoint' u r p q) (rPoint'_ne_zero u r hu hp hq hpq), P2.mk q hq⟩ := by
-  simp [rPoint, rPoint'_ne_zero u r hu hp hq hpq]
+theorem rPoint_mk {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq : q ≠ 0)
+    (hpq : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) :
+    rPoint cf ⟨P2.mk p hp, P2.mk q hq⟩ =
+    ⟨P2.mk (rPoint' cf p q) (rPoint'_ne_zero cf hp hq hpq), P2.mk q hq⟩ := by
+  simp [rPoint, rPoint'_ne_zero cf hp hq hpq]
 
-theorem mapsTo_rPoint (hu : u ≠ 0) : Set.MapsTo (rPoint u r) (dom u r) (dom u r) := by
+theorem mapsTo_rPoint : Set.MapsTo (rPoint cf) (dom cf) (dom cf) := by
   intro ⟨p, q⟩ hpq
   induction p with | mk p hp
   induction q with | mk q hq
-  rw [rPoint_mk u r hu hp hq hpq]
-  obtain ⟨ho, hi, hpq⟩ := mem_dom u r hp hq |>.mp hpq
+  rw [rPoint_mk cf hp hq hpq]
+  obtain ⟨ho, hi, hpq⟩ := mem_dom cf hp hq |>.mp hpq
   rw [mem_dom]
   simp_rw [rPoint']
   split_ifs
@@ -269,28 +277,28 @@ theorem mapsTo_rPoint (hu : u ≠ 0) : Set.MapsTo (rPoint u r) (dom u r) (dom u 
   simp only [Matrix.cons_val_one, Matrix.cons_val_zero, Matrix.cons_val]
   grind
 
-theorem rPoint_rPoint (hu : u ≠ 0) {pq : P2 × P2} (hpq : pq ∈ dom u r) :
-    rPoint u r (rPoint u r pq) = pq := by
+theorem rPoint_rPoint {pq : P2 × P2} (hpq : pq ∈ dom cf) :
+    rPoint cf (rPoint cf pq) = pq := by
   obtain ⟨p, q⟩ := pq
   induction p with | mk p hp
   induction q with | mk q hq
-  obtain hmem := mapsTo_rPoint u r hu hpq
-  rw [rPoint_mk u r hu hp hq hpq] at ⊢ hmem
-  rw [rPoint_mk u r hu _ _ hmem]
+  obtain hmem := mapsTo_rPoint cf hpq
+  rw [rPoint_mk cf hp hq hpq] at ⊢ hmem
+  rw [rPoint_mk cf _ _ hmem]
   refine Prod.ext_iff.mpr ⟨?_, rfl⟩
   rw [P2.mk_eq_mk']
-  exact rPoint'_rPoint' u r hu hp hq hpq
+  exact rPoint'_rPoint' cf hp hq hpq
 
-theorem rPoint_bijOn (hu : u ≠ 0) : Set.BijOn (rPoint u r) (dom u r) (dom u r) := by
-  refine ⟨mapsTo_rPoint u r hu, ?_, ?_⟩
+theorem rPoint_bijOn : Set.BijOn (rPoint cf) (dom cf) (dom cf) := by
+  refine ⟨mapsTo_rPoint cf, ?_, ?_⟩
   · intro p hp q hq h
-    simpa [rPoint_rPoint, hu, hp, hq] using congr(rPoint u r $h)
+    simpa [rPoint_rPoint, cf.hu, hp, hq] using congr(rPoint cf $h)
   · intro p hp
-    exact ⟨rPoint u r p, mapsTo_rPoint u r hu hp, rPoint_rPoint u r hu hp⟩
+    exact ⟨rPoint cf p, mapsTo_rPoint cf hp, rPoint_rPoint cf hp⟩
 
 noncomputable
 def rChord' (p q : Fin 3 → ℂ) : Fin 3 → ℂ :=
-  if 2 * u * p 0 + r ^ 2 * p 2 - u ^ 2 * p 2 = 0 then -- all sorts of edge cases
+  if 2 * cf.u * p 0 + cf.r ^ 2 * p 2 - cf.u ^ 2 * p 2 = 0 then -- all sorts of edge cases
     if p 0 = 0 then
       ![q 0, - q 1, q 2]
     else if q 2 = 0 then
@@ -298,15 +306,16 @@ def rChord' (p q : Fin 3 → ℂ) : Fin 3 → ℂ :=
     else
       ![p 1, -p 0, 0]
   else -- the only part I had on my notebook
-    ![2 * p 0 * q 2 - (2 * u * p 0 + r ^ 2 * p 2 - u ^ 2 * p 2) * q 0,
-      2 * p 1 * q 2 - (2 * u * p 0 + r ^ 2 * p 2 - u ^ 2 * p 2) * q 1,
-      (2 * u * p 0 + r ^ 2 * p 2 - u ^ 2 * p 2) * q 2]
+    ![2 * p 0 * q 2 - (2 * cf.u * p 0 + cf.r ^ 2 * p 2 - cf.u ^ 2 * p 2) * q 0,
+      2 * p 1 * q 2 - (2 * cf.u * p 0 + cf.r ^ 2 * p 2 - cf.u ^ 2 * p 2) * q 1,
+      (2 * cf.u * p 0 + cf.r ^ 2 * p 2 - cf.u ^ 2 * p 2) * q 2]
 
-theorem rChord'_ne_zero (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq : q ≠ 0)
-    (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom u r) : rChord' u r p q ≠ 0 := by
-  obtain ⟨ho, hi, hpq⟩ := mem_dom u r hp hq |>.mp h
+theorem rChord'_ne_zero {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq : q ≠ 0)
+    (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) : rChord' cf p q ≠ 0 := by
+  obtain _ := cf.hu
+  obtain ⟨ho, hi, hpq⟩ := mem_dom cf hp hq |>.mp h
   unfold rChord'
-  by_cases! hxy : 2 * u * p 0 + r ^ 2 * p 2 - u ^ 2 * p 2 = 0
+  by_cases! hxy : 2 * cf.u * p 0 + cf.r ^ 2 * p 2 - cf.u ^ 2 * p 2 = 0
   · have h0' : p 0 ^ 2 + p 1 ^ 2 = 0 := by linear_combination ho + p 2 * hxy
     simp_rw [hxy]
     by_cases! hp1 : p 0 = 0
@@ -330,12 +339,13 @@ theorem rChord'_ne_zero (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq 
     ext n; fin_cases n <;> assumption
   simp [hxy, hq0]
 
-theorem rChord'_rChord' (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq : q ≠ 0)
-    (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom u r) :
-    ∃ l : ℂ, rChord' u r p (rChord' u r p q) = l • q := by
-  obtain ⟨ho, hi, hpq⟩ := mem_dom u r hp hq |>.mp h
+theorem rChord'_rChord' {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq : q ≠ 0)
+    (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) :
+    ∃ l : ℂ, rChord' cf p (rChord' cf p q) = l • q := by
+  obtain _ := cf.hu
+  obtain ⟨ho, hi, hpq⟩ := mem_dom cf hp hq |>.mp h
   unfold rChord'
-  by_cases h0 : 2 * u * p 0 + r ^ 2 * p 2 - u ^ 2 * p 2 = 0
+  by_cases h0 : 2 * cf.u * p 0 + cf.r ^ 2 * p 2 - cf.u ^ 2 * p 2 = 0
   · have h0' : p 0 ^ 2 + p 1 ^ 2 = 0 := by linear_combination ho + p 2 * h0
     simp_rw [h0]
     by_cases! hp1 : p 0 = 0
@@ -372,7 +382,7 @@ theorem rChord'_rChord' (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq 
     · simp [hp1, hq0]
       grind
     · simp [hp1, hq0]
-  · use (2 * u * p 0 + (r ^ 2) * p 2 - u ^ 2 * p 2) ^ 2
+  · use (2 * cf.u * p 0 + (cf.r ^ 2) * p 2 - cf.u ^ 2 * p 2) ^ 2
     ext n
     fin_cases n
     all_goals
@@ -394,11 +404,11 @@ theorem rChord'_rChord' (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq 
 
 noncomputable
 def rChord (pq : P2 × P2) : P2 × P2 :=
-  ⟨pq.1, P2.lift₂ (fun p q hp hq ↦ P2.mk' (rChord' u r p q)) (by
+  ⟨pq.1, P2.lift₂ (fun p q hp hq ↦ P2.mk' (rChord' cf p q)) (by
     intro p q p' q' hp hq hp' hq' ⟨l, hl0, hl⟩ ⟨m, hm0, hm⟩
     unfold rChord'
-    have hxy : 2 * u * p' 0 + r ^ 2 * p' 2 - u ^ 2 * p' 2 = 0 ↔
-        2 * u * p 0 + r ^ 2 * p 2 - u ^ 2 * p 2 = 0 := by
+    have hxy : 2 * cf.u * p' 0 + cf.r ^ 2 * p' 2 - cf.u ^ 2 * p' 2 = 0 ↔
+        2 * cf.u * p 0 + cf.r ^ 2 * p 2 - cf.u ^ 2 * p 2 = 0 := by
       rw [hl]
       conv_lhs =>
         rw [← mul_left_inj' hl0]
@@ -437,18 +447,18 @@ def rChord (pq : P2 × P2) : P2 × P2 :=
       ring
   ) pq.1 pq.2⟩
 
-theorem rChord_mk (hu : u ≠ 0) {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq : q ≠ 0)
-    (hpq : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom u r) :
-    rChord u r ⟨P2.mk p hp, P2.mk q hq⟩ =
-    ⟨P2.mk p hp, P2.mk (rChord' u r p q) (rChord'_ne_zero u r hu hp hq hpq)⟩ := by
-  simp [rChord, rChord'_ne_zero u r hu hp hq hpq]
+theorem rChord_mk {p q : Fin 3 → ℂ} (hp : p ≠ 0) (hq : q ≠ 0)
+    (hpq : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) :
+    rChord cf ⟨P2.mk p hp, P2.mk q hq⟩ =
+    ⟨P2.mk p hp, P2.mk (rChord' cf p q) (rChord'_ne_zero cf hp hq hpq)⟩ := by
+  simp [rChord, rChord'_ne_zero cf hp hq hpq]
 
-theorem mapsTo_rChord (hu : u ≠ 0) : Set.MapsTo (rChord u r) (dom u r) (dom u r) := by
+theorem mapsTo_rChord : Set.MapsTo (rChord cf) (dom cf) (dom cf) := by
   intro ⟨p, q⟩ hpq
   induction p with | mk p hp
   induction q with | mk q hq
-  rw [rChord_mk u r hu hp hq hpq]
-  obtain ⟨ho, hi, hpq⟩ := mem_dom u r hp hq |>.mp hpq
+  rw [rChord_mk cf hp hq hpq]
+  obtain ⟨ho, hi, hpq⟩ := mem_dom cf hp hq |>.mp hpq
   rw [mem_dom]
   simp_rw [rChord']
   split_ifs
@@ -461,21 +471,21 @@ theorem mapsTo_rChord (hu : u ≠ 0) : Set.MapsTo (rChord u r) (dom u r) (dom u 
   · simp
     grind
 
-theorem rChord_rChord (hu : u ≠ 0) {pq : P2 × P2} (hpq : pq ∈ dom u r) :
-    rChord u r (rChord u r pq) = pq := by
+theorem rChord_rChord {pq : P2 × P2} (hpq : pq ∈ dom cf) :
+    rChord cf (rChord cf pq) = pq := by
   obtain ⟨p, q⟩ := pq
   induction p with | mk p hp
   induction q with | mk q hq
-  obtain hmem := mapsTo_rChord u r hu hpq
-  rw [rChord_mk u r hu hp hq hpq] at ⊢ hmem
-  rw [rChord_mk u r hu _ _ hmem]
+  obtain hmem := mapsTo_rChord cf hpq
+  rw [rChord_mk cf hp hq hpq] at ⊢ hmem
+  rw [rChord_mk cf _ _ hmem]
   refine Prod.ext_iff.mpr ⟨rfl, ?_⟩
   rw [P2.mk_eq_mk']
-  exact rChord'_rChord' u r hu hp hq hpq
+  exact rChord'_rChord' cf hp hq hpq
 
-theorem rChord_bijOn (hu : u ≠ 0) : Set.BijOn (rChord u r) (dom u r) (dom u r) := by
-  refine ⟨mapsTo_rChord u r hu, ?_, ?_⟩
+theorem rChord_bijOn : Set.BijOn (rChord cf) (dom cf) (dom cf) := by
+  refine ⟨mapsTo_rChord cf, ?_, ?_⟩
   · intro p hp q hq h
-    simpa [rChord_rChord, hu, hp, hq] using congr(rChord u r $h)
+    simpa [rChord_rChord, cf.hu, hp, hq] using congr(rChord cf $h)
   · intro p hp
-    exact ⟨rChord u r p, mapsTo_rChord u r hu hp, rChord_rChord u r hu hp⟩
+    exact ⟨rChord cf p, mapsTo_rChord cf hp, rChord_rChord cf hp⟩
