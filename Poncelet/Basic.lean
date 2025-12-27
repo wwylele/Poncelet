@@ -49,6 +49,14 @@ theorem mk'_eq_mk' [DecidableEq K] {p q : Fin 3 → K} {l : K} (hl : l ≠ 0) (h
   · obtain hq := (smul_ne_zero_iff.mp (h ▸ hp)).2
     simpa [mk', hp, hq, mk_eq_mk'] using ⟨l, h⟩
 
+theorem mk_eq_mk'_of_l [DecidableEq K] {p q : Fin 3 → K} (hp : p ≠ 0) (l : K) (h : p = l • q) :
+    mk p hp = mk' q := by
+  have hl : l ≠ 0 := by
+    contrapose! hp with hl
+    simp [h, hl]
+  rw [← mk'_eq]
+  apply mk'_eq_mk' hl h
+
 theorem mk'_smul [DecidableEq K] {s : K} (h : s ≠ 0) (p : Fin 3 → K) :
     mk' (s • p) = mk' p := mk'_eq_mk' h rfl
 

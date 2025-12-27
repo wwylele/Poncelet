@@ -832,7 +832,6 @@ theorem f_two_w_eq_rPoint : f cf (w cf + w cf) = rPoint cf (f cf (-w cf)) := by
   rw [cf.k_sq]
   ring
 
-
 theorem f_w_sub (p : (elliptic cf).Point) : f cf (w cf - p) = rPoint cf (f cf p) := by
   obtain _ := cf.hr
   obtain _ := cf.hu
@@ -848,7 +847,6 @@ theorem f_w_sub (p : (elliptic cf).Point) : f cf (w cf - p) = rPoint cf (f cf p)
     simpa using (f_w_eq_rPoint cf).symm
   by_cases hpnw : .some hxy = -w cf
   · simpa [hpnw] using f_two_w_eq_rPoint cf
-
   obtain hx := x_not_at_w cf hxy hpw hpnw
   have : cf.r ^ 2 * x - cf.u ^ 2 ≠ 0 := by
     contrapose! hx
@@ -857,15 +855,14 @@ theorem f_w_sub (p : (elliptic cf).Point) : f cf (w cf - p) = rPoint cf (f cf p)
   have : cf.u ^ 2 - cf.r ^ 2 * x ≠ 0 := by
     contrapose! this
     linear_combination -this
-
-  suffices fxyz cf (w cf - Point.some hxy) =
-      P2.lift₂ (fun p q hp hq ↦ P2.mk' (rPoint' cf p q)) _
-      (fxyz cf (Point.some hxy)) (fabc cf (Point.some hxy)) by
-    simpa [f, rPoint, fabc_w_sub]
-  rw [w_sub cf hxy hx]
   by_cases hsxy : SingularAbc cf x y
   · by_cases hur : cf.u ^ 2 - cf.r ^ 2 = 0
-    · have hp2 : fxyzRaw cf (Point.some hxy) 2 ≠ 0 := by
+    · suffices fxyz cf (w cf - Point.some hxy) =
+        P2.lift₂ (fun p q hp hq ↦ P2.mk' (rPoint' cf p q)) _
+        (fxyz cf (Point.some hxy)) (fabc cf (Point.some hxy)) by
+        simpa [f, rPoint, fabc_w_sub]
+      rw [w_sub cf hxy hx]
+      have hp2 : fxyzRaw cf (Point.some hxy) 2 ≠ 0 := by
         simpa [fxyzRaw] using hsxy.rx_add_u_ne_zero cf hxy
       suffices P2.mk (fxyzRaw cf (Point.some _)) _ =
           P2.mk' ![-((cf.r * (cf.u + cf.r) ^ 2 * x - cf.u * ((cf.u + cf.r) ^ 2 - 2))
@@ -920,9 +917,7 @@ theorem f_w_sub (p : (elliptic cf).Point) : f cf (w cf - p) = rPoint cf (f cf p)
         · field
         · field_simp
           linear_combination 16 * cf.r ^ 2 * congr($hx ^ 2)
-    have hk : cf.k ≠ 0 := hsxy.k_ne_zero cf hxy
-    simp [fabc, fabcRaw, hsxy, rPoint', fxyz, hur, cf.hu, hk, fxyzRaw]
-    sorry
+    exact f_w_sub_singularAbc cf hxy hsxy hpw hpnw hur (fabc_w_sub cf _)
   --by_cases hsxy : SingularAbc cf x y
   --· sorry
   sorry
