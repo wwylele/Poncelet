@@ -780,3 +780,96 @@ theorem f_w_sub_not_singularAbc_p2 {x y : cf.K} (hxy : (elliptic cf).Nonsingular
       - 16*x^2*cf.u^4*cf.r^4 - 28*x^2*cf.u^3*cf.r^5 + 2*x*cf.u^7*cf.r
       + 10*x*cf.u^6*cf.r^2 + 16*x^3*cf.u^3*cf.r^3 + 6*x*cf.u^5*cf.r^3
       + 8*x^3*cf.u^2*cf.r^4 - 8*x^3*cf.u*cf.r^5 + 2*cf.u^7*cf.r + 8*x^2*cf.u^3*cf.r^3)
+
+theorem f_w_sub_normal {x y : cf.K} (hxy : (elliptic cf).Nonsingular x y)
+    (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
+    (hsxy : ¬ SingularAbc cf x y) (hp2 : fabcNormal cf x y 2 ≠ 0)
+    (habc : fabc cf (w cf - .some hxy) = fabc cf (.some hxy)) :
+    f cf (w cf - (.some hxy)) = rPoint cf (f cf (.some hxy)) := by
+  obtain _ := cf.hr
+  obtain _ := cf.hu
+  obtain hx := x_not_at_w cf hxy hpw hpnw
+  have : cf.r ^ 2 * x - cf.u ^ 2 ≠ 0 := by
+    contrapose! hx
+    field_simp
+    linear_combination hx
+  have : cf.u ^ 2 - cf.r ^ 2 * x ≠ 0 := by
+    contrapose! this
+    linear_combination -this
+  suffices fxyz cf (w cf - Point.some hxy) =
+      P2.lift₂ (fun p q hp hq ↦ P2.mk' (rPoint' cf p q)) _
+      (fxyz cf (Point.some hxy)) (fabc cf (Point.some hxy)) by
+    simpa [f, rPoint, habc]
+  simp only [fxyz, ne_eq, rPoint', Fin.isValue, neg_sub, fabc, fabcRaw, hsxy, ↓reduceIte,
+    P2.lift₂_mk, hp2]
+  rw [w_sub cf hxy hx]
+  have : cf.r * x + cf.u ≠ 0 ∧
+      (cf.r * x - cf.u) ^ 2 * (cf.u + cf.r) ^ 2 + 4 * cf.u * cf.r * x ≠ 0 := by
+    simpa [fabcNormal] using hp2
+  obtain ⟨hrxu, hrxu2⟩ := this
+  simp only [fxyzRaw, neg_mul, fabcNormal, Fin.isValue, Matrix.cons_val_zero, Matrix.cons_val,
+    Matrix.cons_val_one, even_two, Even.neg_pow, mul_neg, sub_neg_eq_add]
+  rw [nonsingular_elliptic cf] at hxy
+  obtain ⟨heq, hs⟩ := hxy
+  refine P2.mk'_eq_mk'_of_third _ ?_ ?_ ?_
+  · simp [hrxu, hrxu2]
+  · simp only [Fin.isValue, Matrix.cons_val_zero, Matrix.cons_val]
+    field_simp
+    rw [cf.k_sq]
+    linear_combination 8 * cf.u * (cf.u + cf.r - 1) * (cf.u + cf.r + 1) *
+        cf.r^2 * (x*cf.r + cf.u)^2 * heq *
+        (-x^4*cf.u^3*cf.r^5 - x^4*cf.u^2*cf.r^6 + x^4*cf.u*cf.r^7 + x^4*cf.r^8
+        + x^3*cf.u^5*cf.r^3 + 2*x^3*cf.u^4*cf.r^4 - 2*x^3*cf.u^2*cf.r^6
+        - x^3*cf.u*cf.r^7 - x^2*cf.u^6*cf.r^2 - 2*x^2*y*cf.u^3*cf.r^4
+        + 2*x^2*cf.u^4*cf.r^4 - 4*x^2*y*cf.u^2*cf.r^5 - 2*x^2*y*cf.u*cf.r^6
+        - x^2*cf.u^2*cf.r^6 - x*cf.u^7*cf.r - 2*x*cf.u^6*cf.r^2
+        - 2*x^3*cf.u^3*cf.r^3 + 4*x*y*cf.u^4*cf.r^3 - 4*x^3*cf.u^2*cf.r^4
+        + 8*x*y*cf.u^3*cf.r^4 + 2*x*cf.u^4*cf.r^4 + 2*x^3*cf.u*cf.r^5
+        + 4*x*y*cf.u^2*cf.r^5 + x*cf.u^3*cf.r^5 + cf.u^8 + cf.u^7*cf.r
+        + 4*x^2*cf.u^4*cf.r^2 - 2*y*cf.u^5*cf.r^2 - cf.u^6*cf.r^2
+        - 4*y*cf.u^4*cf.r^3 - cf.u^5*cf.r^3 + 4*x^2*cf.u^2*cf.r^4
+        - 4*y^2*cf.u^2*cf.r^4 - 2*y*cf.u^3*cf.r^4 + 2*x*cf.u^5*cf.r
+        - 4*x*cf.u^4*cf.r^2 - 8*x*y*cf.u^2*cf.r^3 - 2*x*cf.u^3*cf.r^3
+        - 4*x^2*cf.u^2*cf.r^2)
+  · simp only [Fin.isValue, Matrix.cons_val_one, Matrix.cons_val_zero, Matrix.cons_val, neg_mul]
+    field_simp
+    linear_combination 4 * cf.k * cf.u * cf.r^2 * (x*cf.r + cf.u) * heq *
+        (x^5*cf.u^5*cf.r^6 + 4*x^5*cf.u^4*cf.r^7 + 6*x^5*cf.u^3*cf.r^8
+        + 4*x^5*cf.u^2*cf.r^9 + x^5*cf.u*cf.r^10 - x^4*cf.u^7*cf.r^4
+        - 7*x^4*cf.u^6*cf.r^5 - 19*x^4*cf.u^5*cf.r^6 - 26*x^4*cf.u^4*cf.r^7
+        - 19*x^4*cf.u^3*cf.r^8 - 7*x^4*cf.u^2*cf.r^9 - x^4*cf.u*cf.r^10
+        + 3*x^3*cf.u^8*cf.r^3 + 16*x^3*cf.u^7*cf.r^4 + x^3*y*cf.u^5*cf.r^5
+        + 37*x^3*cf.u^6*cf.r^5 - x^5*cf.u^3*cf.r^6 + 6*x^3*y*cf.u^4*cf.r^6
+        + 48*x^3*cf.u^5*cf.r^6 - x^5*cf.u^2*cf.r^7 + 12*x^3*y*cf.u^3*cf.r^7
+        + 37*x^3*cf.u^4*cf.r^7 + x^5*cf.u*cf.r^8 + 10*x^3*y*cf.u^2*cf.r^8
+        + 16*x^3*cf.u^3*cf.r^8 + x^5*cf.r^9 + 3*x^3*y*cf.u*cf.r^9
+        + 3*x^3*cf.u^2*cf.r^9 - 3*x^2*cf.u^9*cf.r^2 - 16*x^2*cf.u^8*cf.r^3
+        + 2*x^4*cf.u^5*cf.r^4 - 5*x^2*y*cf.u^6*cf.r^4 - 37*x^2*cf.u^7*cf.r^4
+        + 11*x^4*cf.u^4*cf.r^5 - 22*x^2*y*cf.u^5*cf.r^5 - 48*x^2*cf.u^6*cf.r^5
+        + 19*x^4*cf.u^3*cf.r^6 - 36*x^2*y*cf.u^4*cf.r^6 - 37*x^2*cf.u^5*cf.r^6
+        + 13*x^4*cf.u^2*cf.r^7 - 26*x^2*y*cf.u^3*cf.r^7 - 16*x^2*cf.u^4*cf.r^7
+        + 3*x^4*cf.u*cf.r^8 - 7*x^2*y*cf.u^2*cf.r^8 - 3*x^2*cf.u^3*cf.r^8
+        + x*cf.u^10*cf.r + 7*x*cf.u^9*cf.r^2 - 9*x^3*cf.u^6*cf.r^3 + 7*x*y*cf.u^7*cf.r^3
+        + 19*x*cf.u^8*cf.r^3 - 34*x^3*cf.u^5*cf.r^4 + 26*x*y*cf.u^6*cf.r^4
+        + 26*x*cf.u^7*cf.r^4 - 2*x^3*y*cf.u^3*cf.r^5 - 52*x^3*cf.u^4*cf.r^5
+        + 4*x*y^2*cf.u^4*cf.r^5 + 36*x*y*cf.u^5*cf.r^5 + 19*x*cf.u^6*cf.r^5
+        - 4*x^3*y*cf.u^2*cf.r^6 - 38*x^3*cf.u^3*cf.r^6 + 8*x*y^2*cf.u^3*cf.r^6
+        + 22*x*y*cf.u^4*cf.r^6 + 7*x*cf.u^5*cf.r^6 - 2*x^3*y*cf.u*cf.r^7
+        - 11*x^3*cf.u^2*cf.r^7 + 4*x*y^2*cf.u^2*cf.r^7 + 5*x*y*cf.u^3*cf.r^7
+        + x*cf.u^4*cf.r^7 - cf.u^10*cf.r + 11*x^2*cf.u^7*cf.r^2 - 3*y*cf.u^8*cf.r^2
+        - 4*cf.u^9*cf.r^2 + 38*x^2*cf.u^6*cf.r^3 - 10*y*cf.u^7*cf.r^3
+        - 6*cf.u^8*cf.r^3 - 2*x^4*cf.u^3*cf.r^4 + 10*x^2*y*cf.u^4*cf.r^4
+        + 52*x^2*cf.u^5*cf.r^4 - 4*y^2*cf.u^5*cf.r^4 - 12*y*cf.u^6*cf.r^4
+        - 4*cf.u^7*cf.r^4 - 4*x^4*cf.u^2*cf.r^5 + 28*x^2*y*cf.u^3*cf.r^5
+        + 34*x^2*cf.u^4*cf.r^5 - 8*y^2*cf.u^4*cf.r^5 - 6*y*cf.u^5*cf.r^5
+        - cf.u^6*cf.r^5 + 2*x^4*cf.u*cf.r^6 + 18*x^2*y*cf.u^2*cf.r^6
+        + 9*x^2*cf.u^3*cf.r^6 - 4*y^2*cf.u^3*cf.r^6 - y*cf.u^4*cf.r^6
+        - 3*x*cf.u^8*cf.r - 13*x*cf.u^7*cf.r^2 + 6*x^3*cf.u^4*cf.r^3
+        - 18*x*y*cf.u^5*cf.r^3 - 19*x*cf.u^6*cf.r^3 + 20*x^3*cf.u^3*cf.r^4
+        - 28*x*y*cf.u^4*cf.r^4 - 11*x*cf.u^5*cf.r^4 + 18*x^3*cf.u^2*cf.r^5
+        - 4*x*y^2*cf.u^2*cf.r^5 - 10*x*y*cf.u^3*cf.r^5 - 2*x*cf.u^4*cf.r^5
+        - cf.u^9 - cf.u^8*cf.r - 18*x^2*cf.u^5*cf.r^2 + 2*y*cf.u^6*cf.r^2
+        + cf.u^7*cf.r^2 - 20*x^2*cf.u^4*cf.r^3 + 4*y*cf.u^5*cf.r^3 + cf.u^6*cf.r^3
+        - 8*x^2*y*cf.u^2*cf.r^4 - 6*x^2*cf.u^3*cf.r^4 + 4*y^2*cf.u^3*cf.r^4
+        + 2*y*cf.u^4*cf.r^4 - 2*x*cf.u^6*cf.r + 4*x*cf.u^5*cf.r^2 - 4*x^3*cf.u^2*cf.r^3
+        + 8*x*y*cf.u^3*cf.r^3 + 2*x*cf.u^4*cf.r^3 + 4*x^2*cf.u^3*cf.r^2)

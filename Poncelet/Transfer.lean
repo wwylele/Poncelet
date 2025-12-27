@@ -899,7 +899,7 @@ theorem f_w_sub_not_singularAbc {x y : cf.K} (hxy : (elliptic cf).Nonsingular x 
           (2*cf.u^3 + 4*cf.u^2*cf.r + y*cf.r^2 + 2*cf.u*cf.r^2 - 2*cf.u) * hy
       · field
     exact f_w_sub_not_singularAbc_p2 cf hxy hpw hpnw hsxy hp2 huxr (fabc_w_sub cf _)
-  sorry
+  exact f_w_sub_normal cf hxy hpw hpnw hsxy hp2 (fabc_w_sub cf _)
 
 theorem f_w_sub (p : (elliptic cf).Point) : f cf (w cf - p) = rPoint cf (f cf p) := by
   obtain _ := cf.hr
