@@ -335,8 +335,7 @@ theorem fabcNormal_w :
   congrm ![$(by field), $(by field), $(by field)]
 
 @[simp]
-theorem fabc_w :
-    fabc cf (w cf) = P2.mk ![1, -cf.k, cf.u + cf.r] (by simp) := by
+theorem fabc_w : fabc cf (w cf) = P2.mk ![1, -cf.k, cf.u + cf.r] (by simp) := by
   obtain _ := cf.hr
   obtain _ := cf.hu
   unfold fabc
@@ -361,6 +360,24 @@ theorem fabc_w :
     · ring
   simp [fabcRaw, w, hs, fabcNormal_w cf]
   grind
+
+@[simp]
+theorem fxyz_w : fxyz cf (w cf) =
+    P2.mk ![(cf.u - cf.r) * (cf.u + cf.r) ^ 2 + 2 * cf.r, -2 * cf.k * cf.r, (cf.u + cf.r) ^ 2]
+    (by
+      by_cases h : cf.u + cf.r = 0
+      · have h : cf.k ≠ 0 := by
+          rw [← sq_eq_zero_iff.ne, cf.k_sq, h]
+          simp
+        simp [h, cf.hr]
+      · simp [h]
+    ) := by
+  obtain _ := cf.hr
+  simp only [fxyz, fxyzRaw, w]
+  rw [P2.mk_eq_mk']
+  use cf.u ^ 2 / cf.r ^ 2
+  simp_rw [Matrix.smul_vec3, smul_eq_mul]
+  congrm ![$(by field), $(by field), $(by field)]
 
 theorem fabcNormal_neg_w :
     fabcNormal cf (cf.u ^ 2 / cf.r ^ 2) (-cf.u ^ 2 / cf.r ^ 3) = ![
@@ -397,6 +414,7 @@ theorem fabc_neg_w_ne_zero :
   refine Eq.trans ?_ h
   congrm ![$(by field), $(by field), $(by field)]
 
+@[simp]
 theorem fabc_neg_w :
     fabc cf (-w cf) = P2.mk ![
       (cf.u - cf.r) * (cf.u + cf.r) ^ 2 * (cf.u + 3 * cf.r) + 4 * cf.r ^ 2,
@@ -411,6 +429,26 @@ theorem fabc_neg_w :
   · ring
   · ring
   · ring
+
+@[simp]
+theorem fxyz_neg_w : fxyz cf (-w cf) =
+    P2.mk ![(cf.u - cf.r) * (cf.u + cf.r) ^ 2 + 2 * cf.r, 2 * cf.k * cf.r, (cf.u + cf.r) ^ 2]
+    (by
+      by_cases h : cf.u + cf.r = 0
+      · have h : cf.k ≠ 0 := by
+          rw [← sq_eq_zero_iff.ne, cf.k_sq, h]
+          simp
+        simp [h, cf.hr]
+      · simp [h]
+    ) := by
+  obtain _ := cf.hr
+  simp only [fxyz, fxyzRaw, w]
+  rw [P2.mk_eq_mk']
+  use cf.u ^ 2 / cf.r ^ 2
+  simp_rw [Matrix.smul_vec3, smul_eq_mul]
+  congrm ![$(by field), $(?_), $(by field)]
+  simp [elliptic]
+  field
 
 theorem fabcNormal_2w :
     fabcNormal cf ((cf.r ^ 2 - cf.u ^ 2) ^ 2 / (4 * cf.r ^ 2))
@@ -430,6 +468,7 @@ theorem fabcNormal_2w :
   unfold fabcNormal
   congrm ![$(by field), $(by field), $(by field)]
 
+@[simp]
 theorem fabc_2w :
     fabc cf (w cf + w cf) = P2.mk ![
       (cf.u - cf.r) * (cf.u + cf.r) ^ 2 * (cf.u + 3 * cf.r) + 4 * cf.r ^ 2,
@@ -498,6 +537,26 @@ theorem fabc_2w :
   · ring
   · ring
   · ring
+
+@[simp]
+theorem fxyz_2w : fxyz cf (w cf + w cf) =
+    P2.mk' ![((cf.u + cf.r) * ((cf.u - cf.r) ^ 4 * (cf.u + cf.r) ^ 4
+      - 8 * cf.r ^ 2 * (cf.u - cf.r) ^ 2 * (cf.u + cf.r) ^ 2 +
+      8 * cf.r * (cf.r ^ 3 - cf.r ^ 2 * cf.u + cf.r * cf.u ^ 2 + cf.u ^ 3))),
+    4 * cf.r * cf.k * (cf.u^2 - cf.r^2) * ((cf.u ^ 2 - cf.r ^ 2) ^ 2 - 2 * (cf.u ^ 2 + cf.r ^ 2)),
+    (cf.r^4 - 2 * cf.r^2 * cf.u^2 + 4 * cf.r * cf.u + cf.u^4)^2] := by
+  obtain _ := cf.hr
+  rw [two_w]
+  obtain _ := cf.hr
+  simp only [fxyz, fxyzRaw]
+  have : 1 / (16 * cf.r ^ 2) ≠ 0 := by simpa using cf.hr
+  rw [← P2.mk'_eq]
+  apply P2.mk'_eq_mk' this
+  simp_rw [Matrix.smul_vec3, smul_eq_mul]
+  congrm ![?_, ?_, ?_]
+  · field
+  · field
+  · field
 
 theorem fabc_w_sub_singularAbc {x y wx wy : cf.K}
     (hxy : (elliptic cf).Nonsingular x y) (hwxy : (elliptic cf).Nonsingular wx wy)
@@ -645,5 +704,225 @@ theorem fabc_w_sub (p : (elliptic cf).Point) :
   · exact fabc_w_sub_c_eq_zero cf hxy hwxy hpw hpnw hwxyeq hsxy hwsxy hinf
   · exact fabc_w_sub_c_ne_zero cf hxy hwxy hpw hpnw hwxyeq hsxy hwsxy hinf
 
-theorem f_w_sub (p : (elliptic cf).Point) :
-    f cf (w cf - p) = rPoint cf (f cf p) := by sorry
+theorem f_w_eq_rPoint : f cf (w cf) = rPoint cf (f cf 0) := by
+  suffices fxyz cf (w cf) =
+    P2.mk' (rPoint' cf ![cf.u + cf.r, 0, 1] ![1, -cf.k, cf.u + cf.r]) by
+    simpa [f, rPoint, fabc_w_sub]
+  by_cases hur : cf.u + cf.r = 0
+  · suffices P2.mk ![2 * cf.r, -(2 * cf.k * cf.r), 0] _ = P2.mk ![-cf.k, -1, 0] _ by
+      simpa [rPoint', hur]
+    rw [P2.mk_eq_mk']
+    use 2 * cf.r * cf.k
+    simp_rw [Matrix.smul_vec3, smul_eq_mul]
+    congrm ![?_, $(by ring), $(by simp)]
+    trans -2 * cf.r * cf.k ^ 2
+    · simp [cf.k_sq, hur]
+    ring
+  suffices P2.mk ![(cf.u - cf.r) * (cf.u + cf.r) ^ 2 + 2 * cf.r,
+      -(2 * cf.k * cf.r), (cf.u + cf.r) ^ 2] _ =
+    P2.mk ![2 * (cf.u + cf.r) + 2 * cf.u * ((cf.u + cf.r) ^ 2 - 1)
+      - (cf.u + cf.r) * (cf.u + cf.r) ^ 2,
+      -(2 * cf.k * (cf.u + cf.r)) + 2 * cf.u * cf.k, (cf.u + cf.r) ^ 2] _ by
+    simpa [rPoint', hur, cf.k_sq]
+  rw [P2.mk_eq_mk']
+  use 1
+  simp_rw [Matrix.smul_vec3, smul_eq_mul]
+  congrm ![$(by ring), $(by ring), $(by simp)]
+
+theorem f_two_w_eq_rPoint : f cf (w cf + w cf) = rPoint cf (f cf (-w cf)) := by
+  by_cases hur : cf.u + cf.r = 0
+  · have hr : cf.r = -cf.u := by linear_combination hur
+    have hk : cf.k ≠ 0 := by
+      rw [← sq_eq_zero_iff.ne, cf.k_sq, hr]
+      simp
+    suffices P2.mk' ![0, 0,
+        ((-cf.u) ^ 4 - 2 * cf.u ^ 2 * cf.u ^ 2 + -(4 * cf.u * cf.u) + cf.u ^ 4) ^ 2] =
+      P2.mk' ![0, 0, 2 * cf.u * (cf.k * (4 * cf.u ^ 2))] by
+      simpa [f, rPoint, rPoint', hr]
+    suffices P2.mk' ![0, 0, 16 * cf.u ^ 4] = P2.mk' ![0, 0, 8 * cf.u ^ 3 * cf.k] by
+      convert this using 5
+      · ring
+      · ring
+    have : 2 * cf.u / cf.k ≠ 0 := by simp [cf.hu, hk]
+    apply P2.mk'_eq_mk' this
+    simp
+    field
+  by_cases hur2 : (cf.u ^ 2 - cf.r ^ 2) ^ 2 + 4 * cf.u * cf.r = 0
+  · have hk : cf.k ≠ 0 := by
+      contrapose! hur2 with hk
+      rw [← sq_eq_zero_iff, cf.k_sq, sub_eq_zero, sq_eq_one_iff] at hk
+      obtain hur | hur := hk
+      · have hr : cf.r = 1 - cf.u := by linear_combination hur
+        rw [hr]
+        ring_nf
+        simp
+      · have hr : cf.r = -1 - cf.u := by linear_combination hur
+        rw [hr]
+        ring_nf
+        simp
+    have h3 : (cf.r ^ 4 - 2 * cf.r ^ 2 * cf.u ^ 2 + 4 * cf.r * cf.u + cf.u ^ 4) ^ 2 = 0 := by
+      linear_combination congr($hur2 ^ 2)
+    suffices P2.mk'
+      ![(cf.u + cf.r) *
+        ((cf.u - cf.r) ^ 4 * (cf.u + cf.r) ^ 4
+        - 8 * cf.r ^ 2 * (cf.u - cf.r) ^ 2 * (cf.u + cf.r) ^ 2 +
+        8 * cf.r * (cf.r ^ 3 - cf.r ^ 2 * cf.u + cf.r * cf.u ^ 2 + cf.u ^ 3)),
+        4 * cf.r * cf.k * (cf.u ^ 2 - cf.r ^ 2) *
+        ((cf.u ^ 2 - cf.r ^ 2) ^ 2 - 2 * (cf.u ^ 2 + cf.r ^ 2)),
+        0] =
+      P2.mk'
+      ![-(cf.k * ((cf.u ^ 2 - cf.r ^ 2) ^ 2 - 4 * cf.r ^ 2)),
+        -(4 * cf.r ^ 2) + -((cf.u - cf.r) * (cf.u + cf.r) ^ 2 * (cf.u + 3 * cf.r)), 0] by
+      simpa [f, rPoint, rPoint', hur2, hur, h3]
+    have h10 : (cf.u ^ 2 - cf.r ^ 2) ^ 2 - 4 * cf.r ^ 2 ≠ 0 := by
+      by_contra h
+      have : 4 * (cf.u + cf.r) * cf.r = 0 := by linear_combination hur2 - h
+      simp [hur, cf.hr] at this
+    have h1 : 4 * cf.r * cf.k * (cf.u ^ 2 - cf.r ^ 2) *
+        ((cf.u ^ 2 - cf.r ^ 2) ^ 2 - 2 * (cf.u ^ 2 + cf.r ^ 2)) =
+        ((cf.u + cf.r) *
+        ((cf.u - cf.r) ^ 4 * (cf.u + cf.r) ^ 4
+        - 8 * cf.r ^ 2 * (cf.u - cf.r) ^ 2 * (cf.u + cf.r) ^ 2 +
+        8 * cf.r * (cf.r ^ 3 - cf.r ^ 2 * cf.u + cf.r * cf.u ^ 2 + cf.u ^ 3)) /
+        -(cf.k * ((cf.u ^ 2 - cf.r ^ 2) ^ 2 - 4 * cf.r ^ 2))) *
+        (-(4 * cf.r ^ 2) + -((cf.u - cf.r) * (cf.u + cf.r) ^ 2 * (cf.u + 3 * cf.r))) := by
+      field_simp
+      rw [cf.k_sq]
+      linear_combination - (cf.u + cf.r) * congr($hur2 ^ 3)
+    have h0 : (cf.u + cf.r) *
+        ((cf.u - cf.r) ^ 4 * (cf.u + cf.r) ^ 4
+        - 8 * cf.r ^ 2 * (cf.u - cf.r) ^ 2 * (cf.u + cf.r) ^ 2 +
+        8 * cf.r * (cf.r ^ 3 - cf.r ^ 2 * cf.u + cf.r * cf.u ^ 2 + cf.u ^ 3)) /
+        -(cf.k * ((cf.u ^ 2 - cf.r ^ 2) ^ 2 - 4 * cf.r ^ 2)) ≠ 0 := by
+      by_contra! h0
+      have : cf.u ^ 2 - cf.r ^ 2 = 0 ∨
+          (cf.u ^ 2 - cf.r ^ 2) ^ 2 - 2 * (cf.u ^ 2 + cf.r ^ 2) = 0 := by
+        simpa [h0, hk, cf.hr] using h1
+      obtain h | h := this
+      · simp [h, cf.hu, cf.hr] at hur2
+      · have : 2 * (cf.u + cf.r) ^ 2 = 0 := by linear_combination hur2 - h
+        have : cf.u + cf.r = 0 := by simpa using this
+        simp [this] at hur
+    apply P2.mk'_eq_mk' h0
+    simp_rw [Matrix.smul_vec3, smul_eq_mul, mul_zero]
+    congrm ![?_, $h1, 0]
+    rw [div_mul_cancel₀ _ (by simp [hk, h10])]
+  simp only [f, fxyz_2w, fabc_2w, neg_mul, rPoint, ne_eq, rPoint', Fin.isValue, neg_sub, fxyz_neg_w,
+    fabc_neg_w, P2.lift₂_mk, Matrix.cons_val, mul_eq_zero, hur, hur2, or_self, ↓reduceIte,
+    Matrix.cons_val_zero, Matrix.cons_val_one, even_two, Even.neg_pow, mul_neg, sub_neg_eq_add,
+    Matrix.cons_eq_zero_iff, OfNat.ofNat_ne_zero, not_false_eq_true, pow_eq_zero_iff,
+    Matrix.zero_empty, and_true, and_false, P2.mk'_eq, Prod.mk.injEq]
+  symm
+  rw [← P2.mk'_eq]
+  have : (cf.u + cf.r) ^ 4 ≠ 0 := by simpa using hur
+  apply P2.mk'_eq_mk' this
+  simp_rw [Matrix.smul_vec3, smul_eq_mul]
+  congrm ![?_, $(by ring), $(by ring)]
+  suffices 2 * ((cf.u - cf.r) * (cf.u + cf.r) ^ 2 * (cf.u + 3 * cf.r) + 4 * cf.r ^ 2) *
+    (cf.u + cf.r) ^ 2 *
+    ((cf.u + cf.r) * ((cf.u ^ 2 - cf.r ^ 2) ^ 2 + 4 * cf.u * cf.r)) +
+    2 * cf.u * (cf.k ^ 2 * ((cf.u ^ 2 - cf.r ^ 2) ^ 2 - 4 * cf.r ^ 2) ^ 2) * (cf.u + cf.r) ^ 2 -
+    ((cf.u - cf.r) * (cf.u + cf.r) ^ 2 + 2 * cf.r) *
+    ((cf.u + cf.r) * ((cf.u ^ 2 - cf.r ^ 2) ^ 2 + 4 * cf.u * cf.r)) ^ 2 =
+    (cf.u + cf.r) ^ 4 *
+    ((cf.u + cf.r) *
+    ((cf.u - cf.r) ^ 4 * (cf.u + cf.r) ^ 4 - 8 * cf.r ^ 2 * (cf.u - cf.r) ^ 2 * (cf.u + cf.r) ^ 2 +
+    8 * cf.r * (cf.r ^ 3 - cf.r ^ 2 * cf.u + cf.r * cf.u ^ 2 + cf.u ^ 3))) by
+    linear_combination this
+  rw [cf.k_sq]
+  ring
+
+
+theorem f_w_sub (p : (elliptic cf).Point) : f cf (w cf - p) = rPoint cf (f cf p) := by
+  obtain _ := cf.hr
+  obtain _ := cf.hu
+  cases p with
+  | zero =>
+    rw [show Point.zero = 0 from rfl]
+    simpa using f_w_eq_rPoint cf
+  | @some x y hxy =>
+  by_cases hpw : .some hxy = w cf
+  · rw [← (rPoint_bijOn cf).injOn.eq_iff (mapsTo_f cf (by simp))
+      (mapsTo_rPoint cf (mapsTo_f cf (by simp))), rPoint_rPoint cf (mapsTo_f cf (by simp))]
+    rw [hpw]
+    simpa using (f_w_eq_rPoint cf).symm
+  by_cases hpnw : .some hxy = -w cf
+  · simpa [hpnw] using f_two_w_eq_rPoint cf
+
+  obtain hx := x_not_at_w cf hxy hpw hpnw
+  have : cf.r ^ 2 * x - cf.u ^ 2 ≠ 0 := by
+    contrapose! hx
+    field_simp
+    linear_combination hx
+  have : cf.u ^ 2 - cf.r ^ 2 * x ≠ 0 := by
+    contrapose! this
+    linear_combination -this
+
+  suffices fxyz cf (w cf - Point.some hxy) =
+      P2.lift₂ (fun p q hp hq ↦ P2.mk' (rPoint' cf p q)) _
+      (fxyz cf (Point.some hxy)) (fabc cf (Point.some hxy)) by
+    simpa [f, rPoint, fabc_w_sub]
+  rw [w_sub cf hxy hx]
+  by_cases hsxy : SingularAbc cf x y
+  · by_cases hur : cf.u ^ 2 - cf.r ^ 2 = 0
+    · have hp2 : fxyzRaw cf (Point.some hxy) 2 ≠ 0 := by
+        simpa [fxyzRaw] using hsxy.rx_add_u_ne_zero cf hxy
+      suffices P2.mk (fxyzRaw cf (Point.some _)) _ =
+          P2.mk' ![-((cf.r * (cf.u + cf.r) ^ 2 * x - cf.u * ((cf.u + cf.r) ^ 2 - 2))
+            * (4 * cf.u ^ 2)),
+          -(2 * cf.u * cf.k * (4 * cf.u ^ 2)), 0] by
+        simpa [fabc, fabcRaw, hsxy, rPoint', fxyz, hur, hp2]
+      have : (cf.u + cf.r) * (cf.u - cf.r) = 0 := by linear_combination hur
+      obtain hur | hur : cf.u + cf.r = 0 ∨ cf.u - cf.r = 0 := by simpa using this
+      · obtain hx := hsxy.x_eq_zero_of_casePos cf hxy hur
+        obtain hy := hsxy.y_eq_zero_of_casePos cf hxy hur
+        have hr : cf.r = -cf.u := by linear_combination hur
+        symm
+        have : 4 * cf.u ^ 2 ≠ 0 := by simpa using cf.hu
+        rw [← P2.mk'_eq]
+        apply P2.mk'_eq_mk' this
+        simp only [fxyzRaw]
+        simp_rw [Matrix.smul_vec3, smul_eq_mul, hx, hy, hr]
+        congrm ![$(by field), $(by field), $(by field)]
+      · have hu : cf.u = cf.r := (sub_eq_zero.mp hur)
+        have hy : y = 0 := hsxy.y_eq_zero_of_caseNeg cf hxy hu
+        obtain hx := hsxy.c_factor_eq_zero cf hxy
+        rw [hu] at hx
+        have hx : cf.r ^ 2 * (x - 1) ^ 2 + x = 0 := by
+          suffices 4 * cf.r ^ 2 * (cf.r ^ 2 * (x - 1) ^ 2 + x) = 0 by
+            simpa [cf.hr]
+          linear_combination hx
+        simp only [ne_eq, fxyzRaw, hu, hy, mul_zero, add_zero, neg_mul, add_sub_cancel_right,
+          sub_add_cancel]
+        rw [← P2.mk'_eq]
+        have hx1 : x ≠ 1 := by
+          by_contra!
+          simp [this] at hx
+        have hx1' : x - 1 ≠ 0 := sub_eq_zero.ne.mpr hx1
+        have hxn1 : x ≠ -1 := by
+          obtain h := hsxy.rx_add_u_ne_zero cf hxy
+          contrapose! h
+          simp [h, hu]
+        have hxn1' : x + 1 ≠ 0 := by simpa using sub_eq_zero.ne.mpr hxn1
+        have h0 : cf.r ^ 2 * (x - 1) ^ 2 + 2 * x ≠ 0 := by
+          by_contra! h
+          have : x = 0 := by
+            linear_combination  h - hx
+          simp [this, cf.hr] at h
+        have : ((x + 1) * (cf.r ^ 2 * (x - 1) ^ 2 + 2 * x))
+            / (4 * cf.r^4 * (x-1)^3) ≠ 0 := by
+          simp [h0, hxn1', hx1', cf.hr]
+        apply P2.mk'_eq_mk' this
+        simp_rw [Matrix.smul_vec3, smul_eq_mul]
+        congrm ![?_, ?_, ?_]
+        · field_simp
+          linear_combination 4 * (x^3*cf.r^2 - x^2*cf.r^2 - x*cf.r^2 + 2*x^2 + cf.r^2) * hx
+        · field
+        · field_simp
+          linear_combination 16 * cf.r ^ 2 * congr($hx ^ 2)
+    have hk : cf.k ≠ 0 := hsxy.k_ne_zero cf hxy
+    simp [fabc, fabcRaw, hsxy, rPoint', fxyz, hur, cf.hu, hk, fxyzRaw]
+    sorry
+  --by_cases hsxy : SingularAbc cf x y
+  --· sorry
+  sorry

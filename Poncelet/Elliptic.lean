@@ -369,6 +369,12 @@ theorem SingularAbc.fxyzRaw_eq_of_casePos {x y : cf.K}
   obtain hy := h.y_eq_zero_of_casePos cf hxy hur
   simp [fxyzRaw, hx, hy, hur]
 
+theorem SingularAbc.y_eq_zero_of_caseNeg {x y : cf.K}
+    (h : SingularAbc cf x y) (hxy : (elliptic cf).Nonsingular x y) (hur : cf.u = cf.r) :
+    y = 0 := by
+  obtain hxy := h.xy_linear cf hxy
+  simpa [hur, cf.hr] using hxy
+
 theorem SingularAbc.fxyz_eq {x y : cf.K} (h : SingularAbc cf x y)
     (hxy : (elliptic cf).Nonsingular x y) :
     fxyz cf (.some hxy) = P2.mk ![
