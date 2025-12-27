@@ -57,6 +57,20 @@ theorem mk_eq_mk'_of_l [DecidableEq K] {p q : Fin 3 → K} (hp : p ≠ 0) (l : K
   rw [← mk'_eq]
   apply mk'_eq_mk' hl h
 
+theorem mk'_eq_mk'_of_third_zero [DecidableEq K] {p q : Fin 3 → K} (hp : p ≠ 0)
+    (hq1 : q 1 ≠ 0)
+    (hp2 : p 2 = 0) (hq2 : q 2 = 0) (h : p 0 * q 1 = p 1 * q 0) :
+    mk p hp = mk' q := by
+  apply mk_eq_mk'_of_l hp (p 1 / q 1)
+  ext n
+  fin_cases n
+  · simp only [Fin.zero_eta, Fin.isValue, Pi.smul_apply, smul_eq_mul]
+    field_simp
+    exact h
+  · simp only [Fin.mk_one, Fin.isValue, Pi.smul_apply, smul_eq_mul]
+    field
+  · simp [hp2, hq2]
+
 theorem mk'_smul [DecidableEq K] {s : K} (h : s ≠ 0) (p : Fin 3 → K) :
     mk' (s • p) = mk' p := mk'_eq_mk' h rfl
 

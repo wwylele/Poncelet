@@ -387,13 +387,12 @@ theorem fabc_w_sub_singularAbc_not_singularAbc_u_eq_r {x y wx wy : cf.K}
     linear_combination 16 * cf.r ^ 8 *
       (x^4*cf.r^2 - 4*x^3*cf.r^2 + 6*x^2*cf.r^2 + 2*x^3 - 4*x*cf.r^2 + cf.r^2 + 2*x) * hc
 
-
-
 set_option maxHeartbeats 800000 in
+-- Long Expression
 theorem f_w_sub_singularAbc {x y : cf.K} (hxy : (elliptic cf).Nonsingular x y)
     (hsxy : SingularAbc cf x y) (hpw : Point.some hxy ≠ w cf)
     (hpnw : Point.some hxy ≠ -w cf) (hur : cf.u ^ 2 - cf.r ^ 2 ≠ 0)
-    (habc : fabc cf (w cf - .some hxy) = fabc cf (.some hxy)):
+    (habc : fabc cf (w cf - .some hxy) = fabc cf (.some hxy)) :
     f cf (w cf - .some hxy) = rPoint cf (f cf (.some hxy)) := by
   obtain _ := cf.hr
   obtain _ := cf.hu
@@ -649,3 +648,135 @@ theorem f_w_sub_singularAbc {x y : cf.K} (hxy : (elliptic cf).Nonsingular x y)
     - 256*x^2*cf.u^8*cf.r^3 - 64*cf.u^10*cf.r^3 - 256*x^2*cf.u^7*cf.r^4
     + 256*x^2*cf.u^6*cf.r^5 + 32*cf.u^8*cf.r^5 - 128*x^2*cf.u^5*cf.r^6 - 128*x*cf.u^8*cf.r^3) * hc
   · field
+
+theorem f_w_sub_not_singularAbc_p2 {x y : cf.K} (hxy : (elliptic cf).Nonsingular x y)
+    (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
+    (hsxy : ¬ SingularAbc cf x y) (hp2 : fabcNormal cf x y 2 = 0)
+    (huxr : cf.r * x + cf.u ≠ 0) (habc : fabc cf (w cf - .some hxy) = fabc cf (.some hxy)):
+    f cf (w cf - (.some hxy)) = rPoint cf (f cf (.some hxy)) := by
+  obtain _ := cf.hr
+  obtain _ := cf.hu
+  obtain hx := x_not_at_w cf hxy hpw hpnw
+  have : cf.r ^ 2 * x - cf.u ^ 2 ≠ 0 := by
+    contrapose! hx
+    field_simp
+    linear_combination hx
+  have : cf.u ^ 2 - cf.r ^ 2 * x ≠ 0 := by
+    contrapose! this
+    linear_combination -this
+  suffices fxyz cf (w cf - Point.some hxy) =
+      P2.lift₂ (fun p q hp hq ↦ P2.mk' (rPoint' cf p q)) _
+      (fxyz cf (Point.some hxy)) (fabc cf (Point.some hxy)) by
+    simpa [f, rPoint, habc]
+  have huxr2 : (cf.r * x - cf.u) ^ 2 * (cf.u + cf.r) ^ 2 + 4 * cf.u * cf.r * x = 0 := by
+    simpa [fabcNormal, huxr] using hp2
+  obtain ⟨heq, hnonsingular⟩ := (nonsingular_elliptic cf _ _).mp hxy
+  have hur0 : cf.u + cf.r ≠ 0 := by
+    contrapose! hsxy with hur0
+    have hx0 : x = 0 := by simpa [hur0, cf.hr, cf.hu] using huxr2
+    have hy0 : y = 0 := by simpa [cf.hr, hx0] using heq
+    apply SingularAbc.mk cf hxy
+    · simp [hx0, hur0, hy0]
+    · linear_combination (cf.r * x + cf.u) * huxr2
+  have hy : (2 * cf.r ^ 2 * ((cf.u + cf.r) ^ 2 - 1) * (cf.r * x - cf.u) * y) ^ 2 =
+      ((cf.r * x + cf.u) * (cf.r ^ 2 * (cf.u + cf.r) * x ^ 2 +
+      2 * cf.r * (1 - cf.r * (cf.u + cf.r)) * x + (cf.u + cf.r) * cf.u ^ 2)) ^ 2 := by
+    trans (2 * cf.r * ((cf.u + cf.r) ^ 2 - 1) * (cf.r * x - cf.u)) ^ 2 *
+      (x * (cf.r ^ 2 * x ^ 2 + (1 - cf.u ^ 2 - cf.r ^ 2) * x + cf.u ^ 2))
+    · rw [← heq]
+      ring
+    linear_combination huxr2 *
+      (4*x^3*cf.u^2*cf.r^4 + 8*x^3*cf.u*cf.r^5 + 4*x^3*cf.r^6 - 4*x^2*cf.u^4*cf.r^2
+      - 8*x^2*cf.u^3*cf.r^3 - x^4*cf.r^4 - 8*x^2*cf.u^2*cf.r^4 - 8*x^2*cf.u*cf.r^5
+      - 4*x^2*cf.r^6 + 4*x*cf.u^4*cf.r^2 - 4*x^3*cf.u*cf.r^3 + 8*x*cf.u^3*cf.r^3
+      - 4*x^3*cf.r^4 + 4*x*cf.u^2*cf.r^4 + 2*x^2*cf.u^2*cf.r^2 + 8*x^2*cf.u*cf.r^3
+      + 8*x^2*cf.r^4 - 4*x*cf.u^3*cf.r - 4*x*cf.u^2*cf.r^2 - cf.u^4 - 4*x^2*cf.r^2)
+  obtain hy | hy : _ ∨ _ := eq_or_eq_neg_of_sq_eq_sq _ _ hy
+  · absurd hsxy
+    apply SingularAbc.mk cf hxy
+    · linear_combination -hy
+    · linear_combination (cf.r * x + cf.u) * huxr2
+  have hur1 : (cf.u + cf.r) ^ 2 - 1 ≠ 0 := by
+    by_contra! hur1
+    have hx: cf.r ^ 2 * (cf.u + cf.r) * x ^ 2 +
+        2 * cf.r * (1 - cf.r * (cf.u + cf.r)) * x + (cf.u + cf.r) * cf.u ^ 2 = 0 := by
+      simpa [hur1, huxr] using hy
+    contrapose! huxr with huxr
+    have hur1 : (cf.u + cf.r) ^ 2 = 1 ^ 2 := by linear_combination hur1
+    obtain hur1 | hur1 := eq_or_eq_neg_of_sq_eq_sq _ _ hur1
+    · have hr : cf.r = 1 - cf.u := by linear_combination hur1
+      rw [hr] at ⊢ hx
+      rw [← sq_eq_zero_iff]
+      linear_combination hx
+    · have hr : cf.r = -1 - cf.u := by linear_combination hur1
+      rw [hr] at ⊢ hx
+      rw [← sq_eq_zero_iff]
+      linear_combination -hx
+  have hk : cf.k ≠ 0 := by
+    rw [← sq_eq_zero_iff.ne, cf.k_sq]
+    exact hur1
+  have hrxmu : cf.r * x - cf.u ≠ 0 := by
+    by_contra! hrxmu
+    have : x = 0 := by simpa [hrxmu, cf.hr, cf.hu] using huxr2
+    simp [this, cf.hu] at hrxmu
+  have hy : y = -(cf.r * x + cf.u) * (cf.r ^ 2 * (cf.u + cf.r) * x ^ 2 +
+      2 * cf.r * (1 - cf.r * (cf.u + cf.r)) * x + (cf.u + cf.r) * cf.u ^ 2) /
+      (2 * cf.r ^ 2 * ((cf.u + cf.r) ^ 2 - 1) * (cf.r * x - cf.u)) := by
+    field_simp
+    linear_combination hy
+
+  simp only [fxyz, fxyzRaw, w_sub cf hxy hx, neg_mul, ne_eq, rPoint', Fin.isValue, neg_sub, fabc,
+    fabcRaw, hsxy, ↓reduceIte, P2.lift₂_mk, hp2, Matrix.cons_val, OfNat.ofNat_ne_zero,
+    not_false_eq_true, pow_eq_zero_iff, huxr]
+  simp only [fabcNormal, neg_mul, Fin.isValue, Matrix.cons_val_one, Matrix.cons_val_zero,
+    neg_add_rev, neg_neg]
+  refine P2.mk'_eq_mk'_of_third_zero _ ?_ ?_ ?_ ?_
+  · simp only [Fin.isValue, Matrix.cons_val_one, Matrix.cons_val_zero]
+    contrapose! hsxy with h1
+    apply SingularAbc.mk cf hxy
+    · linear_combination -h1
+    · linear_combination (cf.r * x + cf.u) * huxr2
+  · simp only [Fin.isValue, Matrix.cons_val, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true,
+      pow_eq_zero_iff]
+    simp_rw [hy]
+    field_simp
+    linear_combination cf.u * (x*cf.u*cf.r^2 + x*cf.r^3 - cf.u^3 - cf.u^2*cf.r - x*cf.r) *  huxr2
+  · simp
+  · simp only [Fin.isValue, Matrix.cons_val_zero, Matrix.cons_val_one]
+    simp_rw [hy]
+    field_simp
+    rw [cf.k_sq]
+    linear_combination - huxr2 *
+    (x^2*cf.u*cf.r^2 + x^2*cf.r^3 - 2*x*cf.u*cf.r^2 - 2*x*cf.r^3 + cf.u^3
+      + cf.u^2*cf.r + 2*x*cf.r) * (x^5*cf.u^5*cf.r^7 + 5*x^5*cf.u^4*cf.r^8
+      + 10*x^5*cf.u^3*cf.r^9 + 10*x^5*cf.u^2*cf.r^10 + 5*x^5*cf.u*cf.r^11
+      + x^5*cf.r^12 - 2*x^4*cf.u^7*cf.r^5 - 5*x^4*cf.u^6*cf.r^6 - 5*x^4*cf.u^5*cf.r^7
+      - 12*x^4*cf.u^4*cf.r^8 - 28*x^4*cf.u^3*cf.r^9 - 29*x^4*cf.u^2*cf.r^10
+      - 13*x^4*cf.u*cf.r^11 - 2*x^4*cf.r^12 + x^3*cf.u^9*cf.r^3 - 5*x^3*cf.u^8*cf.r^4
+      - 23*x^3*cf.u^7*cf.r^5 - 4*x^5*cf.u^4*cf.r^6 - 23*x^3*cf.u^6*cf.r^6
+      - 11*x^5*cf.u^3*cf.r^7 + 9*x^3*cf.u^5*cf.r^7 - 11*x^5*cf.u^2*cf.r^8
+      + 37*x^3*cf.u^4*cf.r^8 - 5*x^5*cf.u*cf.r^9 + 39*x^3*cf.u^3*cf.r^9
+      - x^5*cf.r^10 + 23*x^3*cf.u^2*cf.r^10 + 6*x^3*cf.u*cf.r^11 + 5*x^2*cf.u^10*cf.r^2
+      + 21*x^2*cf.u^9*cf.r^3 + 4*x^4*cf.u^6*cf.r^4 + 43*x^2*cf.u^8*cf.r^4
+      + 6*x^4*cf.u^5*cf.r^5 + 51*x^2*cf.u^7*cf.r^5 - 3*x^4*cf.u^4*cf.r^6
+      + 19*x^2*cf.u^6*cf.r^6 + 5*x^4*cf.u^3*cf.r^7 - 29*x^2*cf.u^5*cf.r^7
+      + 27*x^4*cf.u^2*cf.r^8 - 35*x^2*cf.u^4*cf.r^8 + 21*x^4*cf.u*cf.r^9
+      - 11*x^2*cf.u^3*cf.r^9 + 4*x^4*cf.r^10 - 3*x*cf.u^11*cf.r - 19*x*cf.u^10*cf.r^2
+      + 5*x^3*cf.u^7*cf.r^3 - 42*x*cf.u^9*cf.r^3 + 27*x^3*cf.u^6*cf.r^4
+      - 38*x*cf.u^8*cf.r^4 + 2*x^5*cf.u^3*cf.r^5 + 40*x^3*cf.u^5*cf.r^5
+      - 7*x*cf.u^7*cf.r^5 + 6*x^5*cf.u^2*cf.r^6 + 16*x^3*cf.u^4*cf.r^6
+      + 9*x*cf.u^6*cf.r^6 + 2*x^5*cf.u*cf.r^7 - 25*x^3*cf.u^3*cf.r^7
+      + 4*x*cf.u^5*cf.r^7 - 43*x^3*cf.u^2*cf.r^8 - 20*x^3*cf.u*cf.r^9
+      + cf.u^12 + 5*cf.u^11*cf.r - 13*x^2*cf.u^8*cf.r^2 + 10*cf.u^10*cf.r^2
+      - 51*x^2*cf.u^7*cf.r^3 + 10*cf.u^9*cf.r^3 - 2*x^4*cf.u^4*cf.r^4
+      - 72*x^2*cf.u^6*cf.r^4 + 5*cf.u^8*cf.r^4 - 2*x^4*cf.u^3*cf.r^5
+      - 12*x^2*cf.u^5*cf.r^5 + cf.u^7*cf.r^5 - 8*x^4*cf.u^2*cf.r^6
+      + 53*x^2*cf.u^4*cf.r^6 - 8*x^4*cf.u*cf.r^7 + 31*x^2*cf.u^3*cf.r^7
+      - 2*x^4*cf.r^8 + 11*x*cf.u^9*cf.r + 29*x*cf.u^8*cf.r^2 - 2*x^3*cf.u^5*cf.r^3
+      + 15*x*cf.u^7*cf.r^3 - 28*x^3*cf.u^4*cf.r^4 - 13*x*cf.u^6*cf.r^4
+      - 32*x^3*cf.u^3*cf.r^5 - 10*x*cf.u^5*cf.r^5 + 12*x^3*cf.u^2*cf.r^6
+      + 22*x^3*cf.u*cf.r^7 + cf.u^10 + cf.u^9*cf.r + 28*x^2*cf.u^6*cf.r^2
+      - cf.u^8*cf.r^2 + 36*x^2*cf.u^5*cf.r^3 - cf.u^7*cf.r^3 + 8*x^4*cf.u^2*cf.r^4
+      - 16*x^2*cf.u^4*cf.r^4 - 28*x^2*cf.u^3*cf.r^5 + 2*x*cf.u^7*cf.r
+      + 10*x*cf.u^6*cf.r^2 + 16*x^3*cf.u^3*cf.r^3 + 6*x*cf.u^5*cf.r^3
+      + 8*x^3*cf.u^2*cf.r^4 - 8*x^3*cf.u*cf.r^5 + 2*cf.u^7*cf.r + 8*x^2*cf.u^3*cf.r^3)

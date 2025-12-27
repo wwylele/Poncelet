@@ -832,6 +832,75 @@ theorem f_two_w_eq_rPoint : f cf (w cf + w cf) = rPoint cf (f cf (-w cf)) := by
   rw [cf.k_sq]
   ring
 
+theorem f_w_sub_not_singularAbc {x y : cf.K} (hxy : (elliptic cf).Nonsingular x y)
+    (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
+    (hsxy : ¬ SingularAbc cf x y) :
+    f cf (w cf - (.some hxy)) = rPoint cf (f cf (.some hxy)) := by
+  obtain _ := cf.hr
+  obtain _ := cf.hu
+  obtain hx := x_not_at_w cf hxy hpw hpnw
+  have : cf.r ^ 2 * x - cf.u ^ 2 ≠ 0 := by
+    contrapose! hx
+    field_simp
+    linear_combination hx
+  have : cf.u ^ 2 - cf.r ^ 2 * x ≠ 0 := by
+    contrapose! this
+    linear_combination -this
+  by_cases hp2 : fabcNormal cf x y 2 = 0
+  · by_cases huxr : cf.r * x + cf.u = 0
+    · suffices fxyz cf (w cf - Point.some hxy) =
+          P2.lift₂ (fun p q hp hq ↦ P2.mk' (rPoint' cf p q)) _
+          (fxyz cf (Point.some hxy)) (fabc cf (Point.some hxy)) by
+        simpa [f, rPoint, fabc_w_sub]
+      have hxeq : x = -cf.u / cf.r := by
+        field_simp
+        linear_combination huxr
+      rw [nonsingular_elliptic cf] at hxy
+      obtain ⟨heq, hnonsingular⟩ := hxy
+      rw [hxeq] at heq
+      have hy : cf.r ^ 4 * y ^ 2 + cf.u ^ 2 * (cf.u + cf.r) ^ 2 - cf.u ^ 2 = 0 := by
+        field_simp at heq
+        linear_combination heq
+      have hk : cf.k ≠ 0 := by
+        contrapose! hsxy with hk
+        have hur : (cf.u + cf.r) ^ 2 = 1 := by
+          rw [← sq_eq_zero_iff, cf.k_sq, sub_eq_zero] at hk
+          exact hk
+        apply SingularAbc.mk cf hxy
+        · simp [hur, huxr]
+        · simp [huxr]
+      have hur1 : (cf.u + cf.r) ^ 2 - 1 ≠ 0 := by
+        rw [← sq_eq_zero_iff.ne, cf.k_sq] at hk
+        exact hk
+      have hur0 : cf.u + cf.r ≠ 0 := by
+        contrapose! hx with hur0
+        have : cf.u = -cf.r := eq_neg_of_add_eq_zero_left hur0
+        rw [hxeq, this]
+        field
+      have hur0' : -cf.r - cf.u ≠ 0 := by
+        contrapose! hur0
+        linear_combination - hur0
+      rw [w_sub cf hxy hx]
+      simp only [fxyz, fxyzRaw, neg_mul, ne_eq, rPoint', Fin.isValue, neg_sub, huxr,
+        OfNat.ofNat_ne_zero, not_false_eq_true, zero_pow, fabc, fabcRaw, hsxy, ↓reduceIte,
+        P2.lift₂_mk, hp2, Matrix.cons_val]
+      simp only [hxeq, fabcNormal, neg_mul, Fin.isValue, Matrix.cons_val_one, Matrix.cons_val_zero,
+        mul_neg]
+      apply P2.mk_eq_mk'_of_l _ ((4 * (cf.u * ((cf.u + cf.r) ^ 2 - 1) + cf.r^2 * y)^2)
+        / (8 * cf.k * cf.u^3 * (cf.u + cf.r)^4 * ((cf.u + cf.r) ^ 2 - 1)))
+      simp_rw [Matrix.smul_vec3, smul_eq_mul]
+      congrm ![?_, ?_, ?_]
+      · field_simp
+        linear_combination 16 * cf.u * ((cf.u + cf.r) ^ 2 - 1) * (cf.u + cf.r) ^ 6 * hy
+      · field_simp
+        rw [cf.k_sq]
+        linear_combination -16 * (cf.u - cf.r) *
+          ((cf.u + cf.r) ^ 2 - 1) * (cf.u + cf.r) ^ 4 *
+          (2*cf.u^3 + 4*cf.u^2*cf.r + y*cf.r^2 + 2*cf.u*cf.r^2 - 2*cf.u) * hy
+      · field
+    exact f_w_sub_not_singularAbc_p2 cf hxy hpw hpnw hsxy hp2 huxr (fabc_w_sub cf _)
+  sorry
+
 theorem f_w_sub (p : (elliptic cf).Point) : f cf (w cf - p) = rPoint cf (f cf p) := by
   obtain _ := cf.hr
   obtain _ := cf.hu
@@ -918,6 +987,4 @@ theorem f_w_sub (p : (elliptic cf).Point) : f cf (w cf - p) = rPoint cf (f cf p)
         · field_simp
           linear_combination 16 * cf.r ^ 2 * congr($hx ^ 2)
     exact f_w_sub_singularAbc cf hxy hsxy hpw hpnw hur (fabc_w_sub cf _)
-  --by_cases hsxy : SingularAbc cf x y
-  --· sorry
-  sorry
+  exact f_w_sub_not_singularAbc cf hxy hpw hpnw hsxy
