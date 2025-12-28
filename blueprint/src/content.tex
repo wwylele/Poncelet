@@ -15,11 +15,11 @@ to most modern proof of the theorem, where explicit curves and maps are construc
 
 Given two plane conics {\it Outer} and {\it Inner}, if it is possible to find a $n$-sided polygon
 simultaneously inscribed in {\it Outer} and circumscribed around {\it Inner}, then it is possible
-to find another another such polygon, one of whose vertices is an arbitrary point on {\it Outer}.
+to find another such polygon, one of whose vertices is an arbitrary point on {\it Outer}.
 
 \section{Notes}
 
-The theorem is usually considered in the real or complex projective plane, but as the arguments is
+The theorem is usually considered in the real or complex projective plane, but as the arguments are
 purely algebraic, we will be able to formalize this in any underlying field with characteristic 0.
 
 Since we are in projective plane, it is possible that the polygon will contain points at infinity
@@ -52,7 +52,7 @@ degree-2 constant $k$ such that
 \[
 k^2 = (u + r)^2 - 1
 \]
-which will be used in the next chapter where. We can always consider the algebraic closure of $K$ 
+which will be used in the next chapter. We can always consider the algebraic closure of $K$ 
 to ensure the existence of $k$. However, even if we restrict ourselves in $\mathbb{R}$, we still can 
 find such $k$ for all useful cases: depending on the sign we choose for $r$, $u + r$ represents 
 either the left-most or the right-most point of {\it Outer}, so to say $k$ exists, we need to ensure
@@ -99,10 +99,10 @@ from previous ones, where the new starting vertex is the ending vertex of the pr
 the new forward edge is the edge associated with the new starting vertex, different from the previous
 edge. We use the function $\mathrm{next}: \mathrm{Dom} \to \mathrm{Dom}$ to represent a such iteration.
 
-To define the $\mathrm{next}$ function, we first recognize that it is a composition of two functions 
+We first recognize that $\mathrm{next}$ is a composition of two functions 
 $\mathrm{rPoint}$ (reflect point) and $\mathrm{rChord}$ (reflect chord).
 
-\begin{definition}\label{rPoint}\lean{rPoint}\leanok
+\begin{definition}\label{rPoint}\lean{rPoint, mapsTo_rPoint}\leanok
     $\mathrm{rPoint}: \mathrm{Dom} \to \mathrm{Dom}$ keeps the edge component, and sends the vertex to 
     the other one associated with the edge:
     \[
@@ -118,7 +118,7 @@ $\mathrm{rPoint}$ (reflect point) and $\mathrm{rChord}$ (reflect chord).
     \]
 \end{definition}
 
-\begin{definition}\label{rChord}\lean{rChord}\leanok
+\begin{definition}\label{rChord}\lean{rChord, mapsTo_rChord}\leanok
     $\mathrm{rChord}: \mathrm{Dom} \to \mathrm{Dom}$ keeps the vertex component, and sends the edge to 
     the other one associated with the vertex:
     \[
@@ -145,6 +145,7 @@ We verify that these are legitimate by proving their characteristic lemma
     $\mathrm{rPoint}$ is an involution.
 \end{lemma}
 \begin{proof}
+    \leanok
     Expand the function composition and verify the equality for all cases
 \end{proof}
 
@@ -156,7 +157,8 @@ We verify that these are legitimate by proving their characteristic lemma
     $\mathrm{rPoint}$ is a bijection from $\mathrm{Dom}$ to itself.
 \end{lemma}
 \begin{proof}
-    Trivial from beingan involution after verifying the domain and the range
+    \leanok
+    Trivial from being an involution after verifying the domain and the range
 \end{proof}
 
 \begin{lemma}
@@ -176,6 +178,7 @@ We verify that these are legitimate by proving their characteristic lemma
     $\mathrm{rChord}$ is an involution.
 \end{lemma}
 \begin{proof}
+    \leanok
     Expand the function composition and verify the equality for all cases
 \end{proof}
 
@@ -187,7 +190,8 @@ We verify that these are legitimate by proving their characteristic lemma
     $\mathrm{rChord}$ is a bijection from $\mathrm{Dom}$ to itself.
 \end{lemma}
 \begin{proof}
-    Trivial from beingan involution after verifying the domain and the range
+    \leanok
+    Trivial from being an involution after verifying the domain and the range
 \end{proof}
 
 \begin{lemma}
@@ -216,35 +220,168 @@ It is obvious that
     $\mathrm{next}$ is a bijection from $\mathrm{Dom}$ to itself.
 \end{lemma}
 \begin{proof}
+    \leanok
     $\mathrm{next}$ is a composition of two bijections
 \end{proof}
 
-With the definition ready, we now formalize the statement of a version of Poncelet's closure theorem
+We shall also verify a property of $\mathrm{next}$ involving tangent points:
+\begin{lemma}
+    $\mathrm{next}$ maps an input to itself if and only if the input vertex is a tangent point of 
+    the two circles.
+\end{lemma}
+\begin{proof}
+    TODO
+\end{proof}
+
+We call $(V, E)$ \emph{singular} if $\mathrm{next}(V, E) = (V, E)$. This is important because if 
+the two circles are tangent to each other, and a vertex lands exactly
+on it, applying $\mathrm{next}$ will resulting in a degenerate polygon where all vertices coincide.
+Obviously this doesn't tell how other vertices behaves, so we will need to exclude it from the theorem.
+
+We now formalize the statement of a version of Poncelet's closure theorem
 \begin{theorem}
-    Given a two circles configuration in field $K$, if for a natural number $n$, for some 
+    Given a two circles configuration in field $K$, if for a natural number $n$, and some non-singular
     $(V, E) \in \mathrm{Dom}$ it holds that $(\mathrm{next})^n(V, E) = (V, E)$, then the same holds for 
-    all $(V, E) \in \mathrm{Dom}$.
+    the same $n$ and all $(V, E) \in \mathrm{Dom}$.
 \end{theorem}
 
 \chapter{Elliptic curve}
 
 To prove the Poncelet's closure theorem for the two circles configuration, we will construct a bijection
-between $\mathrm{Dom}$ and a certain elliptic curve $E$, and show that the function $mathrm{next}$ maps
+between $\mathrm{Dom}$ and a certain elliptic curve $E$, and show that the function $\mathrm{next}$ maps
 to an addition in the group of the elliptic curve. We define the curve $E$ as follows
 
 \begin{definition}\label{elliptic}\lean{elliptic}\leanok
-    $E$ is an affine cubic curve defined by
+    $E$ is an affine cubic curve defined by the following equation, plus a point at infinity as the
+    group identity
     \[
     Y^2 = X\left(r^2X^2 + \left(1-u^2-r^2\right)X + u^2\right)
     \]
+    $E_0$ is the set of non-singular points of $E$ including the point at infinity, which 
+    forms an abelian group.
 \end{definition}
 
 The curve $E$ is not always an elliptic curve because it can be singular. Precisely speaking,
 under the constraints $u \ne 0$ and $r \ne 0$, this curve is singular if and only if 
-$(u + r) ^ 2 = 1$ or $(u - r) ^ 2 = 1$, meanin that the two circles are tangent to each other. In
-general, the group law still holds for non-singular points on a singular cubic curve, so we don't 
-separate elliptic and singular cases for most parts. However, this will exclude the singular point from the 
-bijection we are going to construct, which we will discuss later.
+$(u + r)^2 = 1$ or $(u - r)^2 = 1$, meaning that the two circles are tangent to each other. In
+general, the group law still holds for non-singular points on a singular cubic curve, so we don't
+need to consider the singular case separately for most parts.
+
+We define three special points $o$, $w$, and $g$ on $E_0$, which will be useful soon
+
+\begin{definition}\label{o}\lean{o}\leanok
+    \[
+    o = (0, 0)
+    \]
+\end{definition}
+
+\begin{definition}\label{w}\lean{w}\leanok
+    \[
+    w = \left(\frac{u^2}{r^2}, \frac{u^2}{r^3}\right)
+    \]
+\end{definition}
+
+\begin{definition}\label{g}\lean{g}\leanok
+    \[
+    g = \left(1, \frac{1}{r}\right)
+    \]
+\end{definition}
+
+It is easy to show that they have the following relation 
+\begin{lemma}
+    \lean{o_sub_w}
+    \label{o_sub_w}
+    \uses{o, w, g}
+    \leanok
+    \[
+    g = o - w
+    \]
+    where the subtraction follows the group law of $E$
+\end{lemma}
+\begin{proof}
+    \leanok
+    Use the formula for group addition on elliptic curves
+\end{proof}
+
+Next, we define the mapping $f : E_0 \to \mathrm{Dom}$ as follows
+\begin{definition}\label{f}\lean{f, mapsTo_f}\leanok
+    \[
+    f(X, Y) = (\mathrm{fPoint}(X, Y), \mathrm{fChord}(X, Y))
+    \]
+    \[
+    \mathrm{fPoint}(X, Y) = \begin{cases}
+        \left[u + r : 0 : 1\right] & ((X, Y) = \infty)\\
+        \left[\begin{matrix}r^2 (u + r) X^2 + 2 r(1 - r^2 - ur) X + u^2(u + r):\\ 
+            -2r^2kY:\\ (rX + u)^2\end{matrix}\right] & (\mbox{otherwise})
+    \end{cases}
+    \]
+    \[
+    \mathrm{fChord}(X, Y) = \begin{cases}
+        \left[1 : -k : u + r\right] & ((X, Y) = \infty)\\
+        \left[\begin{matrix}2 uk ((u^2-r^2)^2 + 4u^2):\\
+      (r(u+r)^2 X - u((u+r)^2 - 2))((u^2 - r^2)^2 - 4 u^2):\\
+      8u^2 k (u^2 - r^2) \end{matrix}\right] & (\mbox{if the next line yields $[0 : 0 : 0]$})\\
+      \left[\begin{matrix}
+        -2r^2((u + r)^2 - 1)(rX - u)Y +
+    (rX + u)(r^2(u + r)X^2 +
+      2r(1 - r(u + r))X + (u + r)u^2): \\
+    -k(2r^2(rX + u)Y +
+      (rX - u)(r^2(u + r)X^2 +
+      2r(1 - r(u + r))X + (u + r)u^2)): \\
+    (rX + u)((rX - u)^2(u + r)^2 + 4urX)
+    \end{matrix}\right]
+    \end{cases}
+    \]
+\end{definition}
+As a reminder, $k^2 = (u+r)^2 - 1$. It doesn't matter whether we pick $k$ or $-k$, as changing
+the sign of $k$ results in mirroring around the x-axis.
+
+With the map $f$, we can make connection between the elliptic curve $E$ and the two circles
+configuration with the following theorems
+\begin{theorem}
+    \lean{f_o_sub}
+    \label{f_o_sub}
+    \uses{f, o, rChord}
+    For all $p \in E_0$,
+    \[
+    f(o - p) = \mathrm{rChord}(f (p))
+    \]
+    \leanok
+\end{theorem}
+\begin{proof}
+    \leanok
+    Expand the formula for $f$, $\mathrm{rChord}$, and subtraction for elliptic curve.
+\end{proof}
+
+\begin{theorem}
+    \lean{f_w_sub}
+    \label{f_w_sub}
+    \uses{f, w, rPoint}
+    For all $p \in E_0$,
+    \[
+    f(w - p) = \mathrm{rPoint}(f (p))
+    \]
+    \leanok
+\end{theorem}
+\begin{proof}
+    \leanok
+    Expand the formula for $f$, $\mathrm{rPoint}$, and subtraction for elliptic curve.
+\end{proof}
+
+\begin{theorem}
+    \lean{f_add_g}
+    \label{f_add_g}
+    \uses{f, g, next}
+    For all $p \in E_0$,
+    \[
+    f(p + g) = \mathrm{next}(f (p))
+    \]
+    \leanok
+\end{theorem}
+\begin{proof}
+    \leanok
+    Use $g = o - w$ and $\mathrm{next} = \mathrm{rChord} \circ \mathrm{rPoint}$.
+\end{proof}
 
 
 \chapter{Two conics}
