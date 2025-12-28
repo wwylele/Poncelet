@@ -233,18 +233,18 @@ between $\mathrm{Dom}$ and a certain elliptic curve $E$, and show that the funct
 to an addition in the group of the elliptic curve. We define the curve $E$ as follows
 
 \begin{definition}\label{elliptic}\lean{elliptic}\leanok
-    $E$ is an affine curve over $K$ defined by
+    $E$ is an affine cubic curve defined by
     \[
-    y^2 = x\left(r^2x^2 + \left(1-u^2-r^2\right)x + u^2\right)
+    Y^2 = X\left(r^2X^2 + \left(1-u^2-r^2\right)X + u^2\right)
     \]
 \end{definition}
 
-The curve $E$ is not strictly always an elliptic curve because it can be singular. Precisely speaking,
-under the constraints $u \ne 0$ and $r \ne 0$, this curve is singular if and only of 
+The curve $E$ is not always an elliptic curve because it can be singular. Precisely speaking,
+under the constraints $u \ne 0$ and $r \ne 0$, this curve is singular if and only if 
 $(u + r) ^ 2 = 1$ or $(u - r) ^ 2 = 1$, meanin that the two circles are tangent to each other. In
 general, the group law still holds for non-singular points on a singular cubic curve, so we don't 
-treat this case separately for most parts. However, this will exclude the singular point from the 
-bijection that we will construct, which we will discuss later.
+separate elliptic and singular cases for most parts. However, this will exclude the singular point from the 
+bijection we are going to construct, which we will discuss later.
 
 
 \chapter{Two conics}
