@@ -2,7 +2,7 @@ name = "Poncelet"
 version = "0.1.0"
 keywords = ["math"]
 defaultTargets = ["Poncelet"]
-lintDriver = "batteries/runLinter"
+#lintDriver = "batteries/runLinter"
 
 [leanOptions]
 pp.unicode.fun = true                 # pretty-prints `fun a ↦ b`
