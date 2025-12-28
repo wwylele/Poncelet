@@ -195,12 +195,18 @@ We verify that these are legitimate by proving their characteristic lemma
 \end{proof}
 
 \begin{lemma}
+    \lean{rChord_eq_self}
+    \label{rChord_eq_self}
     \uses{rChord}
-    $\mathrm{rChord}$ maps an edge to itself if and only if the input vertex is a intersection 
-    of {\it Inner} and {\it Outer}. 
+    \leanok
+    $\mathrm{rChord}$ maps an edge to itself if and only if the input vertex is on {\it Inner}.
+    In other words, it is an intersection of {\it Inner} and {\it Outer}.
 \end{lemma}
 \begin{proof}
-    TODO
+    \leanok
+    The formula of $\mathrm{rChord}$ is constructed by calculating a root of a quadratic
+    equation when given another root. Two roots coincide if and only if the discriminant vanishes.
+    The rest is verifying the equations.
 \end{proof}
 
 Using these, we define the function $\mathrm{next}$
