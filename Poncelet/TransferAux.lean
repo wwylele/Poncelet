@@ -9,13 +9,13 @@ variable (cf : Config)
 
 set_option maxHeartbeats 400000 in
 -- Long Expression
-theorem fabc_w_sub_c_eq_zero {x y wx wy : cf.K}
+theorem fChord_w_sub_c_eq_zero {x y wx wy : cf.K}
     (hxy : (elliptic cf).Nonsingular x y) (hwxy : (elliptic cf).Nonsingular wx wy)
     (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
     (hwxyeq : w cf - .some hxy = .some hwxy)
     (hsxy : ¬ SingularAbc cf x y) (hwsxy : ¬ SingularAbc cf wx wy)
     (hc : (cf.r * x + cf.u) * ((cf.r * x - cf.u) ^ 2 * (cf.u + cf.r) ^ 2 + 4 * cf.u * cf.r * x) = 0) :
-    fabc cf (.some hwxy) = fabc cf (.some hxy) := by
+    fChord cf (.some hwxy) = fChord cf (.some hxy) := by
   obtain _ := cf.hr
   obtain _ := cf.hu
   obtain hx := x_not_at_w cf hxy hpw hpnw
@@ -26,12 +26,12 @@ theorem fabc_w_sub_c_eq_zero {x y wx wy : cf.K}
   have : cf.u ^ 2 - cf.r ^ 2 * x ≠ 0 := by
     contrapose! this
     linear_combination -this
-  suffices P2.mk (fabcNormal cf wx wy) _ = P2.mk (fabcNormal cf x y) _ by
-    simpa [fabc, fabcRaw, hsxy, hwsxy]
+  suffices P2.mk (fChordNormal cf wx wy) _ = P2.mk (fChordNormal cf x y) _ by
+    simpa [fChord, fChordRaw, hsxy, hwsxy]
   rw [P2.mk_eq_mk']
   rw [w_sub cf hxy hx, Point.some.injEq] at hwxyeq
   rw [← hwxyeq.1, ← hwxyeq.2]
-  unfold fabcNormal
+  unfold fChordNormal
   have hdeno : -2 * cf.r ^ 2 * ((cf.u + cf.r) ^ 2 - 1) * (cf.r * x - cf.u) * y +
       (cf.r * x + cf.u) *
       (cf.r ^ 2 * (cf.u + cf.r) * x ^ 2 + 2 * cf.r * (1 - cf.r * (cf.u + cf.r)) * x + (cf.u + cf.r) * cf.u ^ 2) ≠ 0 := by
@@ -117,13 +117,13 @@ theorem fabc_w_sub_c_eq_zero {x y wx wy : cf.K}
       + 4*x*y*cf.u^4*cf.r^2 + x*cf.u^5*cf.r^2 + 4*x*y*cf.u^3*cf.r^3 + 3*x*cf.u^4*cf.r^3 - 2*x^3*cf.u*cf.r^4
       + 4*x*y*cf.u^2*cf.r^4 + 2*cf.u^7 + 2*x^2*cf.u^4*cf.r + 4*y*cf.u^5*cf.r + 2*x^2*cf.u^2*cf.r^3 + 4*x*cf.u^5)* heq
 
-theorem fabc_w_sub_c_ne_zero {x y wx wy : cf.K}
+theorem fChord_w_sub_c_ne_zero {x y wx wy : cf.K}
     (hxy : (elliptic cf).Nonsingular x y) (hwxy : (elliptic cf).Nonsingular wx wy)
     (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
     (hwxyeq : w cf - .some hxy = .some hwxy)
     (hsxy : ¬ SingularAbc cf x y) (hwsxy : ¬ SingularAbc cf wx wy)
     (hc : (cf.r * x + cf.u) * ((cf.r * x - cf.u) ^ 2 * (cf.u + cf.r) ^ 2 + 4 * cf.u * cf.r * x) ≠ 0) :
-    fabc cf (.some hwxy) = fabc cf (.some hxy) := by
+    fChord cf (.some hwxy) = fChord cf (.some hxy) := by
   obtain _ := cf.hr
   obtain _ := cf.hu
   obtain hx := x_not_at_w cf hxy hpw hpnw
@@ -142,12 +142,12 @@ theorem fabc_w_sub_c_ne_zero {x y wx wy : cf.K}
     linear_combination (cf.r * x + cf.u) * hc
   set inf2 := (cf.u + cf.r) ^ 2 * (cf.r * x - cf.u) ^ 2 + cf.r * cf.u * x * 4
   obtain ⟨heq, hnonsingular⟩ := (nonsingular_elliptic cf _ _).mp hxy
-  suffices P2.mk (fabcNormal cf wx wy) _ = P2.mk (fabcNormal cf x y) _ by
-    simpa [fabc, fabcRaw, hsxy, hwsxy]
+  suffices P2.mk (fChordNormal cf wx wy) _ = P2.mk (fChordNormal cf x y) _ by
+    simpa [fChord, fChordRaw, hsxy, hwsxy]
   rw [P2.mk_eq_mk']
   rw [w_sub cf hxy hx, Point.some.injEq] at hwxyeq
   rw [← hwxyeq.1, ← hwxyeq.2]
-  unfold fabcNormal
+  unfold fChordNormal
   use (cf.u ^ 3 * (cf.r * cf.u * (x * (cf.r ^ 2 * x + (2 - cf.r ^ 2 - cf.u ^ 2)) + cf.u ^ 2 + cf.r * 2 * y) +
     (cf.r ^ 2 * x - cf.u ^ 2) ^ 2) *
     ((cf.r * cf.u * (x * (cf.r ^ 2 * x + (2 - cf.r ^ 2 - cf.u ^ 2)) + cf.u ^ 2 + cf.r * 2 * y) -
@@ -202,12 +202,12 @@ theorem fabc_w_sub_c_ne_zero {x y wx wy : cf.K}
 
 set_option maxHeartbeats 400000 in
 -- Long Expression
-theorem fabc_w_sub_singularAbc_not_singularAbc {x y wx wy : cf.K}
+theorem fChord_w_sub_singularAbc_not_singularAbc {x y wx wy : cf.K}
     (hxy : (elliptic cf).Nonsingular x y) (hwxy : (elliptic cf).Nonsingular wx wy)
     (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
     (hwxyeq : w cf - .some hxy = .some hwxy)
     (hsxy : SingularAbc cf x y) (hwsxy : ¬ SingularAbc cf wx wy) (hur : cf.u ^ 2 - cf.r ^ 2 ≠ 0) :
-    fabc cf (.some hwxy) = fabc cf (.some hxy) := by
+    fChord cf (.some hwxy) = fChord cf (.some hxy) := by
   obtain _ := cf.hr
   obtain _ := cf.hu
   obtain hx := x_not_at_w cf hxy hpw hpnw
@@ -229,16 +229,16 @@ theorem fabc_w_sub_singularAbc_not_singularAbc {x y wx wy : cf.K}
     field_simp
     linear_combination -hsxy.xy_linear cf hxy
   obtain hc := hsxy.c_factor_eq_zero cf hxy
-  suffices P2.mk (fabcNormal cf wx wy) _ =
+  suffices P2.mk (fChordNormal cf wx wy) _ =
       P2.mk ![2 * cf.u * cf.k * ((cf.u ^ 2 - cf.r ^ 2) ^ 2 + 4 * cf.u ^ 2),
       (cf.r * (cf.u + cf.r) ^ 2 * x - cf.u * ((cf.u + cf.r) ^ 2 - 2)) * ((cf.u ^ 2 - cf.r ^ 2) ^ 2 - 4 * cf.u ^ 2),
       8 * cf.u ^ 2 * cf.k * (cf.u ^ 2 - cf.r ^ 2)] _ by
-    simpa [fabc, fabcRaw, hsxy, hwsxy]
+    simpa [fChord, fChordRaw, hsxy, hwsxy]
   rw [P2.mk_eq_mk']
-  use fabcNormal cf wx wy 2 / (8 * cf.u ^ 2 * cf.k * (cf.u ^ 2 - cf.r ^ 2))
+  use fChordNormal cf wx wy 2 / (8 * cf.u ^ 2 * cf.k * (cf.u ^ 2 - cf.r ^ 2))
   simp_rw [Matrix.smul_vec3, smul_eq_mul]
   rw [← hwx, ← hwy]
-  unfold fabcNormal
+  unfold fChordNormal
   simp_rw [hy]
   simp only [Matrix.cons_val]
   congrm ![?_, ?_, ?_]
@@ -331,12 +331,12 @@ theorem fabc_w_sub_singularAbc_not_singularAbc {x y wx wy : cf.K}
     + 32*cf.u^10*cf.r^3 + 128*x^2*cf.u^7*cf.r^4 - 128*x^2*cf.u^6*cf.r^5 - 128*x*cf.u^10*cf.r) * hc
   · field_simp
 
-theorem fabc_w_sub_singularAbc_not_singularAbc_u_eq_r {x y wx wy : cf.K}
+theorem fChord_w_sub_singularAbc_not_singularAbc_u_eq_r {x y wx wy : cf.K}
     (hxy : (elliptic cf).Nonsingular x y) (hwxy : (elliptic cf).Nonsingular wx wy)
     (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
     (hwxyeq : w cf - .some hxy = .some hwxy)
     (hsxy : SingularAbc cf x y) (hwsxy : ¬ SingularAbc cf wx wy) (hur : cf.u = cf.r) :
-    fabc cf (.some hwxy) = fabc cf (.some hxy) := by
+    fChord cf (.some hwxy) = fChord cf (.some hxy) := by
   obtain _ := cf.hr
   obtain _ := cf.hu
   obtain hx := x_not_at_w cf hxy hpw hpnw
@@ -362,16 +362,16 @@ theorem fabc_w_sub_singularAbc_not_singularAbc_u_eq_r {x y wx wy : cf.K}
     simpa [hur] using cf.hr
   obtain hc := hsxy.c_factor_eq_zero cf hxy
   simp_rw [hur] at hc
-  suffices P2.mk (fabcNormal cf wx wy) _ =
+  suffices P2.mk (fChordNormal cf wx wy) _ =
       P2.mk ![2 * cf.u * cf.k * ((cf.u ^ 2 - cf.r ^ 2) ^ 2 + 4 * cf.u ^ 2),
       (cf.r * (cf.u + cf.r) ^ 2 * x - cf.u * ((cf.u + cf.r) ^ 2 - 2)) * ((cf.u ^ 2 - cf.r ^ 2) ^ 2 - 4 * cf.u ^ 2),
       8 * cf.u ^ 2 * cf.k * (cf.u ^ 2 - cf.r ^ 2)] _ by
-    simpa [fabc, fabcRaw, hsxy, hwsxy]
+    simpa [fChord, fChordRaw, hsxy, hwsxy]
   rw [P2.mk_eq_mk']
-  use fabcNormal cf wx wy 0 / (2 * cf.u * cf.k * ((cf.u ^ 2 - cf.r ^ 2) ^ 2 + 4 * cf.u ^ 2))
+  use fChordNormal cf wx wy 0 / (2 * cf.u * cf.k * ((cf.u ^ 2 - cf.r ^ 2) ^ 2 + 4 * cf.u ^ 2))
   simp_rw [Matrix.smul_vec3, smul_eq_mul]
   rw [← hwx, ← hwy]
-  unfold fabcNormal
+  unfold fChordNormal
   simp_rw [hy]
   simp only [Matrix.cons_val]
   congrm ![?_, ?_, ?_]
@@ -392,7 +392,7 @@ set_option maxHeartbeats 800000 in
 theorem f_w_sub_singularAbc {x y : cf.K} (hxy : (elliptic cf).Nonsingular x y)
     (hsxy : SingularAbc cf x y) (hpw : Point.some hxy ≠ w cf)
     (hpnw : Point.some hxy ≠ -w cf) (hur : cf.u ^ 2 - cf.r ^ 2 ≠ 0)
-    (habc : fabc cf (w cf - .some hxy) = fabc cf (.some hxy)) :
+    (habc : fChord cf (w cf - .some hxy) = fChord cf (.some hxy)) :
     f cf (w cf - .some hxy) = rPoint cf (f cf (.some hxy)) := by
   obtain _ := cf.hr
   obtain _ := cf.hu
@@ -404,13 +404,13 @@ theorem f_w_sub_singularAbc {x y : cf.K} (hxy : (elliptic cf).Nonsingular x y)
   have : cf.u ^ 2 - cf.r ^ 2 * x ≠ 0 := by
     contrapose! this
     linear_combination -this
-  suffices fxyz cf (w cf - Point.some hxy) =
+  suffices fPoint cf (w cf - Point.some hxy) =
       P2.lift₂ (fun p q hp hq ↦ P2.mk' (rPoint' cf p q)) _
-      (fxyz cf (Point.some hxy)) (fabc cf (Point.some hxy)) by
+      (fPoint cf (Point.some hxy)) (fChord cf (Point.some hxy)) by
     simpa [f, rPoint, habc]
   have hk : cf.k ≠ 0 := hsxy.k_ne_zero cf hxy
   rw [w_sub cf hxy hx]
-  simp only [fxyz, fxyzRaw, neg_mul, ne_eq, rPoint', Fin.isValue, neg_sub, fabc, fabcRaw, hsxy,
+  simp only [fPoint, fPointRaw, neg_mul, ne_eq, rPoint', Fin.isValue, neg_sub, fChord, fChordRaw, hsxy,
     ↓reduceIte, P2.lift₂_mk, Matrix.cons_val, mul_eq_zero, OfNat.ofNat_ne_zero, not_false_eq_true,
     pow_eq_zero_iff, cf.hu, or_self, hk, hur, Matrix.cons_val_zero, Matrix.cons_val_one,
     sub_neg_eq_add]
@@ -651,8 +651,8 @@ theorem f_w_sub_singularAbc {x y : cf.K} (hxy : (elliptic cf).Nonsingular x y)
 
 theorem f_w_sub_not_singularAbc_p2 {x y : cf.K} (hxy : (elliptic cf).Nonsingular x y)
     (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
-    (hsxy : ¬ SingularAbc cf x y) (hp2 : fabcNormal cf x y 2 = 0)
-    (huxr : cf.r * x + cf.u ≠ 0) (habc : fabc cf (w cf - .some hxy) = fabc cf (.some hxy)):
+    (hsxy : ¬ SingularAbc cf x y) (hp2 : fChordNormal cf x y 2 = 0)
+    (huxr : cf.r * x + cf.u ≠ 0) (habc : fChord cf (w cf - .some hxy) = fChord cf (.some hxy)) :
     f cf (w cf - (.some hxy)) = rPoint cf (f cf (.some hxy)) := by
   obtain _ := cf.hr
   obtain _ := cf.hu
@@ -664,12 +664,12 @@ theorem f_w_sub_not_singularAbc_p2 {x y : cf.K} (hxy : (elliptic cf).Nonsingular
   have : cf.u ^ 2 - cf.r ^ 2 * x ≠ 0 := by
     contrapose! this
     linear_combination -this
-  suffices fxyz cf (w cf - Point.some hxy) =
+  suffices fPoint cf (w cf - Point.some hxy) =
       P2.lift₂ (fun p q hp hq ↦ P2.mk' (rPoint' cf p q)) _
-      (fxyz cf (Point.some hxy)) (fabc cf (Point.some hxy)) by
+      (fPoint cf (Point.some hxy)) (fChord cf (Point.some hxy)) by
     simpa [f, rPoint, habc]
   have huxr2 : (cf.r * x - cf.u) ^ 2 * (cf.u + cf.r) ^ 2 + 4 * cf.u * cf.r * x = 0 := by
-    simpa [fabcNormal, huxr] using hp2
+    simpa [fChordNormal, huxr] using hp2
   obtain ⟨heq, hnonsingular⟩ := (nonsingular_elliptic cf _ _).mp hxy
   have hur0 : cf.u + cf.r ≠ 0 := by
     contrapose! hsxy with hur0
@@ -724,11 +724,10 @@ theorem f_w_sub_not_singularAbc_p2 {x y : cf.K} (hxy : (elliptic cf).Nonsingular
       (2 * cf.r ^ 2 * ((cf.u + cf.r) ^ 2 - 1) * (cf.r * x - cf.u)) := by
     field_simp
     linear_combination hy
-
-  simp only [fxyz, fxyzRaw, w_sub cf hxy hx, neg_mul, ne_eq, rPoint', Fin.isValue, neg_sub, fabc,
-    fabcRaw, hsxy, ↓reduceIte, P2.lift₂_mk, hp2, Matrix.cons_val, OfNat.ofNat_ne_zero,
+  simp only [fPoint, fPointRaw, w_sub cf hxy hx, neg_mul, ne_eq, rPoint', Fin.isValue, neg_sub, fChord,
+    fChordRaw, hsxy, ↓reduceIte, P2.lift₂_mk, hp2, Matrix.cons_val, OfNat.ofNat_ne_zero,
     not_false_eq_true, pow_eq_zero_iff, huxr]
-  simp only [fabcNormal, neg_mul, Fin.isValue, Matrix.cons_val_one, Matrix.cons_val_zero,
+  simp only [fChordNormal, neg_mul, Fin.isValue, Matrix.cons_val_one, Matrix.cons_val_zero,
     neg_add_rev, neg_neg]
   refine P2.mk'_eq_mk'_of_third_zero _ ?_ ?_ ?_ ?_
   · simp only [Fin.isValue, Matrix.cons_val_one, Matrix.cons_val_zero]
@@ -783,8 +782,8 @@ theorem f_w_sub_not_singularAbc_p2 {x y : cf.K} (hxy : (elliptic cf).Nonsingular
 
 theorem f_w_sub_normal {x y : cf.K} (hxy : (elliptic cf).Nonsingular x y)
     (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
-    (hsxy : ¬ SingularAbc cf x y) (hp2 : fabcNormal cf x y 2 ≠ 0)
-    (habc : fabc cf (w cf - .some hxy) = fabc cf (.some hxy)) :
+    (hsxy : ¬ SingularAbc cf x y) (hp2 : fChordNormal cf x y 2 ≠ 0)
+    (habc : fChord cf (w cf - .some hxy) = fChord cf (.some hxy)) :
     f cf (w cf - (.some hxy)) = rPoint cf (f cf (.some hxy)) := by
   obtain _ := cf.hr
   obtain _ := cf.hu
@@ -796,18 +795,18 @@ theorem f_w_sub_normal {x y : cf.K} (hxy : (elliptic cf).Nonsingular x y)
   have : cf.u ^ 2 - cf.r ^ 2 * x ≠ 0 := by
     contrapose! this
     linear_combination -this
-  suffices fxyz cf (w cf - Point.some hxy) =
+  suffices fPoint cf (w cf - Point.some hxy) =
       P2.lift₂ (fun p q hp hq ↦ P2.mk' (rPoint' cf p q)) _
-      (fxyz cf (Point.some hxy)) (fabc cf (Point.some hxy)) by
+      (fPoint cf (Point.some hxy)) (fChord cf (Point.some hxy)) by
     simpa [f, rPoint, habc]
-  simp only [fxyz, ne_eq, rPoint', Fin.isValue, neg_sub, fabc, fabcRaw, hsxy, ↓reduceIte,
+  simp only [fPoint, ne_eq, rPoint', Fin.isValue, neg_sub, fChord, fChordRaw, hsxy, ↓reduceIte,
     P2.lift₂_mk, hp2]
   rw [w_sub cf hxy hx]
   have : cf.r * x + cf.u ≠ 0 ∧
       (cf.r * x - cf.u) ^ 2 * (cf.u + cf.r) ^ 2 + 4 * cf.u * cf.r * x ≠ 0 := by
-    simpa [fabcNormal] using hp2
+    simpa [fChordNormal] using hp2
   obtain ⟨hrxu, hrxu2⟩ := this
-  simp only [fxyzRaw, neg_mul, fabcNormal, Fin.isValue, Matrix.cons_val_zero, Matrix.cons_val,
+  simp only [fPointRaw, neg_mul, fChordNormal, Fin.isValue, Matrix.cons_val_zero, Matrix.cons_val,
     Matrix.cons_val_one, even_two, Even.neg_pow, mul_neg, sub_neg_eq_add]
   rw [nonsingular_elliptic cf] at hxy
   obtain ⟨heq, hs⟩ := hxy
