@@ -5,3 +5,246 @@
 % If you want to split the blueprint content into several files then
 % the current file can be a simple sequence of \input. Otherwise It
 % can start with a \section or \chapter for instance.
+\chapter{Introduction}
+
+This is a formalization of an "elementary" proof of \href{https://en.wikipedia.org/wiki/Poncelet%27s_closure_theorem}{Poncelet's closure theorem}:
+it only involves basic algebra and group laws of elliptic curves. It is more "low level" comparing
+to most modern proof of the theorem, where explicit curves and maps are constructed.
+
+\section{The theorem statement}
+
+Given two plane conics {\it Outer} and {\it Inner}, if it is possible to find a $n$-sided polygon
+simultaneously inscribed in {\it Outer} and circumscribed around {\it Inner}, then it is possible
+to find another another such polygon, one of whose vertices is an arbitrary point on {\it Outer}.
+
+\section{Notes}
+
+The theorem is usually considered in the real or complex projective plane, but as the arguments is
+purely algebraic, we will be able to formalize this in any underlying field with characteristic 0.
+
+Since we are in projective plane, it is possible that the polygon will contain points at infinity
+or lines at infinity.
+
+Several degenerate cases need to be considered: degenerate conics, and degenerate intersection of 
+them (tangent). Some of these degenerate cases can be naturally included in the general case, while
+others needs to be discussed separately.
+
+Even in the non-degenerate case, it is possible for a polygon to contain repeated vertices and
+edges. This happens when a vertex lands on a intersection of the two conics,
+or an edge is a shared tangent of the two conics. Algebraically, as we will define directed edges, 
+we can distinguish between repeated edges, so this is generally not an issue. However, it can be
+confusing when presented geometrically.
+
+\chapter{Two circles}
+
+We will first focus on a special case of the theorem: two circles. This later will turn out to be
+a good representation of most general cases. To make it even simpler, we will fix {\it Inner} to be
+the unit circle, and restrict the center of {\it Outer} on the x-axis
+\[
+Inner: x^2 + y^2 = z^2
+\]
+\[
+Outer: (x-uz)^2 + y^2 = r^2z^2
+\]
+where $u$ and $r$ are the only two free parameters we are allowed to change. As mentioned before,
+all variables are in a field $K$ with characteristic 0. We will also assume the existence of a
+degree-2 constant $k$ such that
+\[
+k^2 = (u + r)^2 - 1
+\]
+which will be used in the next chapter where. We can always consider the algebraic closure of $K$ 
+to ensure the existence of $k$. However, even if we restrict ourselves in $\mathbb{R}$, we still can 
+find such $k$ for all useful cases: depending on the sign we choose for $r$, $u + r$ represents 
+either the left-most or the right-most point of {\it Outer}, so to say $k$ exists, we need to ensure
+at least one of the two points is not inside {\it Inner}. Indeed, if both points are inside 
+{\it Inner}, then {\it Outer} is completely enclosed by {\it Inner} in the real plane, making the 
+polygon impossible to form.
+
+Finally, we don't allow $u = 0$ (concentric circles) or $r = 0$ (degenerate {\it Outer}). We will
+discuss these cases in a later chapter
+
+We encode these in the following definition
+
+\begin{definition}\label{Config}\lean{Config}\leanok
+    A \emph{two circles configuration} in field $K$ is a tuple $(u, r, k)$ such that $u \ne 0$,
+    $r \ne 0$, and $k^2 = (u + r)^2 - 1$
+\end{definition}
+
+Moving on to vertices and edges, we consider the pair 
+\[
+([x : y : z], [a : b : c]): \mathbf{P}(2, K) \times \mathbf{P}(2, K)
+\]
+where $[x : y : z]$ is the projective coordinates of a point, and $[a : b : c]$ is the projective
+coordinates of a line $ax+by=cz$. We define a subset $Dom$ of 
+$\mathbf{P}(2, K) \times \mathbf{P}(2, K)$ that represents legal vertex-edge pairs for the
+configuration
+
+\begin{definition}\label{dom}\lean{dom}\leanok
+    The subset \emph{domain} ($\mathrm{Dom}$) of $\mathbf{P}(2, K) \times \mathbf{P}(2, K)$ consists of
+    pairs $([x : y : z], [a : b : c])$ such that
+    \begin{itemize}
+        \item $(x-uz)^2 + y^2 = r^2z^2$
+        \item $a^2 + b^2 = c^2$
+        \item $ax+by=cz$
+    \end{itemize}
+\end{definition}
+
+This means that the vertex is on {\it Outer}, the edge is tangent to {\it Inner}, and the vertex is
+on the line of the edge. We also effectively defined directed edges: while each edge has two 
+associated vertices, we specify one of them as the "starting" vertices. Dually, this also assign
+a direction to vertices: we specify the "forward" edge among the two edges associated to the vertex.
+
+We can think of the process of forming a polygon as iteratively generating new elements in $\mathrm{Dom}$
+from previous ones, where the new starting vertex is the ending vertex of the previous edge, and 
+the new forward edge is the edge associated with the new starting vertex, different from the previous
+edge. We use the function $\mathrm{next}: \mathrm{Dom} \to \mathrm{Dom}$ to represent a such iteration.
+
+To define the $\mathrm{next}$ function, we first recognize that it is a composition of two functions 
+$\mathrm{rPoint}$ (reflect point) and $\mathrm{rChord}$ (reflect chord).
+
+\begin{definition}\label{rPoint}\lean{rPoint}\leanok
+    $\mathrm{rPoint}: \mathrm{Dom} \to \mathrm{Dom}$ keeps the edge component, and sends the vertex to 
+    the other one associated with the edge:
+    \[
+    \mathrm{rPoint}([x : y : z], [a : b : c]) = (V, [a : b : c])
+    \]
+    where
+    \[
+    V = \begin{cases}
+        \left[-(r^2 - u^2)b : (r^2 - u^2)a : 2ub\right] & (c = 0, z = 0)\\
+        \left[b : -a : 0\right] & (c = 0, z \ne 0)\\
+        \left[2 acz + 2ub^2z - c^2x : 2bcz + 2uabz - c^2y : c^2z \right] & (c \ne 0)
+    \end{cases}
+    \]
+\end{definition}
+
+\begin{definition}\label{rChord}\lean{rChord}\leanok
+    $\mathrm{rChord}: \mathrm{Dom} \to \mathrm{Dom}$ keeps the vertex component, and sends the edge to 
+    the other one associated with the vertex:
+    \[
+    \mathrm{rChord}([x : y : z], [a : b : c]) = ([x : y : z], E)
+    \]
+    where
+    \[
+    E = \begin{cases}
+        \left[a : -b : c\right] & (2ux +r^2z-u^2z = 0, x = 0)\\
+        \left[y(z^2-y^2) : x(z^2 + y^2) : 2xyz\right] & (2ux +r^2z-u^2z = 0, x\ne0, c=0) \\
+        \left[y : -x : 0\right] & (2ux +r^2z-u^2z = 0, x\ne0, c\ne0) \\
+        \left[2cx - a(2ux+r^2z-u^2z) : 2cy - b(2ux+r^2z-u^2z) : c(2ux+r^2z-u^2z) \right] &
+           (2ux+r^2z-u^2z \ne 0)
+    \end{cases}
+    \]
+\end{definition}
+
+We verify that these are legitimate by proving their characteristic lemma
+\begin{lemma}
+    \lean{rPoint_rPoint}
+    \label{rPoint_rPoint}
+    \uses{rPoint}
+    \leanok
+    $\mathrm{rPoint}$ is an involution.
+\end{lemma}
+\begin{proof}
+    Expand the function composition and verify the equality for all cases
+\end{proof}
+
+\begin{lemma}
+    \lean{rPoint_bijOn}
+    \label{rPoint_bijOn}
+    \uses{rPoint}
+    \leanok
+    $\mathrm{rPoint}$ is a bijection from $\mathrm{Dom}$ to itself.
+\end{lemma}
+\begin{proof}
+    Trivial from beingan involution after verifying the domain and the range
+\end{proof}
+
+\begin{lemma}
+    \uses{rPoint}
+    $\mathrm{rPoint}$ maps a vertex to itself if and only if the input edge is a shared tangent to 
+    {\it Inner} and {\it Outer}.
+\end{lemma}
+\begin{proof}
+    TODO
+\end{proof}
+
+\begin{lemma}
+    \lean{rChord}
+    \label{rChord_rChord}
+    \uses{rChord}
+    \leanok
+    $\mathrm{rChord}$ is an involution.
+\end{lemma}
+\begin{proof}
+    Expand the function composition and verify the equality for all cases
+\end{proof}
+
+\begin{lemma}
+    \lean{rChord_bijOn}
+    \label{rChord_bijOn}
+    \uses{rChord}
+    \leanok
+    $\mathrm{rChord}$ is a bijection from $\mathrm{Dom}$ to itself.
+\end{lemma}
+\begin{proof}
+    Trivial from beingan involution after verifying the domain and the range
+\end{proof}
+
+\begin{lemma}
+    \uses{rChord}
+    $\mathrm{rChord}$ maps an edge to itself if and only if the input vertex is a intersection 
+    of {\it Inner} and {\it Outer}. 
+\end{lemma}
+\begin{proof}
+    TODO
+\end{proof}
+
+Using these, we define the function $\mathrm{next}$
+
+\begin{definition}\label{next}\lean{next}\leanok
+    $\mathrm{next}: \mathrm{Dom} \to \mathrm{Dom}$ sends a pair of vertex and edge to the next one on the polygon.
+    \[
+        \mathrm{next}(V, E) = \mathrm{rChord}(\mathrm{rPoint}(V, E))
+    \]
+\end{definition}
+It is obvious that
+\begin{lemma}
+    \lean{next_bijOn}
+    \label{next_bijOn}
+    \uses{next}
+    \leanok
+    $\mathrm{next}$ is a bijection from $\mathrm{Dom}$ to itself.
+\end{lemma}
+\begin{proof}
+    $\mathrm{next}$ is a composition of two bijections
+\end{proof}
+
+With the definition ready, we now formalize the statement of a version of Poncelet's closure theorem
+\begin{theorem}
+    Given a two circles configuration in field $K$, if for a natural number $n$, for some 
+    $(V, E) \in \mathrm{Dom}$ it holds that $(\mathrm{next})^n(V, E) = (V, E)$, then the same holds for 
+    all $(V, E) \in \mathrm{Dom}$.
+\end{theorem}
+
+\chapter{Elliptic curve}
+
+To prove the Poncelet's closure theorem for the two circles configuration, we will construct a bijection
+between $\mathrm{Dom}$ and a certain elliptic curve $E$, and show that the function $mathrm{next}$ maps
+to an addition in the group of the elliptic curve. We define the curve $E$ as follows
+
+\begin{definition}\label{elliptic}\lean{elliptic}\leanok
+    $E$ is an affine curve over $K$ defined by
+    \[
+    y^2 = x\left(r^2x^2 + \left(1-u^2-r^2\right)x + u^2\right)
+    \]
+\end{definition}
+
+The curve $E$ is not strictly always an elliptic curve because it can be singular. Precisely speaking,
+under the constraints $u \ne 0$ and $r \ne 0$, this curve is singular if and only of 
+$(u + r) ^ 2 = 1$ or $(u - r) ^ 2 = 1$, meanin that the two circles are tangent to each other. In
+general, the group law still holds for non-singular points on a singular cubic curve, so we don't 
+treat this case separately for most parts. However, this will exclude the singular point from the 
+bijection that we will construct, which we will discuss later.
+
+
+\chapter{Two conics}
