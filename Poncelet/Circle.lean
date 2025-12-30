@@ -1,16 +1,29 @@
 import Mathlib
 import Poncelet.P2
 
+/-- A set of parameters to represent a two circles configuration.
+The inner circle is fixed at $[0 : 0 : 1]$ with radius $1$, and the outer circle
+is at $[u : 0 : 1]$ with radius $r$. -/
 structure Config where
+  /-- The type of the coordinate field -/
   K : Type*
+  /-- `K` is a field -/
   field : Field K
+  /-- DecidableEq allows computation in `K` -/
   decidableEq : DecidableEq K
+  /-- We require characteristic 0. Might be able to relax this later -/
   charZero : CharZero K
+  /-- x-coordinate of the center of the outer circle -/
   u : K
+  /-- Radius of the outer circle -/
   r : K
+  /-- Disallow concentric circles -/
   hu : u ≠ 0
+  /-- Disallow degenerate circles -/
   hr : r ≠ 0
+  /-- A auxilliary constant for computation -/
   k : K
+  /-- The constant `k` must satisfy this equation -/
   k_sq : k ^ 2 = (u + r) ^ 2 - 1
 
 variable (cf : Config)
@@ -19,15 +32,30 @@ instance : Field cf.K := cf.field
 instance : DecidableEq cf.K := cf.decidableEq
 instance : CharZero cf.K := cf.charZero
 
+/-- The predicate that a point is on the outer circle. -/
 def OuterCircle (p : P2 cf.K) : Prop :=
-  p.lift (fun p hp ↦ (p 0 - cf.u * p 2) ^ 2 + p 1 ^ 2 = cf.r ^ 2 * p 2 ^ 2) fun p q hp hq h ↦ (by
+  p.lift (fun p hp ↦ (p 0 - cf.u * p 2) ^ 2 + p 1 ^ 2 = cf.r ^ 2 * p 2 ^ 2) fun p q hp hq h ↦ by
     obtain ⟨l, h0, rfl⟩ := h
     simp_rw [Pi.smul_apply, smul_eq_mul]
     conv_rhs =>
       rw [← mul_left_inj' (sq_eq_zero_iff.ne.mpr h0)]
     congrm ?_ = ?_ <;> ring
-  )
 
+/-- The predicate that a line (where $[a : b : c]$ means $ax + by = cz$)
+is tangent to the outer circle. -/
+def TangentOuterCircle (p : P2 cf.K) : Prop :=
+  p.lift (fun p hp ↦
+      2 * cf.u * p 0 * p 2 + cf.u ^ 2 * p 1 ^ 2 = (1 + cf.u ^ 2 - cf.r ^ 2) * p 2 ^ 2)
+    fun p q hp hq h ↦ by
+    obtain ⟨l, h0, rfl⟩ := h
+    simp_rw [Pi.smul_apply, smul_eq_mul]
+    conv_rhs =>
+      rw [← mul_left_inj' (sq_eq_zero_iff.ne.mpr h0)]
+    congrm ?_ = ?_ <;> ring
+
+/-- This is a dual-purpose predicate:
+ - a point is on the inner circle.
+ - a line (where $[a : b : c]$ means $ax + by = cz$) is tangent to the inner circle. -/
 def InnerCircle (p : P2 cf.K) : Prop :=
   p.lift (fun p hp ↦ p 0 ^ 2 + p 1 ^ 2 = p 2 ^ 2) fun p q hp hq h ↦ by
     obtain ⟨l, h0, rfl⟩ := h
@@ -36,6 +64,7 @@ def InnerCircle (p : P2 cf.K) : Prop :=
       rw [← mul_left_inj' (sq_eq_zero_iff.ne.mpr h0)]
     congrm ?_ = ?_ <;> ring
 
+/-- The predicate that a point is on the line. -/
 def Incidence (p q : P2 cf.K) : Prop :=
   P2.lift₂ (fun p q hp hq ↦ p 0 * q 0 + p 1 * q 1 = p 2 * q 2) (fun p q r s hp hq hr hs hpr hqs ↦ by
     obtain ⟨l, hl0, rfl⟩ := hpr
@@ -46,6 +75,8 @@ def Incidence (p q : P2 cf.K) : Prop :=
     congrm ?_ = ?_ <;> ring
   ) p q
 
+/-- The set of pairs of vertex and edge, where the vertex is on the outer circle,
+the edge is tanget to the inner circle, and the vertex is on the line of the edge. -/
 def dom : Set (P2 cf.K × P2 cf.K) :=
   {pq | OuterCircle cf pq.1 ∧ InnerCircle cf pq.2 ∧ Incidence cf pq.1 pq.2}
 
@@ -56,6 +87,7 @@ theorem mem_dom {p q : Fin 3 → cf.K} (hp : p ≠ 0) (hq : q ≠ 0) :
     q 0 ^ 2 + q 1 ^ 2 = q 2 ^ 2 ∧
     p 0 * q 0 + p 1 * q 1 = p 2 * q 2) := by rfl
 
+/-- Reflect the vertex across the edge, expressed in raw coordinates. -/
 def rPoint' (p q : Fin 3 → cf.K) : Fin 3 → cf.K :=
   if q 2 = 0 then
     if p 2 = 0 then
@@ -64,7 +96,7 @@ def rPoint' (p q : Fin 3 → cf.K) : Fin 3 → cf.K :=
       ![q 1, -q 0, 0]
   else
     ![2 * q 0 * p 2 * q 2 + 2 * cf.u * q 1 ^ 2 * p 2 - p 0 * q 2 ^ 2,
-      2 * q 1 * p 2 * q 2 - 2 * cf.u * q 0 * q 1 * p 2  - p 1 * q 2 ^ 2,
+      2 * q 1 * p 2 * q 2 - 2 * cf.u * q 0 * q 1 * p 2 - p 1 * q 2 ^ 2,
       p 2 * q 2 ^ 2]
 
 theorem rPoint'_rPoint' {p q : Fin 3 → cf.K} (hp : p ≠ 0) (hq : q ≠ 0)
@@ -131,33 +163,48 @@ theorem rPoint'_ne_zero {p q : Fin 3 → cf.K} (hp : p ≠ 0) (hq : q ≠ 0)
       ext n; fin_cases n <;> assumption
     · simp [hp2, hq2] at h0
 
-/-theorem rPoint'_eq_self (hu : u ≠ 0) {p q : Fin 3 → cf.K} (hp : p ≠ 0) (hq : q ≠ 0)
-    (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom u r) :
-    (∃ l : K, rPoint' u r p q = l • p) ↔
-    (2 * u * q 0 * q 2 + u ^ 2 * q 1 ^ 2) * q 1 = (1 + u ^ 2 - r ^ 2) * q 2 ^ 2 * q 1 := by
-  obtain ⟨ho, hi, hpq⟩ := mem_dom u r hp hq |>.mp h
+theorem rPoint'_eq_self {p q : Fin 3 → cf.K} (hp : p ≠ 0) (hq : q ≠ 0)
+    (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) :
+    (∃ l : cf.K, rPoint' cf p q = l • p) ↔
+    2 * cf.u * q 0 * q 2 + cf.u ^ 2 * q 1 ^ 2 = (1 + cf.u ^ 2 - cf.r ^ 2) * q 2 ^ 2 := by
+  obtain ⟨ho, hi, heq⟩ := mem_dom cf hp hq |>.mp h
+  clear h
+  simp only [rPoint', neg_sub]
+  obtain _ := cf.hr
+  obtain _ := cf.hu
+  have hq : q 0 = 0 → q 1 = 0 → q 2 ≠ 0 := by simpa [funext_iff, Fin.forall_fin_succ] using hq
+  have hp : p 0 = 0 → p 1 = 0 → p 2 ≠ 0 := by simpa [funext_iff, Fin.forall_fin_succ] using hp
+  by_cases hq2 : q 2 = 0;
+  · by_cases hp2 : p 2 = 0
+    · suffices (∃ l, ![(cf.u ^ 2 - cf.r ^ 2) * q 1,
+          (cf.r ^ 2 - cf.u ^ 2) * q 0, 2 * cf.u * q 1] = l • p) ↔ cf.u = 0 ∨ q 1 = 0 by
+        simpa [hp2, hq2]
+      suffices (∃ l, (cf.u ^ 2 - cf.r ^ 2) * q 1 = l * p 0 ∧
+          (cf.r ^ 2 - cf.u ^ 2) * q 0 = l * p 1 ∧ 2 * cf.u * q 1 = l * p 2) ↔
+          cf.u = 0 ∨ q 1 = 0 by
+        simpa [funext_iff, Fin.forall_fin_succ]
+      grind
+    · suffices (∃ l, ![q 1, -q 0, 0] = l • p) ↔ cf.u = 0 ∨ q 1 = 0 by
+        simpa [hq2, hp2]
+      suffices (∃ l, q 1 = l * p 0 ∧ -q 0 = l * p 1 ∧ (l = 0 ∨ p 2 = 0)) ↔ cf.u = 0 ∨ q 1 = 0 by
+        simpa [funext_iff, Fin.forall_fin_succ]
+      grind
+  · suffices (∃ l,
+      2 * q 0 * p 2 * q 2 + 2 * cf.u * q 1 ^ 2 * p 2 - p 0 * q 2 ^ 2 = l * p 0 ∧
+      2 * q 1 * p 2 * q 2 - 2 * cf.u * q 0 * q 1 * p 2 - p 1 * q 2 ^ 2 = l * p 1 ∧
+      p 2 * q 2 ^ 2 = l * p 2) ↔
+      2 * cf.u * q 0 * q 2 + cf.u ^ 2 * q 1 ^ 2 = (1 + cf.u ^ 2 - cf.r ^ 2) * q 2 ^ 2 by
+      simpa [hq2, funext_iff, Fin.forall_fin_succ]
+    constructor <;> intro h
+    · by_cases hp2: p 2 = 0
+      · have hp0: p 0 = 0 := by
+          grind
+        grind
+      · obtain ⟨l, hl⟩ := h
+        grind
+    · exact ⟨q 2 ^ 2, (by grind), (by grind), (by ring)⟩
 
-  by_cases! hq2 : q 2 = 0
-  · unfold rPoint'
-    by_cases! hp2 : p 2 = 0
-    · have hq1 : q 1 ≠ 0 := by
-        by_contra! hq1
-        have : q 0 = 0 := by simpa [hq2, hq1] using hi
-        clear h
-        contrapose! hq
-        ext n; fin_cases n <;> assumption
-      simp [hq2, hp2, hu]
-
-      · sorry
-    · sorry
-  trans rPoint' u r p q = q 2 ^ 2 • p
-  · sorry
-
-  unfold rPoint'
-  constructor
-  · sorry
-  · sorry-/
-
+/-- Reflect the vertex across the edge. -/
 def rPoint (pq : P2 cf.K × P2 cf.K) : P2 cf.K × P2 cf.K :=
   ⟨P2.lift₂ (fun p q hp hq ↦ P2.mk' (rPoint' cf p q)) (by
   intro p q p' q' hp hq hp' hq' ⟨l, hl0, hl⟩ ⟨m, hm0, hm⟩
@@ -224,6 +271,15 @@ theorem rPoint_bijOn : Set.BijOn (rPoint cf) (dom cf) (dom cf) := by
   · intro p hp
     exact ⟨rPoint cf p, mapsTo_rPoint cf hp, rPoint_rPoint cf hp⟩
 
+theorem rPoint_eq_self {pq : P2 cf.K × P2 cf.K} (h : pq ∈ dom cf) :
+    rPoint cf (pq) = pq ↔ TangentOuterCircle cf pq.2 := by
+  obtain ⟨p, q⟩ := pq
+  induction p with | mk p hp
+  induction q with | mk q hq
+  simp [rPoint, TangentOuterCircle, P2.mk'_eq (rPoint'_ne_zero cf hp hq h),
+    P2.mk_eq_mk' _ _, rPoint'_eq_self cf hp hq h]
+
+/-- Reflect the edge across the vertex, expressed in raw coordinates. -/
 def rChord' (p q : Fin 3 → cf.K) : Fin 3 → cf.K :=
   if 2 * cf.u * p 0 + cf.r ^ 2 * p 2 - cf.u ^ 2 * p 2 = 0 then -- all sorts of edge cases
     if p 0 = 0 then
@@ -320,107 +376,119 @@ theorem rChord'_rChord' {p q : Fin 3 → cf.K} (hp : p ≠ 0) (hq : q ≠ 0)
     simp [h0]
     ring
 
-set_option maxHeartbeats 400000 in
--- a lot of grind
-theorem rChord'_eq_self {p q : Fin 3 → cf.K} (hp : p ≠ 0) (hq : q ≠ 0)
-    (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) :
+theorem rChord'_eq_self_special {p q : Fin 3 → cf.K} (hp : p ≠ 0) (hq : q ≠ 0)
+    (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf)
+    (hxy : 2 * cf.u * p 0 + cf.r ^ 2 * p 2 - cf.u ^ 2 * p 2 = 0) :
     (∃ l : cf.K, rChord' cf p q = l • q) ↔ p 0 ^ 2 + p 1 ^ 2 = p 2 ^ 2 := by
-  simp only [dom, OuterCircle, InnerCircle, Incidence, Set.mem_setOf_eq,
-    P2.lift_mk, P2.lift₂_mk] at h
-  obtain ⟨ho, hi, heq⟩ := h
-  by_cases! hxy : 2 * cf.u * p 0 + cf.r ^ 2 * p 2 - cf.u ^ 2 * p 2 = 0
-  · simp only [rChord', hxy, ↓reduceIte]
-    by_cases hp0 : p 0 = 0
-    · suffices (∃ l, q 0 = l * q 0 ∧ -q 1 = l * q 1 ∧ q 2 = l * q 2) ↔ p 1 ^ 2 = p 2 ^ 2 by
-        simpa [hp0, funext_iff, Fin.forall_fin_succ]
-      constructor
-      · rintro ⟨l, ⟨h0, h1, h2⟩⟩
-        by_cases hq1 : q 1 = 0
-        · have heq : p 0 * q 0 = p 2 * q 2 := by simpa [hq1] using heq
-          have : q 0 ^ 2 = q 2 ^ 2 := by simpa [hq1] using hi
-          have hq2 : q 2 ≠ 0 := by
-            contrapose! hq with hq2
-            ext i
-            fin_cases i
-            · simpa [hq2] using this
-            · exact hq1
-            · exact hq2
-          obtain h | h := eq_or_eq_neg_of_sq_eq_sq _ _ this
-          · grind
-          · grind
-        · grind
-      · intro h
-        have hp2 : p 2 ≠ 0 := by
-          contrapose! hp with hp2
+  obtain ⟨ho, hi, heq⟩ := mem_dom cf hp hq |>.mp h
+  clear h
+  simp only [rChord', hxy, ↓reduceIte]
+  by_cases hp0 : p 0 = 0
+  · suffices (∃ l, q 0 = l * q 0 ∧ -q 1 = l * q 1 ∧ q 2 = l * q 2) ↔ p 1 ^ 2 = p 2 ^ 2 by
+      simpa [hp0, funext_iff, Fin.forall_fin_succ]
+    constructor
+    · rintro ⟨l, ⟨h0, h1, h2⟩⟩
+      by_cases hq1 : q 1 = 0
+      · have heq : p 0 * q 0 = p 2 * q 2 := by simpa [hq1] using heq
+        have : q 0 ^ 2 = q 2 ^ 2 := by simpa [hq1] using hi
+        have hq2 : q 2 ≠ 0 := by
+          contrapose! hq with hq2
           ext i
           fin_cases i
-          · exact hp0
-          · simpa [hp2] using h
-          · exact hp2
-        obtain h | h := eq_or_eq_neg_of_sq_eq_sq _ _ h
+          · simpa [hq2] using this
+          · exact hq1
+          · exact hq2
+        obtain h | h := eq_or_eq_neg_of_sq_eq_sq _ _ this
         · grind
         · grind
-    · by_cases hq2 : q 2 = 0
-      · simp only [hp0, hq2, ↓reduceIte]
-        constructor
-        · rintro ⟨l, hl⟩
-          obtain ⟨h0, h1, h2⟩ : p 1 * (p 2 ^ 2 - p 1 ^ 2) = l * q 0 ∧
-              p 0 * (p 2 ^ 2 + p 1 ^ 2) = l * q 1 ∧
-              2 * p 0 * p 1 * p 2 = l * q 2 := by
-            simpa [funext_iff, Fin.forall_fin_succ] using hl
-          grind
-        · intro h
-          suffices ∃ l, p 1 * (p 2 ^ 2 - p 1 ^ 2) = l * q 0 ∧
-              p 0 * (p 2 ^ 2 + p 1 ^ 2) = l * q 1 ∧
-              2 * p 0 * p 1 * p 2 = l * q 2 by
-            simpa [funext_iff, Fin.forall_fin_succ]
-          have hq0 : q 0 ≠ 0 := by
-            contrapose! hq
-            ext i
-            fin_cases i
-            · exact hq
-            · simpa [hq, hq2] using hi
-            · exact hq2
-          refine ⟨p 1 * (p 2 ^ 2 - p 1 ^ 2) / q 0, ?_, ?_, ?_⟩
-          · field
-          · field_simp
-            grind
-          · field_simp
-            grind
-      · simp only [hp0, hq2, ↓reduceIte]
-        suffices (∃ l, p 1 = l * q 0 ∧ -p 0 = l * q 1 ∧ (l = 0 ∨ q 2 = 0))
-            ↔ p 0 ^ 2 + p 1 ^ 2 = p 2 ^ 2 by
+      · grind
+    · intro h
+      have hp2 : p 2 ≠ 0 := by
+        contrapose! hp with hp2
+        ext i
+        fin_cases i
+        · exact hp0
+        · simpa [hp2] using h
+        · exact hp2
+      obtain h | h := eq_or_eq_neg_of_sq_eq_sq _ _ h
+      · grind
+      · grind
+  · by_cases hq2 : q 2 = 0
+    · simp only [hp0, hq2, ↓reduceIte]
+      constructor
+      · rintro ⟨l, hl⟩
+        obtain ⟨h0, h1, h2⟩ : p 1 * (p 2 ^ 2 - p 1 ^ 2) = l * q 0 ∧
+            p 0 * (p 2 ^ 2 + p 1 ^ 2) = l * q 1 ∧
+            2 * p 0 * p 1 * p 2 = l * q 2 := by
+          simpa [funext_iff, Fin.forall_fin_succ] using hl
+        grind
+      · intro h
+        suffices ∃ l, p 1 * (p 2 ^ 2 - p 1 ^ 2) = l * q 0 ∧
+            p 0 * (p 2 ^ 2 + p 1 ^ 2) = l * q 1 ∧
+            2 * p 0 * p 1 * p 2 = l * q 2 by
           simpa [funext_iff, Fin.forall_fin_succ]
-        grind
-  · simp only [rChord', hxy, ↓reduceIte]
-    by_cases h_case2 : p 0 ^ 2 + p 1 ^ 2 = p 2 ^ 2;
-    · simp only [h_case2, iff_true]
-      use 2 * p 2 - (2 * cf.u * p 0 + cf.r ^ 2 * p 2 - cf.u ^ 2 * p 2)
-      ext i
-      fin_cases i
-      · simp
-        grind
-      · simp
-        grind
-      · simp
-        grind
-    · simp only [h_case2, iff_false]
-      simp_rw [funext_iff, Fin.forall_fin_succ]
-      by_contra! h
-      obtain ⟨l, hl⟩ := h
-      by_cases hq2 : q 2 = 0
-      · by_cases hq0 : q 0 = 0
-        · by_cases hq1 : q 1 = 0
-          · contrapose! hq
-            ext i
-            fin_cases i <;> assumption
-          simp at hl
+        have hq0 : q 0 ≠ 0 := by
+          contrapose! hq
+          ext i
+          fin_cases i
+          · exact hq
+          · simpa [hq, hq2] using hi
+          · exact hq2
+        refine ⟨p 1 * (p 2 ^ 2 - p 1 ^ 2) / q 0, ?_, ?_, ?_⟩
+        · field
+        · field_simp
           grind
+        · field_simp
+          grind
+    · simp only [hp0, hq2, ↓reduceIte]
+      suffices (∃ l, p 1 = l * q 0 ∧ -p 0 = l * q 1 ∧ (l = 0 ∨ q 2 = 0))
+          ↔ p 0 ^ 2 + p 1 ^ 2 = p 2 ^ 2 by
+        simpa [funext_iff, Fin.forall_fin_succ]
+      grind
+
+theorem rChord'_eq_self_normal {p q : Fin 3 → cf.K} (hp : p ≠ 0) (hq : q ≠ 0)
+    (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf)
+    (hxy : 2 * cf.u * p 0 + cf.r ^ 2 * p 2 - cf.u ^ 2 * p 2 ≠ 0) :
+    (∃ l : cf.K, rChord' cf p q = l • q) ↔ p 0 ^ 2 + p 1 ^ 2 = p 2 ^ 2 := by
+  obtain ⟨ho, hi, heq⟩ := mem_dom cf hp hq |>.mp h
+  clear h
+  simp only [rChord', hxy, ↓reduceIte]
+  by_cases h_case2 : p 0 ^ 2 + p 1 ^ 2 = p 2 ^ 2;
+  · simp only [h_case2, iff_true]
+    use 2 * p 2 - (2 * cf.u * p 0 + cf.r ^ 2 * p 2 - cf.u ^ 2 * p 2)
+    ext i
+    fin_cases i
+    · simp
+      grind
+    · simp
+      grind
+    · simp
+      grind
+  · simp only [h_case2, iff_false]
+    simp_rw [funext_iff, Fin.forall_fin_succ]
+    by_contra! h
+    obtain ⟨l, hl⟩ := h
+    by_cases hq2 : q 2 = 0
+    · by_cases hq0 : q 0 = 0
+      · by_cases hq1 : q 1 = 0
+        · contrapose! hq
+          ext i
+          fin_cases i <;> assumption
         simp at hl
         grind
       simp at hl
       grind
+    simp at hl
+    grind
 
+theorem rChord'_eq_self {p q : Fin 3 → cf.K} (hp : p ≠ 0) (hq : q ≠ 0)
+    (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) :
+    (∃ l : cf.K, rChord' cf p q = l • q) ↔ p 0 ^ 2 + p 1 ^ 2 = p 2 ^ 2 := by
+  by_cases! hxy : 2 * cf.u * p 0 + cf.r ^ 2 * p 2 - cf.u ^ 2 * p 2 = 0
+  · exact rChord'_eq_self_special cf hp hq h hxy
+  · exact rChord'_eq_self_normal cf hp hq h hxy
+
+/-- Reflect the edge across the vertex. -/
 def rChord (pq : P2 cf.K × P2 cf.K) : P2 cf.K × P2 cf.K :=
   ⟨pq.1, P2.lift₂ (fun p q hp hq ↦ P2.mk' (rChord' cf p q)) (by
     intro p q p' q' hp hq hp' hq' ⟨l, hl0, hl⟩ ⟨m, hm0, hm⟩
@@ -516,6 +584,7 @@ theorem rChord_eq_self {pq : P2 cf.K × P2 cf.K} (h : pq ∈ dom cf) :
   simp [rChord, InnerCircle, P2.mk'_eq (rChord'_ne_zero cf hp hq h),
     P2.mk_eq_mk' _ _, rChord'_eq_self cf hp hq h]
 
+/-- Send a pair of vertex and edge to the next one on the polygon. -/
 def next (pq : P2 cf.K × P2 cf.K) : P2 cf.K × P2 cf.K :=
   rChord cf (rPoint cf pq)
 
@@ -524,3 +593,151 @@ theorem mapsTo_next : Set.MapsTo (next cf) (dom cf) (dom cf) :=
 
 theorem next_bijOn : Set.BijOn (next cf) (dom cf) (dom cf) :=
   (rChord_bijOn cf).comp (rPoint_bijOn cf)
+
+theorem next_eq_self {pq : P2 cf.K × P2 cf.K} (h : pq ∈ dom cf) :
+    next cf (pq) = pq ↔ InnerCircle cf pq.1 ∧ TangentOuterCircle cf pq.2 := by
+  rw [← rChord_eq_self cf h, ← rPoint_eq_self cf h]
+  unfold next
+  unfold rChord rPoint
+  grind
+
+theorem next_eq_self' {pq : P2 cf.K × P2 cf.K} (h : pq ∈ dom cf) :
+    next cf (pq) = pq ↔
+    pq = ⟨P2.mk ![1, 0, 1] (by simp), P2.mk ![1, 0, 1] (by simp)⟩ ∨
+    pq = ⟨P2.mk ![-1, 0, 1] (by simp), P2.mk ![-1, 0, 1] (by simp)⟩ := by
+  obtain _ := cf.hu
+  obtain _ := cf.hr
+  rw [next_eq_self cf h]
+  obtain ⟨p, q⟩ := pq
+  induction p with | mk p hp
+  induction q with | mk q hq
+  rw [mem_dom] at h
+  obtain ⟨ho, hi, heq⟩ := h
+  simp_rw [Prod.mk.injEq]
+  rw [P2.mk_eq_mk', P2.mk_eq_mk', P2.mk_eq_mk', P2.mk_eq_mk']
+  suffices InnerCircle cf (P2.mk p hp) ∧ TangentOuterCircle cf (P2.mk q hq) ↔
+      (p 1 = 0 ∧ p 2 = p 0) ∧ q 1 = 0 ∧ q 2 = q 0 ∨
+      (p 0 = -p 2 ∧ p 1 = 0) ∧ q 0 = -q 2 ∧ q 1 = 0 by
+    simpa [P2.mk_eq_mk', funext_iff, Fin.forall_fin_succ]
+  simp only [InnerCircle, TangentOuterCircle, P2.lift_mk]
+  constructor
+  · rintro ⟨h1, h2⟩
+    have hp2 : p 2 ≠ 0 := by
+      contrapose! hq with hp2
+      rw [hp2] at h1 heq
+      rw [zero_pow (by simp), ← eq_neg_iff_add_eq_zero] at h1
+      rw [zero_mul, ← eq_neg_iff_add_eq_zero] at heq
+      have heq : p 0 ^ 2 * q 0 ^ 2 = p 1 ^ 2 * q 1 ^ 2 := by linear_combination congr($heq ^ 2)
+      rw [h1, neg_mul_comm] at heq
+      have : p 1 ^ 2 ≠ 0 := by
+        contrapose! hp
+        ext i
+        fin_cases i
+        · simpa [hp] using h1
+        · simpa using hp
+        · exact hp2
+      rw [mul_right_inj' this] at heq
+      have hq2 : q 2 = 0 := by simpa [← heq] using hi.symm
+      have hq1 : q 1 = 0 := by simpa [hq2, cf.hu] using h2
+      ext i
+      fin_cases i
+      · simpa [hq1] using heq
+      · exact hq1
+      · exact hq2
+    have hq2 : q 2 ≠ 0 := by
+      contrapose! hp2 with hq2
+      rw [hq2] at hi heq
+      rw [zero_pow (by simp), ← eq_neg_iff_add_eq_zero] at hi
+      rw [mul_zero, ← eq_neg_iff_add_eq_zero] at heq
+      have heq : p 0 ^ 2 * q 0 ^ 2 = p 1 ^ 2 * q 1 ^ 2 := by linear_combination congr($heq ^ 2)
+      rw [hi, ← neg_mul_comm] at heq
+      have : q 1 ^ 2 ≠ 0 := by
+        contrapose! hq
+        ext i
+        fin_cases i
+        · simpa [hq] using hi
+        · simpa using hq
+        · exact hq2
+      rw [mul_left_inj' this] at heq
+      simpa [← heq] using h1.symm
+    have : p 2 * (2 * cf.u * p 0 - (1 - cf.r ^ 2 + cf.u ^ 2 ) * p 2) = 0 := by
+      linear_combination h1 - ho
+    have h : 2 * cf.u * p 0 - (1 - cf.r ^ 2 + cf.u ^ 2) * p 2 = 0 := by simpa [hp2] using this
+    have hxz : p 0 = (1 - cf.r ^ 2 + cf.u ^ 2) * p 2 / (2 * cf.u) := by
+      field_simp
+      linear_combination h
+    have hyz : p 1 ^ 2 = (1 - (cf.u - cf.r) ^ 2) * ((cf.u + cf.r) ^ 2 - 1) * p 2 ^ 2
+        / (4 * cf.u ^ 2) := by
+      rw [hxz] at ho
+      field_simp at ho ⊢
+      linear_combination ho
+    have hby : q 1 ^ 2 * p 1 ^ 2 = (q 2 * p 2 - q 0 * p 0) ^ 2 := by
+      rw [← mul_pow]
+      congrm ?_ ^ 2
+      linear_combination heq
+    rw [hxz, hyz] at hby
+    have hac : (cf.u * q 0 - q 2) ^ 2 = (cf.r * q 2) ^ 2 := by
+      linear_combination -(h2 - cf.u ^ 2 * hi)
+    obtain hac' | hac' := eq_or_eq_neg_of_sq_eq_sq _ _ hac
+    · have hac : q 0 = (cf.r + 1) * q 2 / cf.u := by
+        field_simp
+        linear_combination hac'
+      have hbc : q 1 ^ 2 = (cf.u ^ 2 - (cf.r + 1) ^ 2) * q 2 ^ 2 / cf.u ^ 2 := by
+        rw [hac] at hi
+        field_simp at hi ⊢
+        linear_combination hi
+      rw [hac, hbc] at hby
+      field_simp at hby
+      have : 4 * cf.u ^ 2 * ((cf.u - cf.r - 1) * (cf.u + cf.r + 1)) ^ 2 = 0 := by
+        linear_combination -hby
+      obtain hur | hur : cf.u - cf.r - 1 = 0 ∨ cf.u + cf.r + 1 = 0 := by simpa [cf.hu] using this
+      · have : cf.r = cf.u - 1 := by linear_combination -hur
+        rw [this] at h hyz hac' hbc
+        field_simp at hyz hbc
+        grind
+      · have : cf.r = -cf.u - 1 := by linear_combination hur
+        rw [this] at h hyz hac' hbc
+        field_simp at hyz hbc
+        grind
+    · have hac : q 0 = (-cf.r + 1) * q 2 / cf.u := by
+        field_simp
+        linear_combination hac'
+      have hbc : q 1 ^ 2 = (cf.u ^ 2 - (-cf.r + 1) ^ 2) * q 2 ^ 2 / cf.u ^ 2 := by
+        rw [hac] at hi
+        field_simp at hi ⊢
+        linear_combination hi
+      rw [hac, hbc] at hby
+      field_simp at hby
+      have : 4 * cf.u ^ 2 * ((cf.u - cf.r + 1) * (cf.u + cf.r - 1)) ^ 2 = 0 := by
+        linear_combination -hby
+      obtain hur | hur : cf.u - cf.r + 1 = 0 ∨ cf.u + cf.r - 1 = 0 := by simpa [cf.hu] using this
+      · have : cf.r = cf.u + 1 := by linear_combination -hur
+        rw [this] at h hyz hac' hbc
+        field_simp at hyz hbc
+        grind
+      · have : cf.r = -cf.u + 1 := by linear_combination hur
+        rw [this] at h hyz hac' hbc
+        field_simp at hyz hbc
+        grind
+  · intro h
+    obtain ⟨⟨hp1, hp2⟩, ⟨hq1, hq2⟩⟩ | ⟨⟨hp2, hp1⟩, ⟨hq2, hq1⟩⟩ := h
+    · constructor
+      · simp [hp1, hp2]
+      · have hp0 : p 0 ≠ 0 := by
+          contrapose! hp
+          ext i
+          fin_cases i
+          · exact hp
+          · exact hp1
+          · exact hp2 ▸ hp
+        grind
+    · constructor
+      · simp [hp1, hp2]
+      · have hp0 : p 0 ≠ 0 := by
+          contrapose! hp
+          ext i
+          fin_cases i
+          · exact hp
+          · exact hp1
+          · simpa [hp] using hp2
+        grind

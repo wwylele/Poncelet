@@ -10,6 +10,7 @@ theorem k_eq_zero : cf.k = 0 ↔ cf.r = 1 - cf.u ∨ cf.r = -1 - cf.u := by
   rw [← sq_eq_zero_iff, cf.k_sq]
   grind
 
+/-- The elliptic curve associated with the two circles configuration. -/
 def elliptic := (WeierstrassCurve.mk 0
   ((1 - cf.u ^ 2 - cf.r ^ 2) / cf.r ^ 2) 0 (cf.u ^ 2 / cf.r ^ 2) 0).toAffine
 
@@ -34,6 +35,7 @@ theorem nonsingular_elliptic (x y : cf.K) :
   field_simp
   grind
 
+/-- Map a point on the elliptic curve to a vertex, expressed in raw coordinates. -/
 def fPointRaw (p : (elliptic cf).Point) : Fin 3 → cf.K := match p with
 | .zero => ![cf.u + cf.r, 0, 1]
 | .some (x := x) (y := y) _ =>
@@ -48,6 +50,7 @@ theorem fPointRaw_zero : fPointRaw cf .zero = ![cf.u + cf.r, 0, 1] := by simp [f
 @[simp]
 theorem fPointRaw_zero' : fPointRaw cf 0 = ![cf.u + cf.r, 0, 1] := fPointRaw_zero cf
 
+/-- Map a point on the elliptic curve to a vertex. -/
 def fPoint (p : (elliptic cf).Point) : P2 cf.K :=
   P2.mk (fPointRaw cf p) <| by
   cases p with
@@ -89,6 +92,8 @@ theorem outerCircle_fPoint (p : (elliptic cf).Point) :
     rw [heq, cf.k_sq]
     ring
 
+/-- Map a point on the elliptic curve to an edge, expressed in raw coordinates.
+This is only correct when it is non-zero -/
 def fChordNormal (x y : cf.K) : Fin 3 → cf.K :=
   ![-2 * cf.r ^ 2 * ((cf.u + cf.r) ^ 2 - 1) * (cf.r * x - cf.u) * y +
     (cf.r * x + cf.u) * (cf.r ^ 2 * (cf.u + cf.r) * x ^ 2 +
@@ -142,6 +147,7 @@ theorem presingular {x y : cf.K} (hxy : (elliptic cf).Nonsingular x y)
     linear_combination this
   simp [h]
 
+/-- A predicate that `fChordNormal` vanishes -/
 def SingularAbc (x y : cf.K) := fChordNormal cf x y = 0 deriving Decidable
 
 theorem SingularAbc.mk {x y : cf.K} (hxy : (elliptic cf).Nonsingular x y)
@@ -409,6 +415,7 @@ theorem SingularAbc.fPoint_eq {x y : cf.K} (h : SingularAbc cf x y)
 theorem singularAbc_zero_iff : SingularAbc cf 0 0 ↔ cf.u + cf.r = 0 := by
   simp [SingularAbc, fChordNormal, cf.hu, imp_and, imp_or]
 
+/-- Map a point on the elliptic curve to an edge, expressed in raw coordinates. -/
 def fChordRaw (p : (elliptic cf).Point) : Fin 3 → cf.K := match p with
 | .zero => ![1, -cf.k, cf.u + cf.r]
 | .some (x := x) (y := y) _ =>
@@ -440,6 +447,7 @@ theorem SingularAbc.fChordRaw_ne_zero {x y : cf.K}
       simp [this]
     simp [fChordRaw, h, hk, cf.hu, hur]
 
+/-- Map a point on the elliptic curve to an edge. -/
 def fChord (p : (elliptic cf).Point) : P2 cf.K :=
     P2.mk (fChordRaw cf p) <| by
   cases p with
@@ -551,6 +559,7 @@ theorem incidence_fPoint_fChord (p : (elliptic cf).Point) :
     rw [cf.k_sq]
     grind
 
+/-- Map a point on the elliptic curve to a vertex-edge pair. -/
 def f (p : (elliptic cf).Point) : P2 cf.K × P2 cf.K :=
   ⟨fPoint cf p, fChord cf p⟩
 
@@ -563,6 +572,7 @@ theorem f_zero :
 theorem mapsTo_f : Set.MapsTo (f cf) Set.univ (dom cf) :=
   fun p _ ↦ ⟨outerCircle_fPoint cf p, innerCircle_fChord cf p, incidence_fPoint_fChord cf p⟩
 
+/-- The special point related to `fChord`. -/
 def o : (elliptic cf).Point :=
   .some (show (elliptic cf).Nonsingular 0 0 by simp [elliptic, cf.hu, cf.hr])
 
@@ -609,7 +619,7 @@ theorem f_o : f cf (o cf) =
   simp [f]
 
 theorem eq_o_iff {x y : cf.K} (h : (elliptic cf).Nonsingular x y) :
-    .some h = o cf  ↔ x = 0 where
+    .some h = o cf ↔ x = 0 where
   mp h0 := by
     have : x = 0 ∧ y = 0 := by simpa [o] using h0
     exact this.1
@@ -676,6 +686,7 @@ theorem nonsingular_w :
   refine ⟨?_, Or.inr (by simp [cf.hu, cf.hr])⟩
   field
 
+/-- The special point related to `fPoint`. -/
 def w : (elliptic cf).Point := .some (nonsingular_w cf)
 
 theorem slope_w :
@@ -843,6 +854,7 @@ theorem nonsingular_g : (elliptic cf).Nonsingular 1 cf.r⁻¹ := by
   refine ⟨?_, Or.inr (by simp [cf.hr])⟩
   field
 
+/-- The special point related to `next`. -/
 def g : (elliptic cf).Point := .some (nonsingular_g cf)
 
 theorem o_sub_w : o cf - w cf = g cf := by

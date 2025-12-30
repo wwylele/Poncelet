@@ -162,12 +162,18 @@ We verify that these are legitimate by proving their characteristic lemma
 \end{proof}
 
 \begin{lemma}
+    \lean{rPoint_eq_self}
+    \label{rPoint_eq_self}
     \uses{rPoint}
+    \leanok
     $\mathrm{rPoint}$ maps a vertex to itself if and only if the input edge is a shared tangent to 
     {\it Inner} and {\it Outer}.
 \end{lemma}
 \begin{proof}
-    TODO
+    \leanok
+    The formula of $\mathrm{rPoint}$ is constructed by calculating a root of a quadratic
+    equation when given another root. Two roots coincide if and only if the discriminant vanishes.
+    The rest is verifying the equations.
 \end{proof}
 
 \begin{lemma}
@@ -230,19 +236,25 @@ It is obvious that
     $\mathrm{next}$ is a composition of two bijections
 \end{proof}
 
-We shall also verify a property of $\mathrm{next}$ involving tangent points:
-\begin{lemma}
-    $\mathrm{next}$ maps an input to itself if and only if the input vertex is a tangent point of 
-    the two circles.
-\end{lemma}
-\begin{proof}
-    TODO
-\end{proof}
-
 We call $(V, E)$ \emph{singular} if $\mathrm{next}(V, E) = (V, E)$. This is important because if 
 the two circles are tangent to each other, and a vertex lands exactly
 on it, applying $\mathrm{next}$ will resulting in a degenerate polygon where all vertices coincide.
 Obviously this doesn't tell how other vertices behaves, so we will need to exclude it from the theorem.
+We characterize singular point with the following
+\begin{lemma}
+    \lean{next_eq_self, next_eq_self'}
+    \label{next_eq_self}
+    \uses{next}
+    \leanok
+    $\mathrm{next}(V, E) = (V, E)$ if and only if the $V$ is an intersection and $E$ is a shared
+    tangent to {\it Inner} and {\it Outer}. Consequently, {\it Inner} and {\it Outer} must be tangent
+    to each other at $(V, E) = ([1 : 0 : 1], [1 : 0 : 1])$ or at 
+    $(V, E) = ([-1 : 0 : 1], [-1 : 0 : 1])$.
+\end{lemma}
+\begin{proof}
+    The first part is directly from the property of $\mathrm{rPoint}$ and $\mathrm{rChord}$. One can
+    then solve the system of equations for $V$ and $E$. 
+\end{proof}
 
 We now formalize the statement of a version of Poncelet's closure theorem
 \begin{theorem}

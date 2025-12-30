@@ -3,6 +3,7 @@ import Mathlib
 variable {K : Type*} [Field K]
 
 variable (K) in
+/-- Equivalent relation on projective plane. -/
 def P2.equiv : Setoid ({p : Fin 3 → K // p ≠ 0}) where
   r p q := ∃ (l : K), l ≠ 0 ∧ p = l • q.val
   iseqv := {
@@ -17,11 +18,15 @@ def P2.equiv : Setoid ({p : Fin 3 → K // p ≠ 0}) where
   }
 
 variable (K) in
+/-- The projective plane. -/
 def P2 := Quotient (P2.equiv K)
 
 namespace P2
+/-- Point constructor on the projective plane. -/
 def mk (p : Fin 3 → K) (hp : p ≠ 0) := Quotient.mk (equiv K) ⟨p, hp⟩
 
+/-- Alternative constructor that doesn't require the proof of non-zero
+but assign a junk value. -/
 def mk' [DecidableEq K] (p : Fin 3 → K) :=
   if hp : p ≠ 0 then mk p hp else mk ![1, 0, 0] (by simp)
 
@@ -89,6 +94,7 @@ theorem mk'_eq_mk'_of_third [DecidableEq K] {p q : Fin 3 → K} (hp : p ≠ 0) (
 theorem mk'_smul [DecidableEq K] {s : K} (h : s ≠ 0) (p : Fin 3 → K) :
     mk' (s • p) = mk' p := mk'_eq_mk' h rfl
 
+/-- Lift a function on the projective plane. -/
 def lift {α : Sort*} (f : (p : Fin 3 → K) → p ≠ 0 → α)
     (h : ∀ p q, (hp : p ≠ 0) → (hq : q ≠ 0) → (∃ (l : K), l ≠ 0 ∧ p = l • q) → f p hp = f q hq)
     (p : P2 K) : α :=
@@ -100,6 +106,7 @@ theorem lift_mk {α : Sort*} (f : (p : Fin 3 → K) → p ≠ 0 → α)
     (h : ∀ p q, (hp : p ≠ 0) → (hq : q ≠ 0) → (∃ (l : K), l ≠ 0 ∧ p = l • q) → f p hp = f q hq)
     {p : Fin 3 → K} (hp : p ≠ 0) : lift f h (mk p hp) = f p hp := rfl
 
+/-- Lift a function of two variables on the projective plane. -/
 def lift₂ {α : Sort*} (f : (p : Fin 3 → K) → (q : Fin 3 → K) → p ≠ 0 → q ≠ 0 → α)
     (h : ∀ p q r s, (hp : p ≠ 0) → (hq : q ≠ 0) → (hr : r ≠ 0) → (hs : s ≠ 0) →
       (∃ (l : K), l ≠ 0 ∧ p = l • r) → (∃ (l : K), l ≠ 0 ∧ q = l • s) → f p q hp hq = f r s hr hs)
