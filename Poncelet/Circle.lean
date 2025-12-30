@@ -4,7 +4,7 @@ import Poncelet.P2
 variable {K : Type*} [Field K]
 
 variable (K) in
-/-- A set of parameters to represent a two circles configuration.
+/-- A set of parameters to represent a two-circle configuration.
 The inner circle is fixed at $[0 : 0 : 1]$ with radius $1$, and the outer circle
 is at $[u : 0 : 1]$ with radius $r$. -/
 structure Config where
@@ -16,7 +16,7 @@ structure Config where
   hu : u ≠ 0
   /-- Disallow degenerate circles -/
   hr : r ≠ 0
-  /-- A auxilliary constant for computation -/
+  /-- An auxilliary constant for computation -/
   k : K
   /-- The constant `k` must satisfy this equation -/
   k_sq : k ^ 2 = (u + r) ^ 2 - 1
@@ -32,8 +32,9 @@ def OuterCircle (p : P2 K) : Prop :=
       rw [← mul_left_inj' (sq_eq_zero_iff.ne.mpr h0)]
     congrm ?_ = ?_ <;> ring
 
-instance [DecidableEq K] : DecidablePred (OuterCircle cf) :=
-  @inferInstanceAs _ (Quotient.lift.decidablePred _ _)
+instance [DecidableEq K] : DecidablePred (OuterCircle cf) := by
+  unfold OuterCircle P2.lift
+  infer_instance
 
 /-- The predicate that a line (where $[a : b : c]$ means $ax + by = cz$)
 is tangent to the outer circle. -/
@@ -47,8 +48,9 @@ def TangentOuterCircle (p : P2 K) : Prop :=
       rw [← mul_left_inj' (sq_eq_zero_iff.ne.mpr h0)]
     congrm ?_ = ?_ <;> ring
 
-instance [DecidableEq K] : DecidablePred (TangentOuterCircle cf) :=
-  @inferInstanceAs _ (Quotient.lift.decidablePred _ _)
+instance [DecidableEq K] : DecidablePred (TangentOuterCircle cf) := by
+  unfold TangentOuterCircle P2.lift
+  infer_instance
 
 /-- This is a dual-purpose predicate:
  - a point is on the inner circle.
@@ -61,8 +63,9 @@ def InnerCircle (_ : Config K) (p : P2 K) : Prop :=
       rw [← mul_left_inj' (sq_eq_zero_iff.ne.mpr h0)]
     congrm ?_ = ?_ <;> ring
 
-instance [DecidableEq K] : DecidablePred (InnerCircle cf) :=
-  @inferInstanceAs _ (Quotient.lift.decidablePred _ _)
+instance [DecidableEq K] : DecidablePred (InnerCircle cf) := by
+  unfold InnerCircle P2.lift
+  infer_instance
 
 /-- The predicate that a point is on the line. -/
 def Incidence (_ : Config K) (p q : P2 K) : Prop :=
@@ -77,7 +80,7 @@ def Incidence (_ : Config K) (p q : P2 K) : Prop :=
 
 instance [DecidableEq K] (p : P2 K) : DecidablePred (Incidence cf p) := by
   unfold Incidence P2.lift₂
-  exact @inferInstanceAs _ (Quotient.lift₂.decidablePred _ _ p)
+  infer_instance
 
 /-- The set of pairs of vertex and edge, where the vertex is on the outer circle,
 the edge is tanget to the inner circle, and the vertex is on the line of the edge. -/
@@ -85,7 +88,7 @@ def dom : Set (P2 K × P2 K) :=
   {pq | OuterCircle cf pq.1 ∧ InnerCircle cf pq.2 ∧ Incidence cf pq.1 pq.2}
 
 instance [DecidableEq K] : DecidablePred (· ∈ dom cf) := by
-  simp_rw [dom, Set.mem_setOf]
+  unfold dom
   infer_instance
 
 @[simp]

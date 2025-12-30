@@ -66,9 +66,12 @@ discuss these cases in a later chapter
 We encode these in the following definition
 
 \begin{definition}\label{Config}\lean{Config}\leanok
-    A \emph{two circles configuration} in field $K$ is a tuple $(u, r, k)$ such that $u \ne 0$,
-    $r \ne 0$, and $k^2 = (u + r)^2 - 1$
+    A \emph{two-circle configuration} in field $K$ with characteristic 0 is a tuple 
+    $(u, r, k)$ such that $u \ne 0$, $r \ne 0$, and $k^2 = (u + r)^2 - 1$
 \end{definition}
+
+We call a configuration \emph{singular} if the two circles are tangent to each other. That is,
+$u + r = \pm 1$ or $u - r = \pm 1$.
 
 Moving on to vertices and edges, we consider the pair 
 \[
@@ -136,7 +139,7 @@ $\mathrm{rPoint}$ (reflect point) and $\mathrm{rChord}$ (reflect chord).
     \]
 \end{definition}
 
-We verify that these are legitimate by proving their characteristic lemma
+We verify that these are legitimate by proving their characterizing lemma
 \begin{lemma}
     \lean{rPoint_rPoint}
     \label{rPoint_rPoint}
@@ -236,11 +239,10 @@ It is obvious that
     $\mathrm{next}$ is a composition of two bijections
 \end{proof}
 
-We call $(V, E)$ \emph{singular} if $\mathrm{next}(V, E) = (V, E)$. This is important because if 
-the two circles are tangent to each other, and a vertex lands exactly
-on it, applying $\mathrm{next}$ will resulting in a degenerate polygon where all vertices coincide.
+We call $(V, E)$ \emph{singular} if $\mathrm{next}(V, E) = (V, E)$. This is important because applying
+$\mathrm{next}$ on singular point will result in a degenerate polygon where all vertices coincide.
 Obviously this doesn't tell how other vertices behaves, so we will need to exclude it from the theorem.
-We characterize singular point with the following
+We characterize singular points with the following lemma
 \begin{lemma}
     \lean{next_eq_self, next_eq_self'}
     \label{next_eq_self}
@@ -252,20 +254,22 @@ We characterize singular point with the following
     $(V, E) = ([-1 : 0 : 1], [-1 : 0 : 1])$.
 \end{lemma}
 \begin{proof}
-    The first part is directly from the property of $\mathrm{rPoint}$ and $\mathrm{rChord}$. One can
-    then solve the system of equations for $V$ and $E$. 
+    The first part is directly from the property of \ref{rPoint_eq_self} and \ref{rChord_self}. 
+    One can then solve the system of equations for $V$ and $E$ to get the coordinates. 
 \end{proof}
+This tells us that the singular point only exists for a singular configuration, is unique if exists, 
+and is precisely the tangent point.
 
 We now formalize the statement of a version of Poncelet's closure theorem
 \begin{theorem}
-    Given a two circles configuration in field $K$, if for a natural number $n$, and some non-singular
+    Given a two-circle configuration in field $K$, if for a natural number $n$, and some non-singular
     $(V, E) \in \mathrm{Dom}$ it holds that $(\mathrm{next})^n(V, E) = (V, E)$, then the same holds for 
     the same $n$ and all $(V, E) \in \mathrm{Dom}$.
 \end{theorem}
 
 \chapter{Elliptic curve}
 
-To prove the Poncelet's closure theorem for the two circles configuration, we will construct a bijection
+To prove the Poncelet's closure theorem for the two-circle configuration, we will construct a bijection
 between $\mathrm{Dom}$ and a certain elliptic curve $E$, and show that the function $\mathrm{next}$ maps
 to an addition in the group of the elliptic curve. We define the curve $E$ as follows
 
@@ -354,7 +358,7 @@ Next, we define the mapping $f : E_0 \to \mathrm{Dom}$ as follows
 As a reminder, $k^2 = (u+r)^2 - 1$. It doesn't matter whether we pick $k$ or $-k$, as changing
 the sign of $k$ results in mirroring around the x-axis.
 
-With the map $f$, we can make connection between the elliptic curve $E$ and the two circles
+With the map $f$, we can make connection between the elliptic curve $E$ and the two-circle
 configuration with the following theorems
 \begin{theorem}
     \lean{f_o_sub}
