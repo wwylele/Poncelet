@@ -3,9 +3,10 @@ import Poncelet.TransferAux
 
 open WeierstrassCurve.Affine
 
-variable (cf : Config)
+variable {K : Type*} [Field K]
+variable (cf : Config K)
 
-theorem fChordNormal_o_sub (x y : cf.K) (hx : x ≠ 0) :
+theorem fChordNormal_o_sub [CharZero K] (x y : K) (hx : x ≠ 0) :
     fChordNormal cf (cf.u ^ 2 / (cf.r ^ 2 * x)) (cf.u ^ 2 * y / (cf.r ^ 2 * x ^ 2))
       = (cf.u ^ 3 / (cf.r ^ 3 * x ^ 3)) •
     ![2 * cf.r ^ 2 * ((cf.u + cf.r) ^ 2 - 1) * (cf.r * x - cf.u) * y +
@@ -24,7 +25,7 @@ theorem fChordNormal_o_sub (x y : cf.K) (hx : x ≠ 0) :
   · field
   · field
 
-theorem fPoint_o_sub (p : (elliptic cf).Point) :
+theorem fPoint_o_sub [DecidableEq K] [CharZero K] (p : (elliptic cf).Point) :
     fPoint cf (o cf - p) = fPoint cf p := by
   obtain _ := cf.hr
   obtain _ := cf.hu
@@ -57,7 +58,7 @@ theorem fPoint_o_sub (p : (elliptic cf).Point) :
     · field
     · field
 
-theorem f_o_sub_1 (i : cf.K) :
+theorem f_o_sub_1 [DecidableEq K] [CharZero K] (i : K) :
     P2.mk' ![1, i * cf.k, cf.u + cf.r] =
     P2.mk' (rChord' cf ![cf.u + cf.r, 0, 1] ![1, -i * cf.k, cf.u + cf.r]) := by
   by_cases hur : cf.u + cf.r = 0
@@ -71,7 +72,7 @@ theorem f_o_sub_1 (i : cf.K) :
     simpa [rChord', hur']
   ring
 
-theorem SingularAbc.fChord_o_sub {x y : cf.K}
+theorem SingularAbc.fChord_o_sub [DecidableEq K] [CharZero K] {x y : K}
     (h : SingularAbc cf x y) (hxy : (elliptic cf).Nonsingular x y)
     (ho : Point.some hxy ≠ o cf) :
     fChord cf (o cf - .some hxy) = P2.mk ![8 * cf.u ^ 3 * cf.k,
@@ -189,7 +190,7 @@ theorem SingularAbc.fChord_o_sub {x y : cf.K}
     apply eq_of_sub_eq_zero
     linear_combination -4 * (h.c_factor_eq_zero cf hxy)
 
-theorem SingularAbc.f_o_sub {x y : cf.K}
+theorem SingularAbc.f_o_sub [DecidableEq K] [CharZero K] {x y : K}
     (hsxy : SingularAbc cf x y) (hxy : (elliptic cf).Nonsingular x y)
     (ho : Point.some hxy ≠ o cf) :
     f cf (o cf - .some hxy) = rChord cf (f cf (.some hxy)) := by
@@ -232,7 +233,7 @@ theorem SingularAbc.f_o_sub {x y : cf.K}
     rw [← hsxy.x_relation cf hxy]
     ring
 
-theorem f_o_sub (p : (elliptic cf).Point) :
+theorem f_o_sub [DecidableEq K] [CharZero K] (p : (elliptic cf).Point) :
     f cf (o cf - p) = rChord cf (f cf p) := by
   obtain _ := cf.hr
   obtain _ := cf.hu
@@ -258,7 +259,7 @@ theorem f_o_sub (p : (elliptic cf).Point) :
   by_cases hsxy : SingularAbc cf x y
   · exact hsxy.f_o_sub cf hxy ho
   -- check case when o - p is SingularAbc
-  have : ∃ (ox oy : cf.K) (hoxy : (elliptic cf).Nonsingular ox oy),
+  have : ∃ (ox oy : K) (hoxy : (elliptic cf).Nonsingular ox oy),
       o cf - .some hxy = .some hoxy := by
     cases h : o cf - .some hxy with
     | zero =>
@@ -325,7 +326,7 @@ theorem f_o_sub (p : (elliptic cf).Point) :
     Matrix.vecCons_inj, and_true]
   exact ⟨by field, by field, by field⟩
 
-theorem fChordNormal_w :
+theorem fChordNormal_w [CharZero K] :
     fChordNormal cf (cf.u ^ 2 / cf.r ^ 2) (cf.u ^ 2 / cf.r ^ 3) = ![
     cf.u ^ 3 * ((cf.u ^ 2 - cf.r ^ 2) ^ 2 + 4 * cf.u * cf.r) / cf.r ^ 3,
     -cf.k * cf.u ^ 3 * ((cf.u ^ 2 - cf.r ^ 2) ^ 2 + 4 * cf.u * cf.r) / cf.r ^ 3,
@@ -336,7 +337,8 @@ theorem fChordNormal_w :
   congrm ![$(by field), $(by field), $(by field)]
 
 @[simp]
-theorem fChord_w : fChord cf (w cf) = P2.mk ![1, -cf.k, cf.u + cf.r] (by simp) := by
+theorem fChord_w [DecidableEq K] [CharZero K] :
+    fChord cf (w cf) = P2.mk ![1, -cf.k, cf.u + cf.r] (by simp) := by
   obtain _ := cf.hr
   obtain _ := cf.hu
   unfold fChord
@@ -363,7 +365,7 @@ theorem fChord_w : fChord cf (w cf) = P2.mk ![1, -cf.k, cf.u + cf.r] (by simp) :
   grind
 
 @[simp]
-theorem fPoint_w : fPoint cf (w cf) =
+theorem fPoint_w [DecidableEq K] [CharZero K] : fPoint cf (w cf) =
     P2.mk ![(cf.u - cf.r) * (cf.u + cf.r) ^ 2 + 2 * cf.r, -2 * cf.k * cf.r, (cf.u + cf.r) ^ 2]
     (by
       by_cases h : cf.u + cf.r = 0
@@ -380,7 +382,7 @@ theorem fPoint_w : fPoint cf (w cf) =
   simp_rw [Matrix.smul_vec3, smul_eq_mul]
   congrm ![$(by field), $(by field), $(by field)]
 
-theorem fChordNormal_neg_w :
+theorem fChordNormal_neg_w [CharZero K] :
     fChordNormal cf (cf.u ^ 2 / cf.r ^ 2) (-cf.u ^ 2 / cf.r ^ 3) = ![
     cf.u ^ 3 * ((cf.u - cf.r) * (cf.u + cf.r) ^ 2 * (cf.u + 3 * cf.r) + 4 * cf.r ^ 2) / cf.r ^ 3,
     -cf.k * cf.u ^ 3 * ((cf.u ^ 2 - cf.r ^ 2) ^ 2 - 4 * cf.r ^ 2) / cf.r ^ 3,
@@ -391,7 +393,7 @@ theorem fChordNormal_neg_w :
   congrm ![$(by field), $(by field), $(by field)]
 
 
-theorem not_singularAbc_neg_w :
+theorem not_singularAbc_neg_w [DecidableEq K] [CharZero K] :
     ¬ SingularAbc cf (cf.u ^ 2 / cf.r ^ 2) (-cf.u ^ 2 / cf.r ^ 3) := by
   obtain _ := cf.hr
   obtain _ := cf.hu
@@ -401,10 +403,11 @@ theorem not_singularAbc_neg_w :
   field_simp at ha hc
   grind
 
-theorem fChord_neg_w_ne_zero :
+theorem fChord_neg_w_ne_zero [CharZero K] :
     ![(cf.u - cf.r) * (cf.u + cf.r) ^ 2 * (cf.u + 3 * cf.r) + 4 * cf.r ^ 2,
       -cf.k * ((cf.u ^ 2 - cf.r ^ 2) ^ 2 - 4 * cf.r ^ 2),
       (cf.u + cf.r) * ((cf.u ^ 2 - cf.r ^ 2) ^ 2 + 4 * cf.u * cf.r)] ≠ 0 := by
+  classical
   obtain _ := cf.hr
   obtain _ := cf.hu
   obtain h := not_singularAbc_neg_w cf
@@ -416,7 +419,7 @@ theorem fChord_neg_w_ne_zero :
   congrm ![$(by field), $(by field), $(by field)]
 
 @[simp]
-theorem fChord_neg_w :
+theorem fChord_neg_w [DecidableEq K] [CharZero K] :
     fChord cf (-w cf) = P2.mk ![
       (cf.u - cf.r) * (cf.u + cf.r) ^ 2 * (cf.u + 3 * cf.r) + 4 * cf.r ^ 2,
       -cf.k * ((cf.u ^ 2 - cf.r ^ 2) ^ 2 - 4 * cf.r ^ 2),
@@ -432,7 +435,7 @@ theorem fChord_neg_w :
   · ring
 
 @[simp]
-theorem fPoint_neg_w : fPoint cf (-w cf) =
+theorem fPoint_neg_w [DecidableEq K] [CharZero K] : fPoint cf (-w cf) =
     P2.mk ![(cf.u - cf.r) * (cf.u + cf.r) ^ 2 + 2 * cf.r, 2 * cf.k * cf.r, (cf.u + cf.r) ^ 2]
     (by
       by_cases h : cf.u + cf.r = 0
@@ -451,7 +454,7 @@ theorem fPoint_neg_w : fPoint cf (-w cf) =
   simp [elliptic]
   field
 
-theorem fChordNormal_2w :
+theorem fChordNormal_2w [CharZero K] :
     fChordNormal cf ((cf.r ^ 2 - cf.u ^ 2) ^ 2 / (4 * cf.r ^ 2))
     ((cf.r ^ 2 - cf.u ^ 2) * ((cf.r ^ 2 - cf.u ^ 2) ^ 2
       - 2 * (cf.r ^ 2 + cf.u ^ 2)) / (8 * cf.r ^ 3)) =
@@ -470,7 +473,7 @@ theorem fChordNormal_2w :
   congrm ![$(by field), $(by field), $(by field)]
 
 @[simp]
-theorem fChord_2w :
+theorem fChord_2w [DecidableEq K] [CharZero K] :
     fChord cf (w cf + w cf) = P2.mk ![
       (cf.u - cf.r) * (cf.u + cf.r) ^ 2 * (cf.u + 3 * cf.r) + 4 * cf.r ^ 2,
       -cf.k * ((cf.u ^ 2 - cf.r ^ 2) ^ 2 - 4 * cf.r ^ 2),
@@ -540,7 +543,7 @@ theorem fChord_2w :
   · ring
 
 @[simp]
-theorem fPoint_2w : fPoint cf (w cf + w cf) =
+theorem fPoint_2w [DecidableEq K] [CharZero K] : fPoint cf (w cf + w cf) =
     P2.mk' ![((cf.u + cf.r) * ((cf.u - cf.r) ^ 4 * (cf.u + cf.r) ^ 4
       - 8 * cf.r ^ 2 * (cf.u - cf.r) ^ 2 * (cf.u + cf.r) ^ 2 +
       8 * cf.r * (cf.r ^ 3 - cf.r ^ 2 * cf.u + cf.r * cf.u ^ 2 + cf.u ^ 3))),
@@ -559,7 +562,7 @@ theorem fPoint_2w : fPoint cf (w cf + w cf) =
   · field
   · field
 
-theorem fChord_w_sub_singularAbc {x y wx wy : cf.K}
+theorem fChord_w_sub_singularAbc [DecidableEq K] [CharZero K] {x y wx wy : K}
     (hxy : (elliptic cf).Nonsingular x y) (hwxy : (elliptic cf).Nonsingular wx wy)
     (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
     (hwxyeq : w cf - .some hxy = .some hwxy)
@@ -657,7 +660,7 @@ theorem fChord_w_sub_singularAbc {x y wx wy : cf.K}
   exact fChord_w_sub_singularAbc_not_singularAbc cf hxy hwxy hpw hpnw hwxyeq hsxy hwsxy hur
 
 
-theorem fChord_w_sub (p : (elliptic cf).Point) :
+theorem fChord_w_sub [DecidableEq K] [CharZero K] (p : (elliptic cf).Point) :
     fChord cf (w cf - p) = fChord cf p := by
   obtain _ := cf.hr
   obtain _ := cf.hu
@@ -670,7 +673,7 @@ theorem fChord_w_sub (p : (elliptic cf).Point) :
   · simp [hpw]
   by_cases hpnw : .some hxy = -w cf
   · simp_rw [hpnw, sub_neg_eq_add, fChord_2w, fChord_neg_w]
-  have : ∃ (wx wy : cf.K) (hwxy : (elliptic cf).Nonsingular wx wy),
+  have : ∃ (wx wy : K) (hwxy : (elliptic cf).Nonsingular wx wy),
       w cf - .some hxy = .some hwxy := by
     cases h : w cf - .some hxy with
     | zero =>
@@ -705,7 +708,7 @@ theorem fChord_w_sub (p : (elliptic cf).Point) :
   · exact fChord_w_sub_c_eq_zero cf hxy hwxy hpw hpnw hwxyeq hsxy hwsxy hinf
   · exact fChord_w_sub_c_ne_zero cf hxy hwxy hpw hpnw hwxyeq hsxy hwsxy hinf
 
-theorem f_w_eq_rPoint : f cf (w cf) = rPoint cf (f cf 0) := by
+theorem f_w_eq_rPoint [DecidableEq K] [CharZero K] : f cf (w cf) = rPoint cf (f cf 0) := by
   suffices fPoint cf (w cf) =
     P2.mk' (rPoint' cf ![cf.u + cf.r, 0, 1] ![1, -cf.k, cf.u + cf.r]) by
     simpa [f, rPoint, fChord_w_sub]
@@ -730,7 +733,8 @@ theorem f_w_eq_rPoint : f cf (w cf) = rPoint cf (f cf 0) := by
   simp_rw [Matrix.smul_vec3, smul_eq_mul]
   congrm ![$(by ring), $(by ring), $(by simp)]
 
-theorem f_two_w_eq_rPoint : f cf (w cf + w cf) = rPoint cf (f cf (-w cf)) := by
+theorem f_two_w_eq_rPoint [DecidableEq K] [CharZero K] :
+    f cf (w cf + w cf) = rPoint cf (f cf (-w cf)) := by
   by_cases hur : cf.u + cf.r = 0
   · have hr : cf.r = -cf.u := by linear_combination hur
     have hk : cf.k ≠ 0 := by
@@ -833,7 +837,8 @@ theorem f_two_w_eq_rPoint : f cf (w cf + w cf) = rPoint cf (f cf (-w cf)) := by
   rw [cf.k_sq]
   ring
 
-theorem f_w_sub_not_singularAbc {x y : cf.K} (hxy : (elliptic cf).Nonsingular x y)
+theorem f_w_sub_not_singularAbc [DecidableEq K] [CharZero K] {x y : K}
+    (hxy : (elliptic cf).Nonsingular x y)
     (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
     (hsxy : ¬ SingularAbc cf x y) :
     f cf (w cf - (.some hxy)) = rPoint cf (f cf (.some hxy)) := by
@@ -902,7 +907,8 @@ theorem f_w_sub_not_singularAbc {x y : cf.K} (hxy : (elliptic cf).Nonsingular x 
     exact f_w_sub_not_singularAbc_p2 cf hxy hpw hpnw hsxy hp2 huxr (fChord_w_sub cf _)
   exact f_w_sub_normal cf hxy hpw hpnw hsxy hp2 (fChord_w_sub cf _)
 
-theorem f_w_sub (p : (elliptic cf).Point) : f cf (w cf - p) = rPoint cf (f cf p) := by
+theorem f_w_sub [DecidableEq K] [CharZero K] (p : (elliptic cf).Point) :
+    f cf (w cf - p) = rPoint cf (f cf p) := by
   obtain _ := cf.hr
   obtain _ := cf.hu
   cases p with
@@ -990,6 +996,7 @@ theorem f_w_sub (p : (elliptic cf).Point) : f cf (w cf - p) = rPoint cf (f cf p)
     exact f_w_sub_singularAbc cf hxy hsxy hpw hpnw hur (fChord_w_sub cf _)
   exact f_w_sub_not_singularAbc cf hxy hpw hpnw hsxy
 
-theorem f_add_g (p : (elliptic cf).Point) : f cf (p + g cf) = next cf (f cf p) := by
+theorem f_add_g [DecidableEq K] [CharZero K] (p : (elliptic cf).Point) :
+    f cf (p + g cf) = next cf (f cf p) := by
   rw [next, ← f_w_sub, ← f_o_sub, ← o_sub_w]
   congrm f cf $(by abel)

@@ -5,11 +5,12 @@ set_option linter.style.longLine false
 
 open WeierstrassCurve.Affine
 
-variable (cf : Config)
+variable {K : Type*} [Field K]
+variable (cf : Config K)
 
 set_option maxHeartbeats 400000 in
 -- Long Expression
-theorem fChord_w_sub_c_eq_zero {x y wx wy : cf.K}
+theorem fChord_w_sub_c_eq_zero [DecidableEq K] [CharZero K] {x y wx wy : K}
     (hxy : (elliptic cf).Nonsingular x y) (hwxy : (elliptic cf).Nonsingular wx wy)
     (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
     (hwxyeq : w cf - .some hxy = .some hwxy)
@@ -117,7 +118,7 @@ theorem fChord_w_sub_c_eq_zero {x y wx wy : cf.K}
       + 4*x*y*cf.u^4*cf.r^2 + x*cf.u^5*cf.r^2 + 4*x*y*cf.u^3*cf.r^3 + 3*x*cf.u^4*cf.r^3 - 2*x^3*cf.u*cf.r^4
       + 4*x*y*cf.u^2*cf.r^4 + 2*cf.u^7 + 2*x^2*cf.u^4*cf.r + 4*y*cf.u^5*cf.r + 2*x^2*cf.u^2*cf.r^3 + 4*x*cf.u^5)* heq
 
-theorem fChord_w_sub_c_ne_zero {x y wx wy : cf.K}
+theorem fChord_w_sub_c_ne_zero [DecidableEq K] [CharZero K] {x y wx wy : K}
     (hxy : (elliptic cf).Nonsingular x y) (hwxy : (elliptic cf).Nonsingular wx wy)
     (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
     (hwxyeq : w cf - .some hxy = .some hwxy)
@@ -202,7 +203,8 @@ theorem fChord_w_sub_c_ne_zero {x y wx wy : cf.K}
 
 set_option maxHeartbeats 400000 in
 -- Long Expression
-theorem fChord_w_sub_singularAbc_not_singularAbc {x y wx wy : cf.K}
+theorem fChord_w_sub_singularAbc_not_singularAbc [DecidableEq K] [CharZero K]
+    {x y wx wy : K}
     (hxy : (elliptic cf).Nonsingular x y) (hwxy : (elliptic cf).Nonsingular wx wy)
     (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
     (hwxyeq : w cf - .some hxy = .some hwxy)
@@ -331,7 +333,8 @@ theorem fChord_w_sub_singularAbc_not_singularAbc {x y wx wy : cf.K}
     + 32*cf.u^10*cf.r^3 + 128*x^2*cf.u^7*cf.r^4 - 128*x^2*cf.u^6*cf.r^5 - 128*x*cf.u^10*cf.r) * hc
   · field_simp
 
-theorem fChord_w_sub_singularAbc_not_singularAbc_u_eq_r {x y wx wy : cf.K}
+theorem fChord_w_sub_singularAbc_not_singularAbc_u_eq_r [DecidableEq K] [CharZero K]
+    {x y wx wy : K}
     (hxy : (elliptic cf).Nonsingular x y) (hwxy : (elliptic cf).Nonsingular wx wy)
     (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
     (hwxyeq : w cf - .some hxy = .some hwxy)
@@ -389,7 +392,8 @@ theorem fChord_w_sub_singularAbc_not_singularAbc_u_eq_r {x y wx wy : cf.K}
 
 set_option maxHeartbeats 800000 in
 -- Long Expression
-theorem f_w_sub_singularAbc {x y : cf.K} (hxy : (elliptic cf).Nonsingular x y)
+theorem f_w_sub_singularAbc [DecidableEq K] [CharZero K] {x y : K}
+    (hxy : (elliptic cf).Nonsingular x y)
     (hsxy : SingularAbc cf x y) (hpw : Point.some hxy ≠ w cf)
     (hpnw : Point.some hxy ≠ -w cf) (hur : cf.u ^ 2 - cf.r ^ 2 ≠ 0)
     (habc : fChord cf (w cf - .some hxy) = fChord cf (.some hxy)) :
@@ -649,7 +653,8 @@ theorem f_w_sub_singularAbc {x y : cf.K} (hxy : (elliptic cf).Nonsingular x y)
     + 256*x^2*cf.u^6*cf.r^5 + 32*cf.u^8*cf.r^5 - 128*x^2*cf.u^5*cf.r^6 - 128*x*cf.u^8*cf.r^3) * hc
   · field
 
-theorem f_w_sub_not_singularAbc_p2 {x y : cf.K} (hxy : (elliptic cf).Nonsingular x y)
+theorem f_w_sub_not_singularAbc_p2 [DecidableEq K] [CharZero K]
+    {x y : K} (hxy : (elliptic cf).Nonsingular x y)
     (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
     (hsxy : ¬ SingularAbc cf x y) (hp2 : fChordNormal cf x y 2 = 0)
     (huxr : cf.r * x + cf.u ≠ 0) (habc : fChord cf (w cf - .some hxy) = fChord cf (.some hxy)) :
@@ -780,7 +785,8 @@ theorem f_w_sub_not_singularAbc_p2 {x y : cf.K} (hxy : (elliptic cf).Nonsingular
       + 10*x*cf.u^6*cf.r^2 + 16*x^3*cf.u^3*cf.r^3 + 6*x*cf.u^5*cf.r^3
       + 8*x^3*cf.u^2*cf.r^4 - 8*x^3*cf.u*cf.r^5 + 2*cf.u^7*cf.r + 8*x^2*cf.u^3*cf.r^3)
 
-theorem f_w_sub_normal {x y : cf.K} (hxy : (elliptic cf).Nonsingular x y)
+theorem f_w_sub_normal [DecidableEq K] [CharZero K]
+    {x y : K} (hxy : (elliptic cf).Nonsingular x y)
     (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
     (hsxy : ¬ SingularAbc cf x y) (hp2 : fChordNormal cf x y 2 ≠ 0)
     (habc : fChord cf (w cf - .some hxy) = fChord cf (.some hxy)) :

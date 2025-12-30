@@ -21,6 +21,11 @@ variable (K) in
 /-- The projective plane. -/
 def P2 := Quotient (P2.equiv K)
 
+unsafe instance [Repr K] : Repr (P2 K) where
+  reprPrec p :=
+    let p := p.unquot
+    Repr.reprPrec (p.val 0, p.val 1, p.val 2)
+
 namespace P2
 /-- Point constructor on the projective plane. -/
 def mk (p : Fin 3 → K) (hp : p ≠ 0) := Quotient.mk (equiv K) ⟨p, hp⟩

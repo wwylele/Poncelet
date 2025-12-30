@@ -1,18 +1,13 @@
 import Mathlib
 import Poncelet.P2
 
+variable {K : Type*} [Field K]
+
+variable (K) in
 /-- A set of parameters to represent a two circles configuration.
 The inner circle is fixed at $[0 : 0 : 1]$ with radius $1$, and the outer circle
 is at $[u : 0 : 1]$ with radius $r$. -/
 structure Config where
-  /-- The type of the coordinate field -/
-  K : Type*
-  /-- `K` is a field -/
-  field : Field K
-  /-- DecidableEq allows computation in `K` -/
-  decidableEq : DecidableEq K
-  /-- We require characteristic 0. Might be able to relax this later -/
-  charZero : CharZero K
   /-- x-coordinate of the center of the outer circle -/
   u : K
   /-- Radius of the outer circle -/
@@ -26,14 +21,10 @@ structure Config where
   /-- The constant `k` must satisfy this equation -/
   k_sq : k ^ 2 = (u + r) ^ 2 - 1
 
-variable (cf : Config)
-
-instance : Field cf.K := cf.field
-instance : DecidableEq cf.K := cf.decidableEq
-instance : CharZero cf.K := cf.charZero
+variable (cf : Config K)
 
 /-- The predicate that a point is on the outer circle. -/
-def OuterCircle (p : P2 cf.K) : Prop :=
+def OuterCircle (p : P2 K) : Prop :=
   p.lift (fun p hp ↦ (p 0 - cf.u * p 2) ^ 2 + p 1 ^ 2 = cf.r ^ 2 * p 2 ^ 2) fun p q hp hq h ↦ by
     obtain ⟨l, h0, rfl⟩ := h
     simp_rw [Pi.smul_apply, smul_eq_mul]
@@ -41,9 +32,12 @@ def OuterCircle (p : P2 cf.K) : Prop :=
       rw [← mul_left_inj' (sq_eq_zero_iff.ne.mpr h0)]
     congrm ?_ = ?_ <;> ring
 
+instance [DecidableEq K] : DecidablePred (OuterCircle cf) :=
+  @inferInstanceAs _ (Quotient.lift.decidablePred _ _)
+
 /-- The predicate that a line (where $[a : b : c]$ means $ax + by = cz$)
 is tangent to the outer circle. -/
-def TangentOuterCircle (p : P2 cf.K) : Prop :=
+def TangentOuterCircle (p : P2 K) : Prop :=
   p.lift (fun p hp ↦
       2 * cf.u * p 0 * p 2 + cf.u ^ 2 * p 1 ^ 2 = (1 + cf.u ^ 2 - cf.r ^ 2) * p 2 ^ 2)
     fun p q hp hq h ↦ by
@@ -53,10 +47,13 @@ def TangentOuterCircle (p : P2 cf.K) : Prop :=
       rw [← mul_left_inj' (sq_eq_zero_iff.ne.mpr h0)]
     congrm ?_ = ?_ <;> ring
 
+instance [DecidableEq K] : DecidablePred (TangentOuterCircle cf) :=
+  @inferInstanceAs _ (Quotient.lift.decidablePred _ _)
+
 /-- This is a dual-purpose predicate:
  - a point is on the inner circle.
  - a line (where $[a : b : c]$ means $ax + by = cz$) is tangent to the inner circle. -/
-def InnerCircle (p : P2 cf.K) : Prop :=
+def InnerCircle (_ : Config K) (p : P2 K) : Prop :=
   p.lift (fun p hp ↦ p 0 ^ 2 + p 1 ^ 2 = p 2 ^ 2) fun p q hp hq h ↦ by
     obtain ⟨l, h0, rfl⟩ := h
     simp_rw [Pi.smul_apply, smul_eq_mul]
@@ -64,8 +61,11 @@ def InnerCircle (p : P2 cf.K) : Prop :=
       rw [← mul_left_inj' (sq_eq_zero_iff.ne.mpr h0)]
     congrm ?_ = ?_ <;> ring
 
+instance [DecidableEq K] : DecidablePred (InnerCircle cf) :=
+  @inferInstanceAs _ (Quotient.lift.decidablePred _ _)
+
 /-- The predicate that a point is on the line. -/
-def Incidence (p q : P2 cf.K) : Prop :=
+def Incidence (_ : Config K) (p q : P2 K) : Prop :=
   P2.lift₂ (fun p q hp hq ↦ p 0 * q 0 + p 1 * q 1 = p 2 * q 2) (fun p q r s hp hq hr hs hpr hqs ↦ by
     obtain ⟨l, hl0, rfl⟩ := hpr
     obtain ⟨m, hm0, rfl⟩ := hqs
@@ -75,20 +75,28 @@ def Incidence (p q : P2 cf.K) : Prop :=
     congrm ?_ = ?_ <;> ring
   ) p q
 
+instance [DecidableEq K] (p : P2 K) : DecidablePred (Incidence cf p) := by
+  unfold Incidence P2.lift₂
+  exact @inferInstanceAs _ (Quotient.lift₂.decidablePred _ _ p)
+
 /-- The set of pairs of vertex and edge, where the vertex is on the outer circle,
 the edge is tanget to the inner circle, and the vertex is on the line of the edge. -/
-def dom : Set (P2 cf.K × P2 cf.K) :=
+def dom : Set (P2 K × P2 K) :=
   {pq | OuterCircle cf pq.1 ∧ InnerCircle cf pq.2 ∧ Incidence cf pq.1 pq.2}
 
+instance [DecidableEq K] : DecidablePred (· ∈ dom cf) := by
+  simp_rw [dom, Set.mem_setOf]
+  infer_instance
+
 @[simp]
-theorem mem_dom {p q : Fin 3 → cf.K} (hp : p ≠ 0) (hq : q ≠ 0) :
+theorem mem_dom {p q : Fin 3 → K} (hp : p ≠ 0) (hq : q ≠ 0) :
     ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf ↔ (
     (p 0 - cf.u * p 2) ^ 2 + p 1 ^ 2 = cf.r ^ 2 * p 2 ^ 2 ∧
     q 0 ^ 2 + q 1 ^ 2 = q 2 ^ 2 ∧
     p 0 * q 0 + p 1 * q 1 = p 2 * q 2) := by rfl
 
 /-- Reflect the vertex across the edge, expressed in raw coordinates. -/
-def rPoint' (p q : Fin 3 → cf.K) : Fin 3 → cf.K :=
+def rPoint' [DecidableEq K] (p q : Fin 3 → K) : Fin 3 → K :=
   if q 2 = 0 then
     if p 2 = 0 then
       ![-(cf.r ^ 2 - cf.u ^ 2) * q 1, (cf.r ^ 2 - cf.u ^ 2) * q 0, 2 * cf.u * q 1]
@@ -99,9 +107,9 @@ def rPoint' (p q : Fin 3 → cf.K) : Fin 3 → cf.K :=
       2 * q 1 * p 2 * q 2 - 2 * cf.u * q 0 * q 1 * p 2 - p 1 * q 2 ^ 2,
       p 2 * q 2 ^ 2]
 
-theorem rPoint'_rPoint' {p q : Fin 3 → cf.K} (hp : p ≠ 0) (hq : q ≠ 0)
+theorem rPoint'_rPoint' [DecidableEq K] [CharZero K] {p q : Fin 3 → K} (hp : p ≠ 0) (hq : q ≠ 0)
     (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) :
-    ∃ l : cf.K, rPoint' cf (rPoint' cf p q) q = l • p := by
+    ∃ l : K, rPoint' cf (rPoint' cf p q) q = l • p := by
   obtain ⟨ho, hi, hpq⟩ := mem_dom cf hp hq |>.mp h
   unfold rPoint'
   by_cases! hq2 : q 2 = 0
@@ -141,7 +149,7 @@ theorem rPoint'_rPoint' {p q : Fin 3 → cf.K} (hp : p ≠ 0) (hq : q ≠ 0)
   simp [hq2]
   ring
 
-theorem rPoint'_ne_zero {p q : Fin 3 → cf.K} (hp : p ≠ 0) (hq : q ≠ 0)
+theorem rPoint'_ne_zero [DecidableEq K] [CharZero K] {p q : Fin 3 → K} (hp : p ≠ 0) (hq : q ≠ 0)
     (hpq : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) : rPoint' cf p q ≠ 0 := by
   unfold rPoint'
   by_contra! h0
@@ -163,9 +171,9 @@ theorem rPoint'_ne_zero {p q : Fin 3 → cf.K} (hp : p ≠ 0) (hq : q ≠ 0)
       ext n; fin_cases n <;> assumption
     · simp [hp2, hq2] at h0
 
-theorem rPoint'_eq_self {p q : Fin 3 → cf.K} (hp : p ≠ 0) (hq : q ≠ 0)
+theorem rPoint'_eq_self [DecidableEq K] [CharZero K] {p q : Fin 3 → K} (hp : p ≠ 0) (hq : q ≠ 0)
     (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) :
-    (∃ l : cf.K, rPoint' cf p q = l • p) ↔
+    (∃ l : K, rPoint' cf p q = l • p) ↔
     2 * cf.u * q 0 * q 2 + cf.u ^ 2 * q 1 ^ 2 = (1 + cf.u ^ 2 - cf.r ^ 2) * q 2 ^ 2 := by
   obtain ⟨ho, hi, heq⟩ := mem_dom cf hp hq |>.mp h
   clear h
@@ -205,7 +213,7 @@ theorem rPoint'_eq_self {p q : Fin 3 → cf.K} (hp : p ≠ 0) (hq : q ≠ 0)
     · exact ⟨q 2 ^ 2, (by grind), (by grind), (by ring)⟩
 
 /-- Reflect the vertex across the edge. -/
-def rPoint (pq : P2 cf.K × P2 cf.K) : P2 cf.K × P2 cf.K :=
+def rPoint [DecidableEq K] [CharZero K] (pq : P2 K × P2 K) : P2 K × P2 K :=
   ⟨P2.lift₂ (fun p q hp hq ↦ P2.mk' (rPoint' cf p q)) (by
   intro p q p' q' hp hq hp' hq' ⟨l, hl0, hl⟩ ⟨m, hm0, hm⟩
   unfold rPoint'
@@ -233,13 +241,14 @@ def rPoint (pq : P2 cf.K × P2 cf.K) : P2 cf.K × P2 cf.K :=
   ring
   ) pq.1 pq.2, pq.2⟩
 
-theorem rPoint_mk {p q : Fin 3 → cf.K} (hp : p ≠ 0) (hq : q ≠ 0)
+theorem rPoint_mk [DecidableEq K] [CharZero K] {p q : Fin 3 → K} (hp : p ≠ 0) (hq : q ≠ 0)
     (hpq : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) :
     rPoint cf ⟨P2.mk p hp, P2.mk q hq⟩ =
     ⟨P2.mk (rPoint' cf p q) (rPoint'_ne_zero cf hp hq hpq), P2.mk q hq⟩ := by
   simp [rPoint, rPoint'_ne_zero cf hp hq hpq]
 
-theorem mapsTo_rPoint : Set.MapsTo (rPoint cf) (dom cf) (dom cf) := by
+theorem mapsTo_rPoint [DecidableEq K] [CharZero K] :
+    Set.MapsTo (rPoint cf) (dom cf) (dom cf) := by
   intro ⟨p, q⟩ hpq
   induction p with | mk p hp
   induction q with | mk q hq
@@ -252,7 +261,7 @@ theorem mapsTo_rPoint : Set.MapsTo (rPoint cf) (dom cf) (dom cf) := by
   simp only [Matrix.cons_val_one, Matrix.cons_val_zero, Matrix.cons_val]
   grind
 
-theorem rPoint_rPoint {pq : P2 cf.K × P2 cf.K} (hpq : pq ∈ dom cf) :
+theorem rPoint_rPoint [DecidableEq K] [CharZero K] {pq : P2 K × P2 K} (hpq : pq ∈ dom cf) :
     rPoint cf (rPoint cf pq) = pq := by
   obtain ⟨p, q⟩ := pq
   induction p with | mk p hp
@@ -264,14 +273,15 @@ theorem rPoint_rPoint {pq : P2 cf.K × P2 cf.K} (hpq : pq ∈ dom cf) :
   rw [P2.mk_eq_mk']
   exact rPoint'_rPoint' cf hp hq hpq
 
-theorem rPoint_bijOn : Set.BijOn (rPoint cf) (dom cf) (dom cf) := by
+theorem rPoint_bijOn [DecidableEq K] [CharZero K] :
+    Set.BijOn (rPoint cf) (dom cf) (dom cf) := by
   refine ⟨mapsTo_rPoint cf, ?_, ?_⟩
   · intro p hp q hq h
     simpa [rPoint_rPoint, cf.hu, hp, hq] using congr(rPoint cf $h)
   · intro p hp
     exact ⟨rPoint cf p, mapsTo_rPoint cf hp, rPoint_rPoint cf hp⟩
 
-theorem rPoint_eq_self {pq : P2 cf.K × P2 cf.K} (h : pq ∈ dom cf) :
+theorem rPoint_eq_self [DecidableEq K] [CharZero K] {pq : P2 K × P2 K} (h : pq ∈ dom cf) :
     rPoint cf (pq) = pq ↔ TangentOuterCircle cf pq.2 := by
   obtain ⟨p, q⟩ := pq
   induction p with | mk p hp
@@ -280,7 +290,7 @@ theorem rPoint_eq_self {pq : P2 cf.K × P2 cf.K} (h : pq ∈ dom cf) :
     P2.mk_eq_mk' _ _, rPoint'_eq_self cf hp hq h]
 
 /-- Reflect the edge across the vertex, expressed in raw coordinates. -/
-def rChord' (p q : Fin 3 → cf.K) : Fin 3 → cf.K :=
+def rChord' [DecidableEq K] [CharZero K] (p q : Fin 3 → K) : Fin 3 → K :=
   if 2 * cf.u * p 0 + cf.r ^ 2 * p 2 - cf.u ^ 2 * p 2 = 0 then -- all sorts of edge cases
     if p 0 = 0 then
       ![q 0, - q 1, q 2]
@@ -293,7 +303,7 @@ def rChord' (p q : Fin 3 → cf.K) : Fin 3 → cf.K :=
       2 * p 1 * q 2 - (2 * cf.u * p 0 + cf.r ^ 2 * p 2 - cf.u ^ 2 * p 2) * q 1,
       (2 * cf.u * p 0 + cf.r ^ 2 * p 2 - cf.u ^ 2 * p 2) * q 2]
 
-theorem rChord'_ne_zero {p q : Fin 3 → cf.K} (hp : p ≠ 0) (hq : q ≠ 0)
+theorem rChord'_ne_zero [DecidableEq K] [CharZero K] {p q : Fin 3 → K} (hp : p ≠ 0) (hq : q ≠ 0)
     (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) : rChord' cf p q ≠ 0 := by
   obtain _ := cf.hu
   obtain ⟨ho, hi, hpq⟩ := mem_dom cf hp hq |>.mp h
@@ -324,9 +334,10 @@ theorem rChord'_ne_zero {p q : Fin 3 → cf.K} (hp : p ≠ 0) (hq : q ≠ 0)
     ext n; fin_cases n <;> assumption
   simp [hxy, hq2]
 
-theorem rChord'_rChord' {p q : Fin 3 → cf.K} (hp : p ≠ 0) (hq : q ≠ 0)
+theorem rChord'_rChord' [DecidableEq K] [CharZero K] {p q : Fin 3 → K}
+    (hp : p ≠ 0) (hq : q ≠ 0)
     (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) :
-    ∃ l : cf.K, rChord' cf p (rChord' cf p q) = l • q := by
+    ∃ l : K, rChord' cf p (rChord' cf p q) = l • q := by
   obtain _ := cf.hu
   obtain ⟨ho, hi, hpq⟩ := mem_dom cf hp hq |>.mp h
   unfold rChord'
@@ -376,10 +387,11 @@ theorem rChord'_rChord' {p q : Fin 3 → cf.K} (hp : p ≠ 0) (hq : q ≠ 0)
     simp [h0]
     ring
 
-theorem rChord'_eq_self_special {p q : Fin 3 → cf.K} (hp : p ≠ 0) (hq : q ≠ 0)
+theorem rChord'_eq_self_special [DecidableEq K] [CharZero K] {p q : Fin 3 → K}
+    (hp : p ≠ 0) (hq : q ≠ 0)
     (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf)
     (hxy : 2 * cf.u * p 0 + cf.r ^ 2 * p 2 - cf.u ^ 2 * p 2 = 0) :
-    (∃ l : cf.K, rChord' cf p q = l • q) ↔ p 0 ^ 2 + p 1 ^ 2 = p 2 ^ 2 := by
+    (∃ l : K, rChord' cf p q = l • q) ↔ p 0 ^ 2 + p 1 ^ 2 = p 2 ^ 2 := by
   obtain ⟨ho, hi, heq⟩ := mem_dom cf hp hq |>.mp h
   clear h
   simp only [rChord', hxy, ↓reduceIte]
@@ -446,10 +458,11 @@ theorem rChord'_eq_self_special {p q : Fin 3 → cf.K} (hp : p ≠ 0) (hq : q �
         simpa [funext_iff, Fin.forall_fin_succ]
       grind
 
-theorem rChord'_eq_self_normal {p q : Fin 3 → cf.K} (hp : p ≠ 0) (hq : q ≠ 0)
+theorem rChord'_eq_self_normal [DecidableEq K] [CharZero K] {p q : Fin 3 → K}
+    (hp : p ≠ 0) (hq : q ≠ 0)
     (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf)
     (hxy : 2 * cf.u * p 0 + cf.r ^ 2 * p 2 - cf.u ^ 2 * p 2 ≠ 0) :
-    (∃ l : cf.K, rChord' cf p q = l • q) ↔ p 0 ^ 2 + p 1 ^ 2 = p 2 ^ 2 := by
+    (∃ l : K, rChord' cf p q = l • q) ↔ p 0 ^ 2 + p 1 ^ 2 = p 2 ^ 2 := by
   obtain ⟨ho, hi, heq⟩ := mem_dom cf hp hq |>.mp h
   clear h
   simp only [rChord', hxy, ↓reduceIte]
@@ -481,15 +494,16 @@ theorem rChord'_eq_self_normal {p q : Fin 3 → cf.K} (hp : p ≠ 0) (hq : q ≠
     simp at hl
     grind
 
-theorem rChord'_eq_self {p q : Fin 3 → cf.K} (hp : p ≠ 0) (hq : q ≠ 0)
+theorem rChord'_eq_self [DecidableEq K] [CharZero K] {p q : Fin 3 → K}
+    (hp : p ≠ 0) (hq : q ≠ 0)
     (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) :
-    (∃ l : cf.K, rChord' cf p q = l • q) ↔ p 0 ^ 2 + p 1 ^ 2 = p 2 ^ 2 := by
+    (∃ l : K, rChord' cf p q = l • q) ↔ p 0 ^ 2 + p 1 ^ 2 = p 2 ^ 2 := by
   by_cases! hxy : 2 * cf.u * p 0 + cf.r ^ 2 * p 2 - cf.u ^ 2 * p 2 = 0
   · exact rChord'_eq_self_special cf hp hq h hxy
   · exact rChord'_eq_self_normal cf hp hq h hxy
 
 /-- Reflect the edge across the vertex. -/
-def rChord (pq : P2 cf.K × P2 cf.K) : P2 cf.K × P2 cf.K :=
+def rChord [DecidableEq K] [CharZero K] (pq : P2 K × P2 K) : P2 K × P2 K :=
   ⟨pq.1, P2.lift₂ (fun p q hp hq ↦ P2.mk' (rChord' cf p q)) (by
     intro p q p' q' hp hq hp' hq' ⟨l, hl0, hl⟩ ⟨m, hm0, hm⟩
     unfold rChord'
@@ -533,13 +547,15 @@ def rChord (pq : P2 cf.K × P2 cf.K) : P2 cf.K × P2 cf.K :=
       ring
   ) pq.1 pq.2⟩
 
-theorem rChord_mk {p q : Fin 3 → cf.K} (hp : p ≠ 0) (hq : q ≠ 0)
+theorem rChord_mk [DecidableEq K] [CharZero K] {p q : Fin 3 → K}
+    (hp : p ≠ 0) (hq : q ≠ 0)
     (hpq : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) :
     rChord cf ⟨P2.mk p hp, P2.mk q hq⟩ =
     ⟨P2.mk p hp, P2.mk (rChord' cf p q) (rChord'_ne_zero cf hp hq hpq)⟩ := by
   simp [rChord, rChord'_ne_zero cf hp hq hpq]
 
-theorem mapsTo_rChord : Set.MapsTo (rChord cf) (dom cf) (dom cf) := by
+theorem mapsTo_rChord [DecidableEq K] [CharZero K] :
+    Set.MapsTo (rChord cf) (dom cf) (dom cf) := by
   intro ⟨p, q⟩ hpq
   induction p with | mk p hp
   induction q with | mk q hq
@@ -557,7 +573,7 @@ theorem mapsTo_rChord : Set.MapsTo (rChord cf) (dom cf) (dom cf) := by
   · simp
     grind
 
-theorem rChord_rChord {pq : P2 cf.K × P2 cf.K} (hpq : pq ∈ dom cf) :
+theorem rChord_rChord [DecidableEq K] [CharZero K] {pq : P2 K × P2 K} (hpq : pq ∈ dom cf) :
     rChord cf (rChord cf pq) = pq := by
   obtain ⟨p, q⟩ := pq
   induction p with | mk p hp
@@ -569,14 +585,15 @@ theorem rChord_rChord {pq : P2 cf.K × P2 cf.K} (hpq : pq ∈ dom cf) :
   rw [P2.mk_eq_mk']
   exact rChord'_rChord' cf hp hq hpq
 
-theorem rChord_bijOn : Set.BijOn (rChord cf) (dom cf) (dom cf) := by
+theorem rChord_bijOn [DecidableEq K] [CharZero K] :
+    Set.BijOn (rChord cf) (dom cf) (dom cf) := by
   refine ⟨mapsTo_rChord cf, ?_, ?_⟩
   · intro p hp q hq h
     simpa [rChord_rChord, cf.hu, hp, hq] using congr(rChord cf $h)
   · intro p hp
     exact ⟨rChord cf p, mapsTo_rChord cf hp, rChord_rChord cf hp⟩
 
-theorem rChord_eq_self {pq : P2 cf.K × P2 cf.K} (h : pq ∈ dom cf) :
+theorem rChord_eq_self [DecidableEq K] [CharZero K] {pq : P2 K × P2 K} (h : pq ∈ dom cf) :
     (rChord cf pq = pq) ↔ InnerCircle cf pq.1 := by
   obtain ⟨p, q⟩ := pq
   induction p with | mk p hp
@@ -585,23 +602,25 @@ theorem rChord_eq_self {pq : P2 cf.K × P2 cf.K} (h : pq ∈ dom cf) :
     P2.mk_eq_mk' _ _, rChord'_eq_self cf hp hq h]
 
 /-- Send a pair of vertex and edge to the next one on the polygon. -/
-def next (pq : P2 cf.K × P2 cf.K) : P2 cf.K × P2 cf.K :=
+def next [DecidableEq K] [CharZero K] (pq : P2 K × P2 K) : P2 K × P2 K :=
   rChord cf (rPoint cf pq)
 
-theorem mapsTo_next : Set.MapsTo (next cf) (dom cf) (dom cf) :=
+theorem mapsTo_next [DecidableEq K] [CharZero K] :
+    Set.MapsTo (next cf) (dom cf) (dom cf) :=
   (mapsTo_rChord cf).comp (mapsTo_rPoint cf)
 
-theorem next_bijOn : Set.BijOn (next cf) (dom cf) (dom cf) :=
+theorem next_bijOn [DecidableEq K] [CharZero K] :
+    Set.BijOn (next cf) (dom cf) (dom cf) :=
   (rChord_bijOn cf).comp (rPoint_bijOn cf)
 
-theorem next_eq_self {pq : P2 cf.K × P2 cf.K} (h : pq ∈ dom cf) :
+theorem next_eq_self [DecidableEq K] [CharZero K] {pq : P2 K × P2 K} (h : pq ∈ dom cf) :
     next cf (pq) = pq ↔ InnerCircle cf pq.1 ∧ TangentOuterCircle cf pq.2 := by
   rw [← rChord_eq_self cf h, ← rPoint_eq_self cf h]
   unfold next
   unfold rChord rPoint
   grind
 
-theorem next_eq_self' {pq : P2 cf.K × P2 cf.K} (h : pq ∈ dom cf) :
+theorem next_eq_self' [DecidableEq K] [CharZero K] {pq : P2 K × P2 K} (h : pq ∈ dom cf) :
     next cf (pq) = pq ↔
     pq = ⟨P2.mk ![1, 0, 1] (by simp), P2.mk ![1, 0, 1] (by simp)⟩ ∨
     pq = ⟨P2.mk ![-1, 0, 1] (by simp), P2.mk ![-1, 0, 1] (by simp)⟩ := by
