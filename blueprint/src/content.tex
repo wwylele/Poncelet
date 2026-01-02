@@ -286,13 +286,32 @@ to an addition in the group of the elliptic curve. We define the curve $E$ as fo
     forms an abelian group.
 \end{definition}
 
-The curve $E$ is not always an elliptic curve because it can be singular. Precisely speaking,
-under the constraints $u \ne 0$ and $r \ne 0$, this curve is singular if and only if 
-$(u + r)^2 = 1$ or $(u - r)^2 = 1$, meaning that the two circles are tangent to each other. In
-general, the group law still holds for non-singular points on a singular cubic curve, so we don't
+The curve $E$ is not always an elliptic curve because it can be singular. This is characterized by
+
+\begin{lemma}
+    \lean{singular_elliptic}
+    \label{singular_elliptic}
+    \uses{elliptic}
+    \leanok
+    The curve $E$ contains a singular point only in the following 4 cases
+    \begin{itemize}
+        \item $u + r = \pm 1$ (positive singular), and the singular point is $(-u / r, 0)$
+        \item $u - r = \pm 1$ (negative singular), and the singular point is $(u / r, 0)$
+    \end{itemize}
+\end{lemma}
+\begin{proof}
+    \leanok
+    This can be solved from the system of equations of $E$ and the singular point.
+\end{proof}
+
+\begin{corollary}
+    The curve $E$ is singular if and only if the two circles are tangent to each other
+\end{corollary}
+
+In general, the group law still holds for non-singular points on a singular cubic curve, so we don't
 need to consider the singular case separately for most parts.
 
-We define three special points $o$, $w$, and $g$ on $E_0$, which will be useful soon
+We define three special points $o$, $w$, and $g$ on $E_0$, which will be useful soon.
 
 \begin{definition}\label{o}\lean{o}\leanok
     \[
@@ -360,6 +379,18 @@ Next, we define the mapping $f : E_0 \to \mathrm{Dom}$ as follows
 \end{definition}
 As a reminder, $k^2 = (u+r)^2 - 1$. It doesn't matter whether we pick $k$ or $-k$, as changing
 the sign of $k$ results in mirroring around the x-axis.
+
+We should also note that when $k = 0$, which corresponds to the positive singular case, this
+mapping becomes trivial.
+\begin{lemma}
+    If $k = 0$, $f$ becomes is constant function
+    \[
+    f(X, Y) = ([u + r : 0 : 1], [u + r : 0 : 1])
+    \]
+\end{lemma}
+In such case, $f$ is not useful, but we can flip the sign of $r$, which keeps both $\mathrm{Dom}$
+and $E$ the same, and turn it into a negative singular case and get a useful $f$. This has no
+impact on the next few lemma, but this will appear again when we need the surjectivity of $f$. 
 
 With the map $f$, we can make connection between the elliptic curve $E$ and the two-circle
 configuration with the following theorems
