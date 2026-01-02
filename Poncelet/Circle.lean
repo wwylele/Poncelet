@@ -110,7 +110,8 @@ def rPoint' [DecidableEq K] (p q : Fin 3 → K) : Fin 3 → K :=
       2 * q 1 * p 2 * q 2 - 2 * cf.u * q 0 * q 1 * p 2 - p 1 * q 2 ^ 2,
       p 2 * q 2 ^ 2]
 
-theorem rPoint'_rPoint' [DecidableEq K] [CharZero K] {p q : Fin 3 → K} (hp : p ≠ 0) (hq : q ≠ 0)
+theorem rPoint'_rPoint' [DecidableEq K] [hchar : NeZero (2 : K)]
+    {p q : Fin 3 → K} (hp : p ≠ 0) (hq : q ≠ 0)
     (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) :
     ∃ l : K, rPoint' cf (rPoint' cf p q) q = l • p := by
   obtain ⟨ho, hi, hpq⟩ := mem_dom cf hp hq |>.mp h
@@ -132,11 +133,11 @@ theorem rPoint'_rPoint' [DecidableEq K] [CharZero K] {p q : Fin 3 → K} (hp : p
       use q 1 / p 0
       ext n
       fin_cases n
-      · suffices q 1 = q 1 / p 0 * p 0 by simpa [hp2, hq2, cf.hu, hq1]
+      · suffices q 1 = q 1 / p 0 * p 0 by simpa [hp2, hq2, cf.hu, hq1, hchar.out]
         grind
-      · suffices -q 0 = q 1 / p 0 * p 1 by simpa [hp2, hq2, cf.hu, hq1]
+      · suffices -q 0 = q 1 / p 0 * p 1 by simpa [hp2, hq2, cf.hu, hq1, hchar.out]
         grind
-      · simp [hp2, hq2, cf.hu, hq1]
+      · simp [hp2, hq2, cf.hu, hq1, hchar.out]
     · use 2 * cf.u * q 1 / p 2
       ext n
       fin_cases n
@@ -152,13 +153,14 @@ theorem rPoint'_rPoint' [DecidableEq K] [CharZero K] {p q : Fin 3 → K} (hp : p
   simp [hq2]
   ring
 
-theorem rPoint'_ne_zero [DecidableEq K] [CharZero K] {p q : Fin 3 → K} (hp : p ≠ 0) (hq : q ≠ 0)
+theorem rPoint'_ne_zero [DecidableEq K] [hchar : NeZero (2 : K)]
+    {p q : Fin 3 → K} (hp : p ≠ 0) (hq : q ≠ 0)
     (hpq : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) : rPoint' cf p q ≠ 0 := by
   unfold rPoint'
   by_contra! h0
   by_cases! hq2 : q 2 = 0
   · by_cases! hp2 : p 2 = 0
-    · obtain ⟨_, _, hq1⟩ : _ ∧ _ ∧ q 1 = 0 := by simpa [cf.hu, hp2, hq2] using h0
+    · obtain ⟨_, _, hq1⟩ : _ ∧ _ ∧ q 1 = 0 := by simpa [cf.hu, hp2, hq2, hchar.out] using h0
       have hq0 : q 0 = 0 := by simpa [hq1, hq2] using (mem_dom cf hp hq |>.mp hpq).2.1
       clear hpq
       contrapose! hq
@@ -174,7 +176,8 @@ theorem rPoint'_ne_zero [DecidableEq K] [CharZero K] {p q : Fin 3 → K} (hp : p
       ext n; fin_cases n <;> assumption
     · simp [hp2, hq2] at h0
 
-theorem rPoint'_eq_self [DecidableEq K] [CharZero K] {p q : Fin 3 → K} (hp : p ≠ 0) (hq : q ≠ 0)
+theorem rPoint'_eq_self [DecidableEq K] [hchar : NeZero (2 : K)]
+    {p q : Fin 3 → K} (hp : p ≠ 0) (hq : q ≠ 0)
     (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) :
     (∃ l : K, rPoint' cf p q = l • p) ↔
     2 * cf.u * q 0 * q 2 + cf.u ^ 2 * q 1 ^ 2 = (1 + cf.u ^ 2 - cf.r ^ 2) * q 2 ^ 2 := by
@@ -183,6 +186,7 @@ theorem rPoint'_eq_self [DecidableEq K] [CharZero K] {p q : Fin 3 → K} (hp : p
   simp only [rPoint', neg_sub]
   obtain _ := cf.hr
   obtain _ := cf.hu
+  obtain _ := hchar.out
   have hq : q 0 = 0 → q 1 = 0 → q 2 ≠ 0 := by simpa [funext_iff, Fin.forall_fin_succ] using hq
   have hp : p 0 = 0 → p 1 = 0 → p 2 ≠ 0 := by simpa [funext_iff, Fin.forall_fin_succ] using hp
   by_cases hq2 : q 2 = 0;
@@ -216,7 +220,7 @@ theorem rPoint'_eq_self [DecidableEq K] [CharZero K] {p q : Fin 3 → K} (hp : p
     · exact ⟨q 2 ^ 2, (by grind), (by grind), (by ring)⟩
 
 /-- Reflect the vertex across the edge. -/
-def rPoint [DecidableEq K] [CharZero K] (pq : P2 K × P2 K) : P2 K × P2 K :=
+def rPoint [DecidableEq K] (pq : P2 K × P2 K) : P2 K × P2 K :=
   ⟨P2.lift₂ (fun p q hp hq ↦ P2.mk' (rPoint' cf p q)) (by
   intro p q p' q' hp hq hp' hq' ⟨l, hl0, hl⟩ ⟨m, hm0, hm⟩
   unfold rPoint'
@@ -244,13 +248,14 @@ def rPoint [DecidableEq K] [CharZero K] (pq : P2 K × P2 K) : P2 K × P2 K :=
   ring
   ) pq.1 pq.2, pq.2⟩
 
-theorem rPoint_mk [DecidableEq K] [CharZero K] {p q : Fin 3 → K} (hp : p ≠ 0) (hq : q ≠ 0)
+theorem rPoint_mk [DecidableEq K] [hchar : NeZero (2 : K)]
+    {p q : Fin 3 → K} (hp : p ≠ 0) (hq : q ≠ 0)
     (hpq : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) :
     rPoint cf ⟨P2.mk p hp, P2.mk q hq⟩ =
     ⟨P2.mk (rPoint' cf p q) (rPoint'_ne_zero cf hp hq hpq), P2.mk q hq⟩ := by
   simp [rPoint, rPoint'_ne_zero cf hp hq hpq]
 
-theorem mapsTo_rPoint [DecidableEq K] [CharZero K] :
+theorem mapsTo_rPoint [DecidableEq K] [hchar : NeZero (2 : K)] :
     Set.MapsTo (rPoint cf) (dom cf) (dom cf) := by
   intro ⟨p, q⟩ hpq
   induction p with | mk p hp
@@ -264,7 +269,8 @@ theorem mapsTo_rPoint [DecidableEq K] [CharZero K] :
   simp only [Matrix.cons_val_one, Matrix.cons_val_zero, Matrix.cons_val]
   grind
 
-theorem rPoint_rPoint [DecidableEq K] [CharZero K] {pq : P2 K × P2 K} (hpq : pq ∈ dom cf) :
+theorem rPoint_rPoint [DecidableEq K] [hchar : NeZero (2 : K)]
+    {pq : P2 K × P2 K} (hpq : pq ∈ dom cf) :
     rPoint cf (rPoint cf pq) = pq := by
   obtain ⟨p, q⟩ := pq
   induction p with | mk p hp
@@ -276,7 +282,7 @@ theorem rPoint_rPoint [DecidableEq K] [CharZero K] {pq : P2 K × P2 K} (hpq : pq
   rw [P2.mk_eq_mk']
   exact rPoint'_rPoint' cf hp hq hpq
 
-theorem rPoint_bijOn [DecidableEq K] [CharZero K] :
+theorem rPoint_bijOn [DecidableEq K] [hchar : NeZero (2 : K)] :
     Set.BijOn (rPoint cf) (dom cf) (dom cf) := by
   refine ⟨mapsTo_rPoint cf, ?_, ?_⟩
   · intro p hp q hq h
@@ -284,7 +290,8 @@ theorem rPoint_bijOn [DecidableEq K] [CharZero K] :
   · intro p hp
     exact ⟨rPoint cf p, mapsTo_rPoint cf hp, rPoint_rPoint cf hp⟩
 
-theorem rPoint_eq_self [DecidableEq K] [CharZero K] {pq : P2 K × P2 K} (h : pq ∈ dom cf) :
+theorem rPoint_eq_self [DecidableEq K] [hchar : NeZero (2 : K)]
+    {pq : P2 K × P2 K} (h : pq ∈ dom cf) :
     rPoint cf (pq) = pq ↔ TangentOuterCircle cf pq.2 := by
   obtain ⟨p, q⟩ := pq
   induction p with | mk p hp
@@ -293,7 +300,7 @@ theorem rPoint_eq_self [DecidableEq K] [CharZero K] {pq : P2 K × P2 K} (h : pq 
     P2.mk_eq_mk' _ _, rPoint'_eq_self cf hp hq h]
 
 /-- Reflect the edge across the vertex, expressed in raw coordinates. -/
-def rChord' [DecidableEq K] [CharZero K] (p q : Fin 3 → K) : Fin 3 → K :=
+def rChord' [DecidableEq K] (p q : Fin 3 → K) : Fin 3 → K :=
   if 2 * cf.u * p 0 + cf.r ^ 2 * p 2 - cf.u ^ 2 * p 2 = 0 then -- all sorts of edge cases
     if p 0 = 0 then
       ![q 0, - q 1, q 2]
@@ -306,7 +313,8 @@ def rChord' [DecidableEq K] [CharZero K] (p q : Fin 3 → K) : Fin 3 → K :=
       2 * p 1 * q 2 - (2 * cf.u * p 0 + cf.r ^ 2 * p 2 - cf.u ^ 2 * p 2) * q 1,
       (2 * cf.u * p 0 + cf.r ^ 2 * p 2 - cf.u ^ 2 * p 2) * q 2]
 
-theorem rChord'_ne_zero [DecidableEq K] [CharZero K] {p q : Fin 3 → K} (hp : p ≠ 0) (hq : q ≠ 0)
+theorem rChord'_ne_zero [DecidableEq K] [hchar : NeZero (2 : K)]
+    {p q : Fin 3 → K} (hp : p ≠ 0) (hq : q ≠ 0)
     (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) : rChord' cf p q ≠ 0 := by
   obtain _ := cf.hu
   obtain ⟨ho, hi, hpq⟩ := mem_dom cf hp hq |>.mp h
@@ -325,9 +333,9 @@ theorem rChord'_ne_zero [DecidableEq K] [CharZero K] {p q : Fin 3 → K} (hp : p
       simpa [hp0] using h0'
     have hp2 : p 2 ≠ 0 := by
       contrapose! hp0
-      simpa [hp0, cf.hu] using hxy
+      simpa [hp0, cf.hu, hchar.out] using hxy
     by_cases! hq2 : q 2 = 0
-    · simp [hp0, hq2, hp1, hp2]
+    · simp [hp0, hq2, hp1, hp2, hchar.out]
     · simp [hp0, hq2]
   by_cases! hq2 : q 2 = 0
   · suffices q 0 = 0 → q 1 ≠ 0 by simpa [hxy, hq2]
@@ -337,7 +345,7 @@ theorem rChord'_ne_zero [DecidableEq K] [CharZero K] {p q : Fin 3 → K} (hp : p
     ext n; fin_cases n <;> assumption
   simp [hxy, hq2]
 
-theorem rChord'_rChord' [DecidableEq K] [CharZero K] {p q : Fin 3 → K}
+theorem rChord'_rChord' [DecidableEq K] [hchar : NeZero (2 : K)] {p q : Fin 3 → K}
     (hp : p ≠ 0) (hq : q ≠ 0)
     (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) :
     ∃ l : K, rChord' cf p (rChord' cf p q) = l • q := by
@@ -358,11 +366,11 @@ theorem rChord'_rChord' [DecidableEq K] [CharZero K] {p q : Fin 3 → K}
       simpa [hp0] using h0'
     have hp2 : p 2 ≠ 0 := by
       contrapose! hp0
-      simpa [hp0, cf.hu] using h0
+      simpa [hp0, cf.hu, hchar.out] using h0
     by_cases! hq2 : q 2 = 0
     · have hp2 : p 2 ≠ 0 := by grind
       have hq12 : p 0 * q 0 + p 1 * q 1 = 0 := by simpa [hq2] using hpq
-      suffices ∃ l, ![p 1, -p 0, 0] = l • q by simpa [hp0, hq2, hp2, hp1]
+      suffices ∃ l, ![p 1, -p 0, 0] = l • q by simpa [hp0, hq2, hp2, hp1, hchar.out]
       have hq0 : q 0 ≠ 0 := by
         clear h
         contrapose! hq with hq0
@@ -390,11 +398,12 @@ theorem rChord'_rChord' [DecidableEq K] [CharZero K] {p q : Fin 3 → K}
     simp [h0]
     ring
 
-theorem rChord'_eq_self_special [DecidableEq K] [CharZero K] {p q : Fin 3 → K}
+theorem rChord'_eq_self_special [DecidableEq K] [hchar : NeZero (2 : K)] {p q : Fin 3 → K}
     (hp : p ≠ 0) (hq : q ≠ 0)
     (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf)
     (hxy : 2 * cf.u * p 0 + cf.r ^ 2 * p 2 - cf.u ^ 2 * p 2 = 0) :
     (∃ l : K, rChord' cf p q = l • q) ↔ p 0 ^ 2 + p 1 ^ 2 = p 2 ^ 2 := by
+  obtain _ := hchar.out
   obtain ⟨ho, hi, heq⟩ := mem_dom cf hp hq |>.mp h
   clear h
   simp only [rChord', hxy, ↓reduceIte]
@@ -461,11 +470,12 @@ theorem rChord'_eq_self_special [DecidableEq K] [CharZero K] {p q : Fin 3 → K}
         simpa [funext_iff, Fin.forall_fin_succ]
       grind
 
-theorem rChord'_eq_self_normal [DecidableEq K] [CharZero K] {p q : Fin 3 → K}
+theorem rChord'_eq_self_normal [DecidableEq K] [hchar : NeZero (2 : K)] {p q : Fin 3 → K}
     (hp : p ≠ 0) (hq : q ≠ 0)
     (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf)
     (hxy : 2 * cf.u * p 0 + cf.r ^ 2 * p 2 - cf.u ^ 2 * p 2 ≠ 0) :
     (∃ l : K, rChord' cf p q = l • q) ↔ p 0 ^ 2 + p 1 ^ 2 = p 2 ^ 2 := by
+  obtain _ := hchar.out
   obtain ⟨ho, hi, heq⟩ := mem_dom cf hp hq |>.mp h
   clear h
   simp only [rChord', hxy, ↓reduceIte]
@@ -497,7 +507,7 @@ theorem rChord'_eq_self_normal [DecidableEq K] [CharZero K] {p q : Fin 3 → K}
     simp at hl
     grind
 
-theorem rChord'_eq_self [DecidableEq K] [CharZero K] {p q : Fin 3 → K}
+theorem rChord'_eq_self [DecidableEq K] [hchar : NeZero (2 : K)] {p q : Fin 3 → K}
     (hp : p ≠ 0) (hq : q ≠ 0)
     (h : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) :
     (∃ l : K, rChord' cf p q = l • q) ↔ p 0 ^ 2 + p 1 ^ 2 = p 2 ^ 2 := by
@@ -506,7 +516,7 @@ theorem rChord'_eq_self [DecidableEq K] [CharZero K] {p q : Fin 3 → K}
   · exact rChord'_eq_self_normal cf hp hq h hxy
 
 /-- Reflect the edge across the vertex. -/
-def rChord [DecidableEq K] [CharZero K] (pq : P2 K × P2 K) : P2 K × P2 K :=
+def rChord [DecidableEq K] (pq : P2 K × P2 K) : P2 K × P2 K :=
   ⟨pq.1, P2.lift₂ (fun p q hp hq ↦ P2.mk' (rChord' cf p q)) (by
     intro p q p' q' hp hq hp' hq' ⟨l, hl0, hl⟩ ⟨m, hm0, hm⟩
     unfold rChord'
@@ -550,14 +560,14 @@ def rChord [DecidableEq K] [CharZero K] (pq : P2 K × P2 K) : P2 K × P2 K :=
       ring
   ) pq.1 pq.2⟩
 
-theorem rChord_mk [DecidableEq K] [CharZero K] {p q : Fin 3 → K}
+theorem rChord_mk [DecidableEq K] [hchar : NeZero (2 : K)] {p q : Fin 3 → K}
     (hp : p ≠ 0) (hq : q ≠ 0)
     (hpq : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) :
     rChord cf ⟨P2.mk p hp, P2.mk q hq⟩ =
     ⟨P2.mk p hp, P2.mk (rChord' cf p q) (rChord'_ne_zero cf hp hq hpq)⟩ := by
   simp [rChord, rChord'_ne_zero cf hp hq hpq]
 
-theorem mapsTo_rChord [DecidableEq K] [CharZero K] :
+theorem mapsTo_rChord [DecidableEq K] [hchar : NeZero (2 : K)] :
     Set.MapsTo (rChord cf) (dom cf) (dom cf) := by
   intro ⟨p, q⟩ hpq
   induction p with | mk p hp
@@ -576,7 +586,8 @@ theorem mapsTo_rChord [DecidableEq K] [CharZero K] :
   · simp
     grind
 
-theorem rChord_rChord [DecidableEq K] [CharZero K] {pq : P2 K × P2 K} (hpq : pq ∈ dom cf) :
+theorem rChord_rChord [DecidableEq K] [hchar : NeZero (2 : K)]
+    {pq : P2 K × P2 K} (hpq : pq ∈ dom cf) :
     rChord cf (rChord cf pq) = pq := by
   obtain ⟨p, q⟩ := pq
   induction p with | mk p hp
@@ -588,7 +599,7 @@ theorem rChord_rChord [DecidableEq K] [CharZero K] {pq : P2 K × P2 K} (hpq : pq
   rw [P2.mk_eq_mk']
   exact rChord'_rChord' cf hp hq hpq
 
-theorem rChord_bijOn [DecidableEq K] [CharZero K] :
+theorem rChord_bijOn [DecidableEq K] [hchar : NeZero (2 : K)] :
     Set.BijOn (rChord cf) (dom cf) (dom cf) := by
   refine ⟨mapsTo_rChord cf, ?_, ?_⟩
   · intro p hp q hq h
@@ -596,7 +607,8 @@ theorem rChord_bijOn [DecidableEq K] [CharZero K] :
   · intro p hp
     exact ⟨rChord cf p, mapsTo_rChord cf hp, rChord_rChord cf hp⟩
 
-theorem rChord_eq_self [DecidableEq K] [CharZero K] {pq : P2 K × P2 K} (h : pq ∈ dom cf) :
+theorem rChord_eq_self [DecidableEq K] [hchar : NeZero (2 : K)]
+    {pq : P2 K × P2 K} (h : pq ∈ dom cf) :
     (rChord cf pq = pq) ↔ InnerCircle cf pq.1 := by
   obtain ⟨p, q⟩ := pq
   induction p with | mk p hp
@@ -605,30 +617,35 @@ theorem rChord_eq_self [DecidableEq K] [CharZero K] {pq : P2 K × P2 K} (h : pq 
     P2.mk_eq_mk' _ _, rChord'_eq_self cf hp hq h]
 
 /-- Send a pair of vertex and edge to the next one on the polygon. -/
-def next [DecidableEq K] [CharZero K] (pq : P2 K × P2 K) : P2 K × P2 K :=
+def next [DecidableEq K] (pq : P2 K × P2 K) : P2 K × P2 K :=
   rChord cf (rPoint cf pq)
 
-theorem mapsTo_next [DecidableEq K] [CharZero K] :
+theorem mapsTo_next [DecidableEq K] [hchar : NeZero (2 : K)] :
     Set.MapsTo (next cf) (dom cf) (dom cf) :=
   (mapsTo_rChord cf).comp (mapsTo_rPoint cf)
 
-theorem next_bijOn [DecidableEq K] [CharZero K] :
+theorem next_bijOn [DecidableEq K] [hchar : NeZero (2 : K)] :
     Set.BijOn (next cf) (dom cf) (dom cf) :=
   (rChord_bijOn cf).comp (rPoint_bijOn cf)
 
-theorem next_eq_self [DecidableEq K] [CharZero K] {pq : P2 K × P2 K} (h : pq ∈ dom cf) :
+theorem next_eq_self [DecidableEq K] [hchar : NeZero (2 : K)] {pq : P2 K × P2 K} (h : pq ∈ dom cf) :
     next cf (pq) = pq ↔ InnerCircle cf pq.1 ∧ TangentOuterCircle cf pq.2 := by
   rw [← rChord_eq_self cf h, ← rPoint_eq_self cf h]
   unfold next
   unfold rChord rPoint
   grind
 
-theorem next_eq_self' [DecidableEq K] [CharZero K] {pq : P2 K × P2 K} (h : pq ∈ dom cf) :
+theorem next_eq_self' [DecidableEq K] [hchar : NeZero (2 : K)]
+    {pq : P2 K × P2 K} (h : pq ∈ dom cf) :
     next cf (pq) = pq ↔
     pq = ⟨P2.mk ![1, 0, 1] (by simp), P2.mk ![1, 0, 1] (by simp)⟩ ∨
     pq = ⟨P2.mk ![-1, 0, 1] (by simp), P2.mk ![-1, 0, 1] (by simp)⟩ := by
   obtain _ := cf.hu
   obtain _ := cf.hr
+  obtain hchar := hchar.out
+  have h4 : (4 : K) ≠ 0 := by
+    suffices (2 * 2 : K) ≠ 0 by contrapose! this; linear_combination this
+    simpa using hchar
   rw [next_eq_self cf h]
   obtain ⟨p, q⟩ := pq
   induction p with | mk p hp
@@ -712,7 +729,8 @@ theorem next_eq_self' [DecidableEq K] [CharZero K] {pq : P2 K × P2 K} (h : pq �
       field_simp at hby
       have : 4 * cf.u ^ 2 * ((cf.u - cf.r - 1) * (cf.u + cf.r + 1)) ^ 2 = 0 := by
         linear_combination -hby
-      obtain hur | hur : cf.u - cf.r - 1 = 0 ∨ cf.u + cf.r + 1 = 0 := by simpa [cf.hu] using this
+      obtain hur | hur : cf.u - cf.r - 1 = 0 ∨ cf.u + cf.r + 1 = 0 := by
+        simpa [cf.hu, h4] using this
       · have : cf.r = cf.u - 1 := by linear_combination -hur
         rw [this] at h hyz hac' hbc
         field_simp at hyz hbc
@@ -732,7 +750,8 @@ theorem next_eq_self' [DecidableEq K] [CharZero K] {pq : P2 K × P2 K} (h : pq �
       field_simp at hby
       have : 4 * cf.u ^ 2 * ((cf.u - cf.r + 1) * (cf.u + cf.r - 1)) ^ 2 = 0 := by
         linear_combination -hby
-      obtain hur | hur : cf.u - cf.r + 1 = 0 ∨ cf.u + cf.r - 1 = 0 := by simpa [cf.hu] using this
+      obtain hur | hur : cf.u - cf.r + 1 = 0 ∨ cf.u + cf.r - 1 = 0 := by
+        simpa [cf.hu, h4] using this
       · have : cf.r = cf.u + 1 := by linear_combination -hur
         rw [this] at h hyz hac' hbc
         field_simp at hyz hbc

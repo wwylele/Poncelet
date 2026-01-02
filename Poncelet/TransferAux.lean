@@ -10,7 +10,7 @@ variable (cf : Config K)
 
 set_option maxHeartbeats 400000 in
 -- Long Expression
-theorem fChord_w_sub_c_eq_zero [DecidableEq K] [CharZero K] {x y wx wy : K}
+theorem fChord_w_sub_c_eq_zero [DecidableEq K] [hchar : NeZero (2 : K)] {x y wx wy : K}
     (hxy : (elliptic cf).Nonsingular x y) (hwxy : (elliptic cf).Nonsingular wx wy)
     (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
     (hwxyeq : w cf - .some hxy = .some hwxy)
@@ -118,7 +118,7 @@ theorem fChord_w_sub_c_eq_zero [DecidableEq K] [CharZero K] {x y wx wy : K}
       + 4*x*y*cf.u^4*cf.r^2 + x*cf.u^5*cf.r^2 + 4*x*y*cf.u^3*cf.r^3 + 3*x*cf.u^4*cf.r^3 - 2*x^3*cf.u*cf.r^4
       + 4*x*y*cf.u^2*cf.r^4 + 2*cf.u^7 + 2*x^2*cf.u^4*cf.r + 4*y*cf.u^5*cf.r + 2*x^2*cf.u^2*cf.r^3 + 4*x*cf.u^5)* heq
 
-theorem fChord_w_sub_c_ne_zero [DecidableEq K] [CharZero K] {x y wx wy : K}
+theorem fChord_w_sub_c_ne_zero [DecidableEq K] [hchar : NeZero (2 : K)] {x y wx wy : K}
     (hxy : (elliptic cf).Nonsingular x y) (hwxy : (elliptic cf).Nonsingular wx wy)
     (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
     (hwxyeq : w cf - .some hxy = .some hwxy)
@@ -203,13 +203,22 @@ theorem fChord_w_sub_c_ne_zero [DecidableEq K] [CharZero K] {x y wx wy : K}
 
 set_option maxHeartbeats 400000 in
 -- Long Expression
-theorem fChord_w_sub_singularAbc_not_singularAbc [DecidableEq K] [CharZero K]
+theorem fChord_w_sub_singularAbc_not_singularAbc [DecidableEq K] [hchar : NeZero (2 : K)]
     {x y wx wy : K}
     (hxy : (elliptic cf).Nonsingular x y) (hwxy : (elliptic cf).Nonsingular wx wy)
     (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
     (hwxyeq : w cf - .some hxy = .some hwxy)
     (hsxy : SingularAbc cf x y) (hwsxy : ¬ SingularAbc cf wx wy) (hur : cf.u ^ 2 - cf.r ^ 2 ≠ 0) :
     fChord cf (.some hwxy) = fChord cf (.some hxy) := by
+  obtain h2 := hchar.out
+  have h4 : (4 : K) ≠ 0 := by
+    contrapose! h2
+    have : (2 : K) * 2 = 0 := by linear_combination h2
+    simpa using this
+  have h8 : (8 : K) ≠ 0 := by
+    contrapose! h2
+    have : (2 : K) * 2 * 2 = 0 := by linear_combination h2
+    simpa using this
   obtain _ := cf.hr
   obtain _ := cf.hu
   obtain hx := x_not_at_w cf hxy hpw hpnw
@@ -333,13 +342,18 @@ theorem fChord_w_sub_singularAbc_not_singularAbc [DecidableEq K] [CharZero K]
     + 32*cf.u^10*cf.r^3 + 128*x^2*cf.u^7*cf.r^4 - 128*x^2*cf.u^6*cf.r^5 - 128*x*cf.u^10*cf.r) * hc
   · field_simp
 
-theorem fChord_w_sub_singularAbc_not_singularAbc_u_eq_r [DecidableEq K] [CharZero K]
+theorem fChord_w_sub_singularAbc_not_singularAbc_u_eq_r [DecidableEq K] [hchar : NeZero (2 : K)]
     {x y wx wy : K}
     (hxy : (elliptic cf).Nonsingular x y) (hwxy : (elliptic cf).Nonsingular wx wy)
     (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
     (hwxyeq : w cf - .some hxy = .some hwxy)
     (hsxy : SingularAbc cf x y) (hwsxy : ¬ SingularAbc cf wx wy) (hur : cf.u = cf.r) :
     fChord cf (.some hwxy) = fChord cf (.some hxy) := by
+  obtain h2 := hchar.out
+  have h4 : (4 : K) ≠ 0 := by
+    contrapose! h2
+    have : (2 : K) * 2 = 0 := by linear_combination h2
+    simpa using this
   obtain _ := cf.hr
   obtain _ := cf.hu
   obtain hx := x_not_at_w cf hxy hpw hpnw
@@ -355,14 +369,14 @@ theorem fChord_w_sub_singularAbc_not_singularAbc_u_eq_r [DecidableEq K] [CharZer
   obtain ⟨hwx, hwy⟩ := hwxyeq
   have hur2 : cf.u + cf.r ≠ 0 := by
     rw [hur]
-    simpa using cf.hr
+    simpa [← two_mul, hchar.out] using cf.hr
   have hy : y = (cf.u - cf.r) * (cf.r * ((cf.u + cf.r) ^ 2 - 2) * x - cf.u * (cf.u + cf.r) ^ 2) /
       (-2 * cf.r ^ 2 * (cf.u + cf.r)) := by
     field_simp
     linear_combination -hsxy.xy_linear cf hxy
   have hy : y = 0 := by simpa [hur] using hy
   have hdeno : (cf.u ^ 2 - cf.r ^ 2) ^ 2 + cf.u ^ 2 * 4 ≠ 0 := by
-    simpa [hur] using cf.hr
+    simpa [hur, h4] using cf.hr
   obtain hc := hsxy.c_factor_eq_zero cf hxy
   simp_rw [hur] at hc
   suffices P2.mk (fChordNormal cf wx wy) _ =
@@ -653,12 +667,17 @@ theorem f_w_sub_singularAbc [DecidableEq K] [CharZero K] {x y : K}
     + 256*x^2*cf.u^6*cf.r^5 + 32*cf.u^8*cf.r^5 - 128*x^2*cf.u^5*cf.r^6 - 128*x*cf.u^8*cf.r^3) * hc
   · field
 
-theorem f_w_sub_not_singularAbc_p2 [DecidableEq K] [CharZero K]
+theorem f_w_sub_not_singularAbc_p2 [DecidableEq K] [hchar : NeZero (2 : K)]
     {x y : K} (hxy : (elliptic cf).Nonsingular x y)
     (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
     (hsxy : ¬ SingularAbc cf x y) (hp2 : fChordNormal cf x y 2 = 0)
     (huxr : cf.r * x + cf.u ≠ 0) (habc : fChord cf (w cf - .some hxy) = fChord cf (.some hxy)) :
     f cf (w cf - (.some hxy)) = rPoint cf (f cf (.some hxy)) := by
+  obtain h2 := hchar.out
+  have h4 : (4 : K) ≠ 0 := by
+    contrapose! h2
+    have : (2 : K) * 2 = 0 := by linear_combination h2
+    simpa using this
   obtain _ := cf.hr
   obtain _ := cf.hu
   obtain hx := x_not_at_w cf hxy hpw hpnw
@@ -678,7 +697,7 @@ theorem f_w_sub_not_singularAbc_p2 [DecidableEq K] [CharZero K]
   obtain ⟨heq, hnonsingular⟩ := (nonsingular_elliptic cf _ _).mp hxy
   have hur0 : cf.u + cf.r ≠ 0 := by
     contrapose! hsxy with hur0
-    have hx0 : x = 0 := by simpa [hur0, cf.hr, cf.hu] using huxr2
+    have hx0 : x = 0 := by simpa [hur0, cf.hr, cf.hu, h4] using huxr2
     have hy0 : y = 0 := by simpa [cf.hr, hx0] using heq
     apply SingularAbc.mk cf hxy
     · simp [hx0, hur0, hy0]
@@ -722,7 +741,7 @@ theorem f_w_sub_not_singularAbc_p2 [DecidableEq K] [CharZero K]
     exact hur1
   have hrxmu : cf.r * x - cf.u ≠ 0 := by
     by_contra! hrxmu
-    have : x = 0 := by simpa [hrxmu, cf.hr, cf.hu] using huxr2
+    have : x = 0 := by simpa [hrxmu, cf.hr, cf.hu, h4] using huxr2
     simp [this, cf.hu] at hrxmu
   have hy : y = -(cf.r * x + cf.u) * (cf.r ^ 2 * (cf.u + cf.r) * x ^ 2 +
       2 * cf.r * (1 - cf.r * (cf.u + cf.r)) * x + (cf.u + cf.r) * cf.u ^ 2) /
@@ -785,7 +804,7 @@ theorem f_w_sub_not_singularAbc_p2 [DecidableEq K] [CharZero K]
       + 10*x*cf.u^6*cf.r^2 + 16*x^3*cf.u^3*cf.r^3 + 6*x*cf.u^5*cf.r^3
       + 8*x^3*cf.u^2*cf.r^4 - 8*x^3*cf.u*cf.r^5 + 2*cf.u^7*cf.r + 8*x^2*cf.u^3*cf.r^3)
 
-theorem f_w_sub_normal [DecidableEq K] [CharZero K]
+theorem f_w_sub_normal [DecidableEq K] [hchar : NeZero (2 : K)]
     {x y : K} (hxy : (elliptic cf).Nonsingular x y)
     (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
     (hsxy : ¬ SingularAbc cf x y) (hp2 : fChordNormal cf x y 2 ≠ 0)
