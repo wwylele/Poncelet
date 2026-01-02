@@ -36,6 +36,70 @@ theorem nonsingular_elliptic [CharZero K] (x y : K) :
   field_simp
   grind
 
+theorem singular_elliptic [CharZero K] (x y : K) :
+    (elliptic cf).Equation x y ∧ ¬ (elliptic cf).Nonsingular x y ↔
+    (((cf.u = cf.r - 1 ∨ cf.u = 1 - cf.r) ∧ x = (cf.r - 1) / cf.r) ∨
+    ((cf.u = cf.r + 1 ∨ cf.u = -cf.r - 1) ∧ x = (cf.r + 1) / cf.r)) ∧ y = 0 := by
+  obtain _ := cf.hr
+  rw [equation_elliptic, nonsingular_elliptic]
+  trans cf.r ^ 2 * y ^ 2 = x * (cf.r ^ 2 * x ^ 2 + (1 - cf.u ^ 2 - cf.r ^ 2) * x + cf.u ^ 2) ∧
+        (3 * cf.r ^ 2 * x ^ 2 + 2 * (1 - cf.u ^ 2 - cf.r ^ 2) * x + cf.u ^ 2 = 0 ∧ y = 0)
+  · tauto
+  constructor
+  · rintro ⟨h1, h2, hy⟩
+    rw [hy] at h1
+    symm at h1
+    have hx : x ≠ 0 := by
+      contrapose! h2
+      simp [h2, cf.hu]
+    have hx2 : cf.r ^ 2 * x ^ 2 + (1 - cf.u ^ 2 - cf.r ^ 2) * x + cf.u ^ 2 = 0 := by
+      simpa [hx] using h1
+    have hx3 : (2 * cf.r ^ 2 * x + (1 - cf.u ^ 2 - cf.r ^ 2)) * x = 0 := by
+      linear_combination h2 - hx2
+    have hx4 : 2 * cf.r ^ 2 * x + (1 - cf.u ^ 2 - cf.r ^ 2) = 0 := by
+      simpa [hx] using hx3
+    have hx5 : x = -(1 - cf.u ^ 2 - cf.r ^ 2) / (2 * cf.r ^ 2) := by
+      field_simp
+      linear_combination hx4
+    rw [hx5] at h1
+    field_simp at h1
+    have h : (1 - cf.u ^ 2 - cf.r ^ 2) * (cf.u - cf.r + 1) * (cf.u - cf.r - 1) *
+        (cf.u + cf.r - 1) * (cf.u + cf.r + 1) = 0 := by
+      linear_combination h1
+    obtain h | h | h | h | h : 1 - cf.u ^ 2 - cf.r ^ 2 = 0 ∨
+        cf.u - cf.r + 1 = 0 ∨ cf.u - cf.r - 1 = 0 ∨
+        cf.u + cf.r - 1 = 0 ∨ cf.u + cf.r + 1 = 0 := by simpa [or_assoc] using h
+    · simp [h, hx, cf.hr] at hx4
+    · have hu : cf.u = cf.r - 1 := by linear_combination h
+      rw [hu] at hx5
+      suffices x = (cf.r - 1) / cf.r by simp [hu, this, hy]
+      field_simp at hx5 ⊢
+      rw [← mul_left_inj' (show 2 * cf.r ≠ 0 by simp [cf.hr])]
+      linear_combination hx5
+    · have hu : cf.u = cf.r + 1 := by linear_combination h
+      rw [hu] at hx5
+      suffices x = (cf.r + 1) / cf.r by simp [hu, this, hy]
+      field_simp at hx5 ⊢
+      rw [← mul_left_inj' (show 2 * cf.r ≠ 0 by simp [cf.hr])]
+      linear_combination hx5
+    · have hu : cf.u = 1 - cf.r := by linear_combination h
+      rw [hu] at hx5
+      suffices x = (cf.r - 1) / cf.r by simp [hu, this, hy]
+      field_simp at hx5 ⊢
+      rw [← mul_left_inj' (show 2 * cf.r ≠ 0 by simp [cf.hr])]
+      linear_combination hx5
+    · have hu : cf.u = -cf.r - 1 := by linear_combination h
+      rw [hu] at hx5
+      suffices x = (cf.r + 1) / cf.r by simp [hu, this, hy]
+      field_simp at hx5 ⊢
+      rw [← mul_left_inj' (show 2 * cf.r ≠ 0 by simp [cf.hr])]
+      linear_combination hx5
+  · intro h
+    obtain ⟨⟨hu | hu, hx⟩ | ⟨hu | hu, hx⟩, hy⟩ := h
+    all_goals
+    simp_rw [hu, hx, hy]
+    exact ⟨by field, by field, by simp⟩
+
 /-- Map a point on the elliptic curve to a vertex, expressed in raw coordinates. -/
 def fPointRaw (p : (elliptic cf).Point) : Fin 3 → K := match p with
 | .zero => ![cf.u + cf.r, 0, 1]

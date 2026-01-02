@@ -71,7 +71,10 @@ We encode these in the following definition
 \end{definition}
 
 We call a configuration \emph{singular} if the two circles are tangent to each other. That is,
-$u + r = \pm 1$ or $u - r = \pm 1$.
+$u + r = \pm 1$ or $u - r = \pm 1$. We further categorize $u + r = \pm 1$ as 
+\emph{positive-singular}, and $u - r = \pm 1$ as \emph{negative-singular}. This distinction is 
+inconsequential geometrically, as we can change the sign of $r$ while preserving the geometry, but
+this will provide algebraic significance later.
 
 Moving on to vertices and edges, we consider the pair 
 \[
@@ -240,8 +243,8 @@ It is obvious that
 \end{proof}
 
 We call $(V, E)$ \emph{singular} if $\mathrm{next}(V, E) = (V, E)$. This is important because applying
-$\mathrm{next}$ on singular point will result in a degenerate polygon where all vertices coincide.
-Obviously this doesn't tell how other vertices behaves, so we will need to exclude it from the theorem.
+$\mathrm{next}$ on a singular point repeatedly will result in a degenerate polygon where all vertices coincide.
+Obviously this doesn't tell us how other vertices behaves, so we will need to exclude it from the theorem.
 We characterize singular points with the following lemma
 \begin{lemma}
     \lean{next_eq_self, next_eq_self'}
