@@ -165,7 +165,53 @@ def normalize [DecidableEq K] (p : P2 K) : Fin 3 → K := p.lift (fun p hp ↦
     simp [funext_iff, Fin.forall_fin_succ] at ⊢ hp hq h
     grind)
 
-unsafe instance [DecidableEq K] [Repr K] : Repr (P2 K) where
+theorem normalize_injective [DecidableEq K] :
+    Function.Injective (normalize (K := K)) := by
+  intro p q h
+  induction p with | mk p hp
+  induction q with | mk q hq
+  simp only [normalize, lift_mk] at h
+  by_cases hp2 : p 2 = 0
+  · have hq2 : q 2 = 0 := by
+      by_contra! hq2
+      simpa [hp2, hq2, ite_apply] using congr($h 2)
+    by_cases hp1 : p 1 = 0
+    · have hq1 : q 1 = 0 := by
+        by_contra! hq1
+        simpa [hp2, hp1, hq2, hq1, ite_apply] using congr($h 1)
+      rw [mk_eq_mk']
+      have hq0 : q 0 ≠ 0 := by
+        contrapose! hq with hq0
+        ext i
+        fin_cases i
+        · exact hq0
+        · exact hq1
+        · exact hq2
+      use p 0 / q 0
+      ext i
+      fin_cases i
+      · simp
+        field
+      · simp [hp1, hq1]
+      · simp [hp2, hq2]
+    have hq1 : q 1 ≠ 0 := by
+      simpa [hp2, hp1, hq2, ite_apply] using congr($h 1)
+    have h01 : p 0 / p 1 = q 0 / q 1 := by simpa [hp2, hp1, hq2, hq1] using h
+    apply mk_eq_mk_of_third_zero _ _ hp2 hq2
+    simpa [field] using h01
+  have hq2 : q 2 ≠ 0 := by
+    simpa [hp2, ite_apply] using congr($h 2)
+  have h : p 0 / p 2 = q 0 / q 2 ∧ p 1 / p 2 = q 1 / q 2 := by
+    simpa [hp2, hq2] using h
+  conv_rhs => rw [← mk'_eq]
+  refine mk'_eq_mk'_of_third _ hq2 ?_ ?_
+  · simpa [field] using h.1
+  · simpa [field] using h.2
+
+instance [DecidableEq K] : DecidableEq (P2 K) := fun a b ↦
+  decidable_of_iff (a.normalize = b.normalize) normalize_injective.eq_iff
+
+instance [DecidableEq K] [Repr K] : Repr (P2 K) where
   reprPrec p :=
     let p := p.normalize
     Repr.reprPrec (p 0, p 1, p 2)
