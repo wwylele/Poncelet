@@ -76,6 +76,31 @@ theorem mk'_eq_mk'_of_third_zero [DecidableEq K] {p q : Fin 3 → K} (hp : p ≠
     field
   · simp [hp2, hq2]
 
+theorem mk_eq_mk_of_third_zero {p q : Fin 3 → K} (hp : p ≠ 0) (hq : q ≠ 0)
+    (hp2 : p 2 = 0) (hq2 : q 2 = 0) (h : p 0 * q 1 = p 1 * q 0) :
+    mk p hp = mk q hq := by
+  classical
+  by_cases hq1 : q 1 = 0
+  · have hq0 : q 0 ≠ 0 := by
+      contrapose! hq
+      ext i
+      fin_cases i
+      · simpa using hq
+      · simpa using hq1
+      · simpa using hq2
+    rw [mk_eq_mk']
+    use p 0 / q 0
+    ext i
+    fin_cases i
+    · simp
+      field
+    · simp
+      field_simp
+      grind
+    · simp [hp2, hq2]
+  · rw [← mk'_eq hq]
+    exact mk'_eq_mk'_of_third_zero hp hq1 hp2 hq2 h
+
 theorem mk'_eq_mk'_of_third [DecidableEq K] {p q : Fin 3 → K} (hp : p ≠ 0) (hq2 : q 2 ≠ 0)
     (h0 : p 0 * q 2 = p 2 * q 0) (h1 : p 1 * q 2 = p 2 * q 1) :
     mk p hp = mk' q := by
