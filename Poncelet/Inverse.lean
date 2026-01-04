@@ -887,32 +887,268 @@ theorem SingularB.q_eq [DecidableEq K] [NeZero (2 : K)] {pq : P2 K × P2 K}
   · simp only [SingularB, P2.lift₂_mk] at h
     simpa [mul_comm (q _)] using h.1
 
-theorem SingularB.p_equation [DecidableEq K] [NeZero (2 : K)]
-    (p : Fin 3 → K) (hp : p ≠ 0) {q : P2 K}
+theorem SingularB.p1_equation [DecidableEq K] [NeZero (2 : K)]
+    {p : Fin 3 → K} {hp : p ≠ 0} {q : P2 K}
     (hpq : ⟨P2.mk p hp, q⟩ ∈ dom cf) (h : SingularB cf ⟨P2.mk p hp, q⟩) :
-    (cf.u + cf.r) ^ 2 * p 0 ^ 2 +
-    2 * (cf.r + 2 * cf.u - cf.u * (cf.u + cf.r) ^ 2) * p 0 * p 2 +
-    (2 * cf.r * (cf.u + cf.r) + (cf.u + cf.r) ^ 3 * (cf.u - cf.r)) * p 2 ^ 2
-    = 0 := by
+    -cf.k * p 1 = p 0 + (cf.u + cf.r) * p 2 := by
   obtain hq := h.q_eq cf hpq
   simp only at hq
   rw [hq] at hpq
   obtain ⟨ho, hi, hpq⟩ := mem_dom cf hp _ |>.mp hpq
   simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val] at hpq
-  have hpq' : -cf.k * p 1 = p 0 + (cf.u + cf.r) * p 2 := by linear_combination hpq
+  linear_combination hpq
+
+theorem SingularB.p_equation [DecidableEq K] [NeZero (2 : K)]
+    {p : Fin 3 → K} {hp : p ≠ 0} {q : P2 K}
+    (hpq : ⟨P2.mk p hp, q⟩ ∈ dom cf) (h : SingularB cf ⟨P2.mk p hp, q⟩) :
+    (cf.u + cf.r) ^ 2 * p 0 ^ 2 +
+    2 * (cf.r + 2 * cf.u - cf.u * (cf.u + cf.r) ^ 2) * p 0 * p 2 +
+    (2 * cf.r * (cf.u + cf.r) + (cf.u + cf.r) ^ 3 * (cf.u - cf.r)) * p 2 ^ 2
+    = 0 := by
+  obtain hpq' := h.p1_equation cf hpq
+  obtain hq := h.q_eq cf hpq
+  simp only at hq
+  rw [hq] at hpq
+  obtain ⟨ho, hi, hpq⟩ := mem_dom cf hp _ |>.mp hpq
   have hpq' : ((cf.u + cf.r) ^ 2 - 1) * p 1 ^ 2 = (p 0 + (cf.u + cf.r) * p 2) ^ 2 := by
     rw [← cf.k_sq]
     linear_combination congr($hpq' ^ 2)
   linear_combination ((cf.u + cf.r) ^ 2 - 1) * ho - hpq'
 
+def exSingularB (pq : P2 K × P2 K) : K := P2.lift₂
+  (fun p q hp hq ↦ (cf.u + cf.r) ^ 2 * (p 0 + (cf.r - cf.u) * p 2) / (2 * cf.r * p 2)) (
+  by
+    intro p q p' q' hp hq hp' hq' ⟨l, hl0, hl⟩ ⟨m, hm0, hm⟩
+    simp_rw [hl]
+    simp only [Pi.smul_apply, smul_eq_mul]
+    field
+  ) pq.1 pq.2
+
+def eySingularB (pq : P2 K × P2 K) : K := P2.lift₂
+  (fun p q hp hq ↦ (cf.u + cf.r) *
+    ((cf.u * cf.r + cf.r ^ 2 - 1) * (cf.u + cf.r) * p 0 +
+    (cf.r^4 + cf.r^3 * cf.u - cf.r^2 * cf.u^2 - cf.r * cf.u^3 - cf.u^2 - cf.r^2) * p 2)
+    / (2 * cf.r ^ 2 * p 2)) (
+  by
+    intro p q p' q' hp hq hp' hq' ⟨l, hl0, hl⟩ ⟨m, hm0, hm⟩
+    simp_rw [hl]
+    simp only [Pi.smul_apply, smul_eq_mul]
+    field
+  ) pq.1 pq.2
+
+theorem equation_exSingularB_eySingularB [DecidableEq K] [NeZero (2 : K)] {pq : P2 K × P2 K}
+    (hpq : pq ∈ dom cf) (h : SingularB cf pq) (hz : ¬ ZeroZ pq) :
+    (elliptic cf).Equation (exSingularB cf pq) (eySingularB cf pq) := by
+  obtain _ := cf.hr
+  obtain _ := cf.hu
+  obtain ⟨p, q⟩ := pq
+  induction p with | mk p hp
+  induction q with | mk q hq
+  obtain hpeq := h.p_equation cf hpq
+  have hp2 : p 2 ≠ 0 := by simpa [ZeroZ] using hz
+  rw [equation_elliptic]
+  simp only [eySingularB, P2.lift₂_mk, exSingularB]
+  field_simp
+  linear_combination - (cf.u + cf.r)^2 *
+    (-cf.u^3*cf.r*p 2 - cf.u^2*cf.r^2*p 2 + cf.u*cf.r^3*p 2 + cf.r^4*p 2 +
+    p 0*cf.u^2*cf.r + 2*p 0*cf.u*cf.r^2 + p 0*cf.r^3 - 2*cf.u^2*p 2) * hpeq
+
+theorem nonsingular_exSingularB_eySingularB [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0)
+    {pq : P2 K × P2 K}
+    (hpq : pq ∈ dom cf) (h : SingularB cf pq) (hz : ¬ ZeroZ pq)
+    (hleft : pq.1 ≠ P2.mk ![-1, 0, 1] (by simp))
+    (hright : pq.1 ≠ P2.mk ![1, 0, 1] (by simp)) :
+    (elliptic cf).Nonsingular (exSingularB cf pq) (eySingularB cf pq) := by
+  obtain _ := cf.hr
+  obtain hu0 := cf.hu
+  obtain h2 := hchar.out
+  have h4 : (4 : K) ≠ 0 := by
+    contrapose! h2
+    have : (2 : K) * 2 = 0 := by linear_combination h2
+    simpa using this
+  obtain ⟨p, q⟩ := pq
+  induction p with | mk p hp
+  induction q with | mk q hq
+  obtain hp1 := h.p1_equation cf hpq
+  obtain hpeq := h.p_equation cf hpq
+  have hp2 : p 2 ≠ 0 := by simpa [ZeroZ] using hz
+  obtain hur0 := h.u_add_r_ne_zero
+  by_contra! hs
+  obtain ⟨hux, hy⟩ :=
+    (singular_elliptic cf _ _).mp ⟨(equation_exSingularB_eySingularB cf hpq h hz), hs⟩
+  have hy : (cf.u * cf.r + cf.r ^ 2 - 1) * (cf.u + cf.r) * p 0 +
+      (cf.r ^ 4 + cf.r ^ 3 * cf.u - cf.r ^ 2 * cf.u ^ 2 - cf.r * cf.u ^ 3 - cf.u ^ 2 - cf.r ^ 2)
+      * p 2 = 0 := by
+    simpa [eySingularB, cf.hr, hp2, hchar.out, hur0] using hy
+  obtain ⟨hu, hx⟩ | ⟨hu, hx⟩ := hux
+  · have hx : (cf.u + cf.r) ^ 2 * (p 0 + (cf.r - cf.u) * p 2) = p 2 * 2 * (cf.r - 1) := by
+      simp only [exSingularB,  P2.lift₂_mk] at hx
+      field_simp at hx
+      linear_combination hx
+    obtain hu | hu := hu
+    · have hr0 : cf.r - 1 ≠ 0 := by
+        by_contra! h
+        simp [hu, h] at hu0
+      rw [hu] at hx
+      rw [hu] at hy
+      have hy : (cf.r - 1) * (4*p 0 *cf.r^2 + 4*cf.r^2*p 2 - 2*cf.r*p 2 - p 0 + p 2) = 0 := by
+        linear_combination hy
+      have hy : (4*p 0 *cf.r^2 + 4*cf.r^2*p 2 - 2*cf.r*p 2 - p 0 + p 2) = 0 := by
+        simpa [hr0] using hy
+      have heq : 2 * (2*cf.r - 1) * (p 0 + p 2) = 0 := by
+        linear_combination hy - hx
+      obtain hr | hp02 : (2*cf.r - 1) = 0 ∨ (p 0 + p 2) = 0 := by simpa [hchar.out] using heq
+      · grind
+      have hp02': p 0 = - p 2 := by linear_combination hp02
+      rw [hp02'] at hy
+      have : p 2 * 2 * (cf.r - 1) = 0 := by linear_combination -hy
+      have hr : cf.r = 1 := by simpa [sub_eq_zero, hp2, hchar.out] using this
+      contrapose! hleft
+      simp only
+      rw [P2.mk_eq_mk']
+      use p 2
+      ext i
+      fin_cases i
+      · simpa using hp02'
+      · simpa [hu, hr, hp02, hk] using hp1
+      · simp
+    · rw [hu] at hy
+      have heq : (cf.r - 1) * (p 0 + p 2) = 0 := by linear_combination hy
+      obtain hr | hp02 := mul_eq_zero.mp heq
+      · grind
+      have hp02': p 0 = - p 2 := by linear_combination hp02
+      contrapose! hleft
+      simp only
+      rw [P2.mk_eq_mk']
+      use p 2
+      ext i
+      fin_cases i
+      · simpa using hp02'
+      · simpa [hu, hp02, hk] using hp1
+      · simp
+  · have hx : (cf.u + cf.r) ^ 2 * (p 0 + (cf.r - cf.u) * p 2) = p 2 * 2 * (cf.r + 1) := by
+      simp only [exSingularB,  P2.lift₂_mk] at hx
+      field_simp at hx
+      linear_combination hx
+    obtain hu | hu := hu
+    · rw [hu] at hx
+      rw [hu] at hy
+      have : p 2 = -(2 * cf.r + 1) * p 0 := by linear_combination cf.r * hx - hy
+      rw [this] at hx
+      have : 4 * (2*cf.r + 1) * (cf.r + 1)^2 * p 0 = 0 := by linear_combination hx
+      obtain hr | hr | hx : 2*cf.r + 1 = 0 ∨ cf.r + 1 = 0 ∨ p 0 = 0 := by
+        simpa [h4, or_assoc] using this
+      · grind
+      · grind
+      · grind
+    · rw [hu] at hx
+      rw [hu] at hy
+      have : (cf.r + 1) * (p 0 - p 2) = 0 := by linear_combination hy
+      obtain hr | hp02 := mul_eq_zero.mp this
+      · grind
+      contrapose! hright
+      simp only
+      rw [P2.mk_eq_mk']
+      use p 2
+      ext i
+      fin_cases i
+      · simpa [sub_eq_zero] using hp02
+      · rw [hu, (show -cf.r - 1 + cf.r = -1 by ring)] at hp1
+        simpa [hu, hp02, hk, ← sub_eq_add_neg] using hp1
+      · simp
 
 def eSingularB [DecidableEq K] [NeZero (2 : K)] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
-    (hpq : pq ∈ dom cf) (h : SingularB cf pq) : (elliptic cf).Point := sorry
+    (hpq : pq ∈ dom cf) (h : SingularB cf pq) (hz : ¬ ZeroZ pq)
+    (hleft : pq.1 ≠ P2.mk ![-1, 0, 1] (by simp))
+    (hright : pq.1 ≠ P2.mk ![1, 0, 1] (by simp)) :=
+  Point.some (nonsingular_exSingularB_eySingularB cf hk hpq h hz hleft hright)
+
+theorem fPoint_eSingularB [DecidableEq K] [hchar : NeZero (2 : K)]
+    (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
+    (hpq : pq ∈ dom cf) (h : SingularB cf pq) (hz : ¬ ZeroZ pq)
+    (hleft : pq.1 ≠ P2.mk ![-1, 0, 1] (by simp))
+    (hright : pq.1 ≠ P2.mk ![1, 0, 1] (by simp)) :
+    fPoint cf (eSingularB cf hk hpq h hz hleft hright) = pq.1 := by
+  obtain _ := cf.hr
+  obtain _ := cf.hu
+  obtain ⟨p, q⟩ := pq
+  induction p with | mk p hp
+  induction q with | mk q hq
+  obtain hpeq := h.p_equation cf hpq
+  have hp2 : p 2 ≠ 0 := by simpa [ZeroZ] using hz
+  obtain hp1 := h.p1_equation cf hpq
+  have hp1 : p 1 = -(p 0 + (cf.u + cf.r) * p 2) / cf.k := by
+    field_simp
+    linear_combination - hp1
+  simp only [fPoint, fPointRaw, eSingularB, exSingularB, P2.lift₂_mk, eySingularB]
+  conv_rhs => rw [← P2.mk'_eq]
+  refine P2.mk'_eq_mk'_of_third _ hp2 ?_ ?_
+  · simp only [Matrix.cons_val_zero, Matrix.cons_val]
+    field_simp
+    linear_combination -(-cf.u^3*p 2 - cf.u^2*cf.r*p 2 + cf.u*cf.r^2*p 2 +
+      cf.r^3*p 2 + cf.u^2*p 0 + 2*cf.u*cf.r*p 0 + cf.r^2*p 0 - 2*cf.r*p 2) * hpeq
+  · rw [hp1]
+    simp only [Matrix.cons_val_one, Matrix.cons_val_zero, Matrix.cons_val]
+    field_simp
+    rw [cf.k_sq]
+    linear_combination (cf.u^3*p 2 + 5*cf.u^2*cf.r*p 2 + 7*cf.u*cf.r^2*p 2 + 3*cf.r^3*p 2 +
+      cf.u^2*p 0 + 2*cf.u*cf.r*p 0 + cf.r^2*p 0 - 2*cf.r*p 2) * hpeq
+
+theorem fChord_eSingularB [DecidableEq K] [hchar : NeZero (2 : K)]
+    (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
+    (hpq : pq ∈ dom cf) (h : SingularB cf pq) (hz : ¬ ZeroZ pq)
+    (hleft : pq.1 ≠ P2.mk ![-1, 0, 1] (by simp))
+    (hright : pq.1 ≠ P2.mk ![1, 0, 1] (by simp)) :
+    fChord cf (eSingularB cf hk hpq h hz hleft hright) = pq.2 := by
+  obtain _ := cf.hr
+  obtain _ := cf.hu
+  rw [h.q_eq cf hpq]
+  obtain ⟨p, q⟩ := pq
+  induction p with | mk p hp
+  induction q with | mk q hq
+  obtain hpeq := h.p_equation cf hpq
+  have hp2 : p 2 ≠ 0 := by simpa [ZeroZ] using hz
+  by_cases hs : SingularAbc cf (exSingularB cf (P2.mk p hp, P2.mk q hq))
+    (eySingularB cf (P2.mk p hp, P2.mk q hq))
+  · obtain hc := hs.c_factor_eq_zero cf
+      (nonsingular_exSingularB_eySingularB cf hk hpq h hz hleft hright)
+    simp only [exSingularB, P2.lift₂_mk] at hc
+    field_simp at hc
+    have hc' : ((cf.u + cf.r) ^ 2 - 1) * (cf.u + cf.r)^2 * (p 0 + (cf.r-cf.u) *p 2) *
+      ((cf.u + cf.r) ^ 2*p 0 +
+      (-cf.u^3 - cf.u^2*cf.r+ cf.u*cf.r^2+ cf.r^3- 4*cf.u+ 2*cf.r)*p 2) = 0 := by
+      linear_combination hc - (cf.u + cf.r) ^ 2 * hpeq
+
+    have hc'' : 2 * p 2 * ((cf.u + cf.r)^2 - 1) * (cf.u + cf.r)^2 *
+      ((-cf.u^3*cf.r - cf.u^2*cf.r^2 + cf.u*cf.r^3 + cf.r^4 + 2*cf.u^2 - 4*cf.u*cf.r)*p 2 +
+      (cf.u^2*cf.r + 2*cf.u*cf.r^2 + cf.r^3 - 4*cf.u)*p 0
+      ) = 0 := by
+      linear_combination hc - (cf.u + cf.r) ^ 4 * hpeq
+    sorry
+
+
+  simp only [fChord, fChordRaw, eSingularB, hs, ↓reduceIte]
+  simp only [fChordNormal, exSingularB, P2.lift₂_mk, eySingularB]
+  conv_rhs => rw [← P2.mk'_eq]
+  refine P2.mk'_eq_mk'_of_third _ (by simpa using h.u_add_r_ne_zero) ?_ ?_
+  · simp only [Matrix.cons_val_zero, Matrix.cons_val]
+    field_simp
+    linear_combination 2 * (cf.u + cf.r)^2 *
+      (-cf.u^5*p 2 - 3*cf.u^4*cf.r*p 2 - 2*cf.u^3*cf.r^2*p 2 + 2*cf.u^2*cf.r^3*p 2
+      + 3*cf.u*cf.r^4*p 2 + cf.r^5*p 2 + cf.u^4*p 0 + 4*cf.u^3*cf.r*p 0
+      + 6*cf.u^2*cf.r^2*p 0 + 4*cf.u*cf.r^3*p 0 + cf.r^4*p 0 - 2*cf.u^3*p 2
+      - 4*cf.u^2*cf.r*p 2 - 2*cf.u*cf.r^2*p 2 + 4*cf.u*p 2) * hpeq
+  · simp only [ Matrix.cons_val_one, Matrix.cons_val_zero, Matrix.cons_val]
+    field_simp
+    linear_combination 8 * p 2 * cf.u * (cf.u + cf.r)^2 * hpeq
 
 theorem f_eSingularB [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
-    (hpq : pq ∈ dom cf) (h : SingularB cf pq) :
-    f cf (eSingularB cf hk hpq h) = pq := by
-  sorry
+    (hpq : pq ∈ dom cf) (h : SingularB cf pq) (hz : ¬ ZeroZ pq)
+    (hleft : pq.1 ≠ P2.mk ![-1, 0, 1] (by simp))
+    (hright : pq.1 ≠ P2.mk ![1, 0, 1] (by simp)) :
+    f cf (eSingularB cf hk hpq h hz hleft hright) = pq := by
+  rw [f, fChord_eSingularB cf hk hpq h hz hleft hright,
+    fPoint_eSingularB cf hk hpq h hz hleft hright]
 
 ------------- general case --------------
 
@@ -1177,7 +1413,7 @@ def e [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
       else
         eSingularAB cf pq
     else if hsb : SingularB cf pq then
-      eSingularB cf hk hpq hsb
+      eSingularB cf hk hpq hsb hz hleft hright
     else
       .zero -- Unreachable
   else
@@ -1198,7 +1434,7 @@ theorem f_e [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
       · simpa [e, hes, hz, hsa, hsab, hur] using f_eSingularABcasePos cf hsab hk hur hpq
       simpa [e, hes, hz, hsa, hsab, hur] using f_eSingularAB cf hsab hk hur hpq
     by_cases hsb : SingularB cf pq
-    · simpa [e, hes, hz, hsa, hsab, hsb] using f_eSingularB cf hk hpq hsb
+    · simpa [e, hes, hz, hsa, hsab, hsb] using f_eSingularB cf hk hpq hsb hz hleft hright
     obtain ⟨p, q⟩ := pq
     induction p with | mk p hp
     induction q with | mk q hq
