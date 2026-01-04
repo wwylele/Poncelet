@@ -7,11 +7,12 @@ variable (cf : Config K)
 
 ------------- p 2 = 0 --------------
 
-def ZeroZ (pq : P2 K × P2 K) : Prop := P2.lift₂ (fun p q hp hq ↦ p 2 = 0) (
+def ZeroZ [DecidableEq K] (pq : P2 K × P2 K) : Prop := P2.lift₂ (fun p q hp hq ↦ p 2 = 0) (
   by
     intro p q p' q' hp hq hp' hq' ⟨l, hl0, hl⟩ ⟨m, hm0, hm⟩
     simp [hl, hl0]
   ) pq.1 pq.2
+deriving Decidable
 
 def eyZeroZ (pq : P2 K × P2 K) : K := P2.lift₂
   (fun p q hp hq ↦ - p 1 * cf.u * cf.k / (p 0 * cf.r ^ 2))
@@ -21,7 +22,8 @@ def eyZeroZ (pq : P2 K × P2 K) : K := P2.lift₂
     grind
   ) pq.1 pq.2
 
-theorem nonsingular_eyZeroZ [NeZero (2 : K)] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
+theorem nonsingular_eyZeroZ [DecidableEq K] [NeZero (2 : K)]
+    (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
     (hpq : pq ∈ dom cf)
     (hz : ZeroZ pq) :
     (elliptic cf).Nonsingular (-cf.u / cf.r) (eyZeroZ cf pq) := by
@@ -55,11 +57,12 @@ theorem nonsingular_eyZeroZ [NeZero (2 : K)] (hk : cf.k ≠ 0) {pq : P2 K × P2 
   · right
     simp [eyZeroZ, cf.hu, cf.hr, hk, hp0, hp1]
 
-def eZeroZ [NeZero (2 : K)] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
+def eZeroZ [DecidableEq K] [NeZero (2 : K)] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
     (hpq : pq ∈ dom cf) (hz : ZeroZ pq) :=
   Point.some (nonsingular_eyZeroZ cf hk hpq hz)
 
-theorem fPoint_eZeroZ [NeZero (2 : K)] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
+theorem fPoint_eZeroZ [DecidableEq K] [NeZero (2 : K)] (hk : cf.k ≠ 0)
+    {pq : P2 K × P2 K}
     (hpq : pq ∈ dom cf) (hz : ZeroZ pq) :
     fPoint cf (eZeroZ cf hk hpq hz) = pq.1 := by
   obtain _ := cf.hu
@@ -175,7 +178,7 @@ theorem f_eZeroZ [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0) {pq 
 
 -/
 
-def SingularA (pq : P2 K × P2 K) : Prop := P2.lift₂
+def SingularA [DecidableEq K] (pq : P2 K × P2 K) : Prop := P2.lift₂
   (fun p q hp hq ↦ (cf.u + cf.r) * q 0 = q 2 ∧ (cf.u + cf.r) * q 1 ≠ -cf.k * q 2) (
   by
     intro p q p' q' hp hq hp' hq' ⟨l, hl0, hl⟩ ⟨m, hm0, hm⟩
@@ -186,8 +189,9 @@ def SingularA (pq : P2 K × P2 K) : Prop := P2.lift₂
       simp [hm]
       grind
   ) pq.1 pq.2
+deriving Decidable
 
-theorem SingularA.u_add_r_ne_zero {pq : P2 K × P2 K} (h : SingularA cf pq) :
+theorem SingularA.u_add_r_ne_zero [DecidableEq K] {pq : P2 K × P2 K} (h : SingularA cf pq) :
     cf.u + cf.r ≠ 0 := by
   obtain ⟨p, q⟩ := pq
   induction p with | mk p hp
@@ -196,7 +200,7 @@ theorem SingularA.u_add_r_ne_zero {pq : P2 K × P2 K} (h : SingularA cf pq) :
   simp [SingularA, P2.lift₂_mk, this] at h
   grind
 
-theorem SingularA.q1_eq {p q : Fin 3 → K} {hp : p ≠ 0} {hq : q ≠ 0}
+theorem SingularA.q1_eq [DecidableEq K] {p q : Fin 3 → K} {hp : p ≠ 0} {hq : q ≠ 0}
     (h : SingularA cf ⟨P2.mk p hp, P2.mk q hq⟩) (hpq : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) :
     (cf.u + cf.r) * q 1 = cf.k * q 2 := by
   simp only [SingularA, P2.lift₂_mk] at h
@@ -209,7 +213,8 @@ theorem SingularA.q1_eq {p q : Fin 3 → K} {hp : p ≠ 0} {hq : q ≠ 0}
   · exact h
   · simp [h] at h2
 
-theorem SingularA.q_eq {pq : P2 K × P2 K} (h : SingularA cf pq) (hpq : pq ∈ dom cf) :
+theorem SingularA.q_eq [DecidableEq K] {pq : P2 K × P2 K} (h : SingularA cf pq)
+    (hpq : pq ∈ dom cf) :
     pq.2 = P2.mk ![1, cf.k, cf.u + cf.r] (by simp) := by
   classical
   obtain ⟨p, q⟩ := pq
@@ -224,7 +229,7 @@ theorem SingularA.q_eq {pq : P2 K × P2 K} (h : SingularA cf pq) (hpq : pq ∈ d
     simp only [SingularA, P2.lift₂_mk] at h
     linear_combination h.1
 
-theorem SingularA.p2_ne_zero {p q : Fin 3 → K} {hp : p ≠ 0} {hq : q ≠ 0}
+theorem SingularA.p2_ne_zero [DecidableEq K] {p q : Fin 3 → K} {hp : p ≠ 0} {hq : q ≠ 0}
     (h : SingularA cf ⟨P2.mk p hp, P2.mk q hq⟩) (hpq : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) :
     p 2 ≠ 0 := by
   by_contra! hp2
@@ -261,7 +266,7 @@ theorem SingularA.p2_ne_zero {p q : Fin 3 → K} {hp : p ≠ 0} {hq : q ≠ 0}
     linear_combination hq01
   simp [h.u_add_r_ne_zero] at this
 
-theorem SingularA.p_equation {p q : Fin 3 → K} {hp : p ≠ 0} {hq : q ≠ 0}
+theorem SingularA.p_equation [DecidableEq K] {p q : Fin 3 → K} {hp : p ≠ 0} {hq : q ≠ 0}
     (h : SingularA cf ⟨P2.mk p hp, P2.mk q hq⟩) (hpq : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) :
     p 1 * ((cf.u + cf.r) ^ 2 * p 1 - 2 * cf.k * cf.r * p 2) = 0 := by
   obtain hqeq := h.q_eq cf hpq
@@ -281,7 +286,7 @@ theorem SingularA.p_equation {p q : Fin 3 → K} {hp : p ≠ 0} {hq : q ≠ 0}
   have hk := cf.k_sq
   grind
 
-theorem SingularA.p01_eq {p q : Fin 3 → K} {hp : p ≠ 0} {hq : q ≠ 0}
+theorem SingularA.p01_eq [DecidableEq K] {p q : Fin 3 → K} {hp : p ≠ 0} {hq : q ≠ 0}
     (h : SingularA cf ⟨P2.mk p hp, P2.mk q hq⟩) (hpq : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) :
     (p 0 = (cf.u + cf.r) * p 2 ∧ p 1 = 0) ∨
     (p 0 = ((cf.u - cf.r) * (cf.u + cf.r) ^ 2 + 2 * cf.r) * p 2 / (cf.u + cf.r) ^ 2 ∧
@@ -330,8 +335,8 @@ def eySingularA (pq : P2 K × P2 K) : K := P2.lift₂
     grind
   ) pq.1 pq.2
 
-theorem nonsingular_exSingularA_eySingularA [NeZero (2 : K)] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
-    (hpq : pq ∈ dom cf) (h : SingularA cf pq) :
+theorem nonsingular_exSingularA_eySingularA [DecidableEq K] [NeZero (2 : K)] (hk : cf.k ≠ 0)
+    {pq : P2 K × P2 K} (hpq : pq ∈ dom cf) (h : SingularA cf pq) :
     (elliptic cf).Nonsingular (exSingularA cf pq) (eySingularA cf pq) := by
   obtain _ := cf.hu
   obtain _ := cf.hr
@@ -359,11 +364,11 @@ theorem nonsingular_exSingularA_eySingularA [NeZero (2 : K)] (hk : cf.k ≠ 0) {
     field_simp
     simp [cf.hr]
 
-def eSingularA [NeZero (2 : K)] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
+def eSingularA [DecidableEq K] [NeZero (2 : K)] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
     (hpq : pq ∈ dom cf) (h : SingularA cf pq) :=
   Point.some (nonsingular_exSingularA_eySingularA cf hk hpq h)
 
-theorem fPoint_eSingularA [NeZero (2 : K)] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
+theorem fPoint_eSingularA [DecidableEq K] [NeZero (2 : K)] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
     (hpq : pq ∈ dom cf) (h : SingularA cf pq) :
     fPoint cf (eSingularA cf hk hpq h) = pq.1 := by
   obtain _ := cf.hu
@@ -478,7 +483,7 @@ theorem f_eSingularA [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0) 
 
 ------------- (u+r) * q 0 = q 2, (u + r) * q 1 = -k * q 2 --------------
 
-def SingularAB (pq : P2 K × P2 K) : Prop := P2.lift₂
+def SingularAB [DecidableEq K] (pq : P2 K × P2 K) : Prop := P2.lift₂
   (fun p q hp hq ↦ (cf.u + cf.r) * q 0 = q 2 ∧ (cf.u + cf.r) * q 1 = -cf.k * q 2) (
   by
     intro p q p' q' hp hq hp' hq' ⟨l, hl0, hl⟩ ⟨m, hm0, hm⟩
@@ -489,10 +494,11 @@ def SingularAB (pq : P2 K × P2 K) : Prop := P2.lift₂
       simp [hm]
       grind
   ) pq.1 pq.2
+deriving Decidable
 
 ------------- Subcase: SingularAbc casePos --------------
 
-theorem SingularAB.q_eq_of_casePos [hchar : NeZero (2 : K)]
+theorem SingularAB.q_eq_of_casePos [DecidableEq K] [hchar : NeZero (2 : K)]
     {pq : P2 K × P2 K} (h : SingularAB cf pq)
     (hur : cf.u + cf.r = 0) (hpq : pq ∈ dom cf) :
     (pq.2 = P2.mk ![1, cf.k, 0] (by simp) ∧
@@ -710,7 +716,8 @@ theorem f_eSingularABcasePos [DecidableEq K] [hchar : NeZero (2 : K)]
 
 ------------- SingularAB general --------------
 
-theorem SingularAB.q_eq {pq : P2 K × P2 K} (h : SingularAB cf pq) (hur : cf.u + cf.r ≠ 0) :
+theorem SingularAB.q_eq [DecidableEq K] {pq : P2 K × P2 K} (h : SingularAB cf pq)
+    (hur : cf.u + cf.r ≠ 0) :
     pq.2 = P2.mk ![1, -cf.k, cf.u + cf.r] (by simp) := by
   classical
   obtain ⟨p, q⟩ := pq
@@ -726,8 +733,8 @@ theorem SingularAB.q_eq {pq : P2 K × P2 K} (h : SingularAB cf pq) (hur : cf.u +
   · rw [mul_comm _ (q 1), mul_comm _ (q 2)] at h2
     simpa using h2
 
-theorem SingularAB.p_eq (hk : cf.k ≠ 0) {pq : P2 K × P2 K} (h : SingularAB cf pq)
-    (hpq : pq ∈ dom cf) (hur : cf.u + cf.r ≠ 0) :
+theorem SingularAB.p_eq [DecidableEq K] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
+    (h : SingularAB cf pq) (hpq : pq ∈ dom cf) (hur : cf.u + cf.r ≠ 0) :
     pq.1 = P2.mk ![cf.u + cf.r, 0, 1] (by simp) ∨
     pq.1 = P2.mk ![(cf.u + cf.r) ^ 2 * (cf.u - cf.r) + 2 * cf.r,
       -2 * cf.r * cf.k, (cf.u + cf.r) ^ 2] (fun h ↦ by simpa [hur] using congr($h 2)) := by
@@ -787,7 +794,7 @@ def eSingularAB [DecidableEq K] [NeZero (2 : K)]
   else
     .some (nonsingular_w cf)
 
-theorem f_eSingularABcase [DecidableEq K] [hchar : NeZero (2 : K)]
+theorem f_eSingularAB [DecidableEq K] [hchar : NeZero (2 : K)]
     {pq : P2 K × P2 K} (h : SingularAB cf pq) (hk : cf.k ≠ 0)
     (hur : cf.u + cf.r ≠ 0) (hpq : pq ∈ dom cf) :
     f cf (eSingularAB cf pq) = pq := by
@@ -830,6 +837,82 @@ theorem f_eSingularABcase [DecidableEq K] [hchar : NeZero (2 : K)]
 
 ------------- (u+r) * q 0 = -q 2, (u + r) * q 1 = -k * q 2 --------------
 
+def SingularB [DecidableEq K] (pq : P2 K × P2 K) : Prop := P2.lift₂
+  (fun p q hp hq ↦ (cf.u + cf.r) * q 1 = -cf.k * q 2 ∧ (cf.u + cf.r) * q 0 ≠ q 2) (
+  by
+    intro p q p' q' hp hq hp' hq' ⟨l, hl0, hl⟩ ⟨m, hm0, hm⟩
+    congrm ?_ ∧ ?_
+    · simp [hm]
+      grind
+    · contrapose!
+      simp [hm]
+      grind
+  ) pq.1 pq.2
+deriving Decidable
+
+theorem SingularB.u_add_r_ne_zero [DecidableEq K] {pq : P2 K × P2 K} (h : SingularB cf pq) :
+    cf.u + cf.r ≠ 0 := by
+  obtain ⟨p, q⟩ := pq
+  induction p with | mk p hp
+  induction q with | mk q hq
+  by_contra!
+  simp [SingularB, P2.lift₂_mk, this] at h
+  grind
+
+theorem SingularB.q0_eq [DecidableEq K] {p q : Fin 3 → K} {hp : p ≠ 0} {hq : q ≠ 0}
+    (h : SingularB cf ⟨P2.mk p hp, P2.mk q hq⟩) (hpq : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) :
+    (cf.u + cf.r) * q 0 = -q 2 := by
+  simp only [SingularB, P2.lift₂_mk] at h
+  obtain ⟨h1, h2⟩ := h
+  obtain ⟨ho, hi, hpq⟩ := mem_dom cf hp hq |>.mp hpq
+  have : ((cf.u + cf.r) * q 0) ^ 2 = (q 2) ^ 2 := by
+    simp_rw [mul_pow]
+    obtain h12 := congr($h1 ^ 2)
+    simp_rw [mul_pow, neg_sq, cf.k_sq] at h12
+    linear_combination -congr($h12) + (cf.u + cf.r) ^ 2 * hi
+  obtain h | h := eq_or_eq_neg_of_sq_eq_sq _ _ this
+  · simp [h] at h2
+  · exact h
+
+theorem SingularB.q_eq [DecidableEq K] [NeZero (2 : K)] {pq : P2 K × P2 K}
+    (hpq : pq ∈ dom cf) (h : SingularB cf pq) :
+    pq.2 = P2.mk ![-1, -cf.k, cf.u + cf.r] (by simp) := by
+  obtain ⟨p, q⟩ := pq
+  induction p with | mk p hp
+  induction q with | mk q hq
+  simp only
+  conv_rhs => rw [← P2.mk'_eq]
+  refine P2.mk'_eq_mk'_of_third _ (by simpa using h.u_add_r_ne_zero) ?_ ?_
+  · simpa [mul_comm (q 0)] using h.q0_eq cf hpq
+  · simp only [SingularB, P2.lift₂_mk] at h
+    simpa [mul_comm (q _)] using h.1
+
+theorem SingularB.p_equation [DecidableEq K] [NeZero (2 : K)]
+    (p : Fin 3 → K) (hp : p ≠ 0) {q : P2 K}
+    (hpq : ⟨P2.mk p hp, q⟩ ∈ dom cf) (h : SingularB cf ⟨P2.mk p hp, q⟩) :
+    (cf.u + cf.r) ^ 2 * p 0 ^ 2 +
+    2 * (cf.r + 2 * cf.u - cf.u * (cf.u + cf.r) ^ 2) * p 0 * p 2 +
+    (2 * cf.r * (cf.u + cf.r) + (cf.u + cf.r) ^ 3 * (cf.u - cf.r)) * p 2 ^ 2
+    = 0 := by
+  obtain hq := h.q_eq cf hpq
+  simp only at hq
+  rw [hq] at hpq
+  obtain ⟨ho, hi, hpq⟩ := mem_dom cf hp _ |>.mp hpq
+  simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val] at hpq
+  have hpq' : -cf.k * p 1 = p 0 + (cf.u + cf.r) * p 2 := by linear_combination hpq
+  have hpq' : ((cf.u + cf.r) ^ 2 - 1) * p 1 ^ 2 = (p 0 + (cf.u + cf.r) * p 2) ^ 2 := by
+    rw [← cf.k_sq]
+    linear_combination congr($hpq' ^ 2)
+  linear_combination ((cf.u + cf.r) ^ 2 - 1) * ho - hpq'
+
+
+def eSingularB [DecidableEq K] [NeZero (2 : K)] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
+    (hpq : pq ∈ dom cf) (h : SingularB cf pq) : (elliptic cf).Point := sorry
+
+theorem f_eSingularB [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
+    (hpq : pq ∈ dom cf) (h : SingularB cf pq) :
+    f cf (eSingularB cf hk hpq h) = pq := by
+  sorry
 
 ------------- general case --------------
 
@@ -842,7 +925,7 @@ def eNume (p q : Fin 3 → K) :=
   + (cf.r * (cf.u + cf.r) - 2) * cf.k * q 0 * q 2 +
   (2 - (cf.u + cf.r) * (cf.u + 2 * cf.r)) *  q 1 * q 2 - cf.u * cf.k * q 2 ^ 2) * p 2
 
-def SingularE (pq : P2 K × P2 K) : Prop := P2.lift₂ (fun p q hp hq ↦
+def SingularE [DecidableEq K] (pq : P2 K × P2 K) : Prop := P2.lift₂ (fun p q hp hq ↦
   eDeno cf p q = 0)
   (by
     intro p q p' q' hp hq hp' hq' ⟨l, hl0, hl⟩ ⟨m, hm0, hm⟩
@@ -850,6 +933,7 @@ def SingularE (pq : P2 K × P2 K) : Prop := P2.lift₂ (fun p q hp hq ↦
     simp only [Pi.smul_apply, smul_eq_mul]
     grind
   ) pq.1 pq.2
+deriving Decidable
 
 def exNormal (pq : P2 K × P2 K) : K := P2.lift₂ (fun p q hp hq ↦ eNume cf p q / eDeno cf p q) (by
     intro p q p' q' hp hq hp' hq' ⟨l, hl0, hl⟩ ⟨m, hm0, hm⟩
@@ -884,7 +968,8 @@ def eyNormal (pq : P2 K × P2 K) : K :=
     grind
   ) pq.1 pq.2
 
-theorem equation_exNormal_eyNormal [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
+theorem equation_exNormal_eyNormal [DecidableEq K] [hchar : NeZero (2 : K)]
+    (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
     (hpq : pq ∈ dom cf)
     (hes : ¬SingularE cf pq) :
     (elliptic cf).Equation (exNormal cf pq) (eyNormal cf pq) := by
@@ -912,7 +997,8 @@ theorem equation_exNormal_eyNormal [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K × 
   -- grobner?
   sorry
 
-theorem nonsingular_exNormal_eyNormal [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
+theorem nonsingular_exNormal_eyNormal [DecidableEq K] [hchar : NeZero (2 : K)]
+    (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
     (hpq : pq ∈ dom cf)
     (hleft : pq.1 ≠ P2.mk ![-1, 0, 1] (by simp))
     (hright : pq.1 ≠ P2.mk ![1, 0, 1] (by simp))
@@ -933,7 +1019,7 @@ theorem nonsingular_exNormal_eyNormal [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K 
     contrapose! hes with hp2
     simp [eDeno, hp2]
   obtain hx2 | hy : cf.r * (eNume cf p q / eDeno cf p q) + cf.u = 0 ∨ p 1 = 0 := by
-    simpa [eyNormal, cf.hr, hk, hp2] using hy
+    simpa [eyNormal, cf.hr, hk, hp2, hchar.out] using hy
   · have hx2 : eNume cf p q / eDeno cf p q = - cf.u / cf.r := by
       grind
     rw [nonsingular_elliptic] at hs
@@ -943,7 +1029,7 @@ theorem nonsingular_exNormal_eyNormal [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K 
     field_simp at hx
     have : 2 * cf.u * ((cf.u + cf.r) ^ 2 - 1) = 0 := by
       linear_combination hx
-    have : (cf.u + cf.r) ^ 2 - 1 = 0 := by simpa [cf.hu] using this
+    have : (cf.u + cf.r) ^ 2 - 1 = 0 := by simpa [cf.hu, hchar.out] using this
     contrapose! hk
     rw [← sq_eq_zero_iff, cf.k_sq, this]
   obtain ⟨hu, hx⟩ | ⟨hu, hx⟩ := hux
@@ -1023,14 +1109,14 @@ theorem nonsingular_exNormal_eyNormal [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K 
       rw [← sq_eq_zero_iff, cf.k_sq, hu]
       ring
 
-def eNormal [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
+def eNormal [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
     (hpq : pq ∈ dom cf)
     (hleft : pq.1 ≠ P2.mk ![-1, 0, 1] (by simp))
     (hright : pq.1 ≠ P2.mk ![1, 0, 1] (by simp))
     (hes : ¬SingularE cf pq) :=
   Point.some (nonsingular_exNormal_eyNormal cf hk hpq hleft hright hes)
 
-theorem fPoint_eNormal [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
+theorem fPoint_eNormal [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
     (hpq : pq ∈ dom cf)
     (hleft : pq.1 ≠ P2.mk ![-1, 0, 1] (by simp))
     (hright : pq.1 ≠ P2.mk ![1, 0, 1] (by simp))
@@ -1067,3 +1153,61 @@ theorem fPoint_eNormal [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
     sorry
   · simp only [Fin.isValue, Matrix.cons_val]
     field_simp
+
+theorem f_eNormal [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
+    (hpq : pq ∈ dom cf)
+    (hleft : pq.1 ≠ P2.mk ![-1, 0, 1] (by simp))
+    (hright : pq.1 ≠ P2.mk ![1, 0, 1] (by simp))
+    (hes : ¬SingularE cf pq) :
+    f cf (eNormal cf hk hpq hleft hright hes) = pq := by
+  sorry
+
+def e [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
+    (hpq : pq ∈ dom cf)
+    (hleft : pq.1 ≠ P2.mk ![-1, 0, 1] (by simp))
+    (hright : pq.1 ≠ P2.mk ![1, 0, 1] (by simp)) :=
+  if hes : SingularE cf pq then
+    if hz : ZeroZ pq then
+      eZeroZ cf hk hpq hz
+    else if hsa : SingularA cf pq then
+      eSingularA cf hk hpq hsa
+    else if SingularAB cf pq then
+      if hur : cf.u + cf.r = 0 then
+        eSingularABcasePos cf pq hur
+      else
+        eSingularAB cf pq
+    else if hsb : SingularB cf pq then
+      eSingularB cf hk hpq hsb
+    else
+      .zero -- Unreachable
+  else
+    eNormal cf hk hpq hleft hright hes
+
+theorem f_e [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
+    (hpq : pq ∈ dom cf)
+    (hleft : pq.1 ≠ P2.mk ![-1, 0, 1] (by simp))
+    (hright : pq.1 ≠ P2.mk ![1, 0, 1] (by simp)) :
+    f cf (e cf hk hpq hleft hright) = pq := by
+  by_cases hes : SingularE cf pq
+  · by_cases hz : ZeroZ pq
+    · simpa [e, hes, hz] using f_eZeroZ cf hk hpq hz
+    by_cases hsa : SingularA cf pq
+    · simpa [e, hes, hz, hsa] using f_eSingularA cf hk hpq hsa
+    by_cases hsab : SingularAB cf pq
+    · by_cases hur : cf.u + cf.r = 0
+      · simpa [e, hes, hz, hsa, hsab, hur] using f_eSingularABcasePos cf hsab hk hur hpq
+      simpa [e, hes, hz, hsa, hsab, hur] using f_eSingularAB cf hsab hk hur hpq
+    by_cases hsb : SingularB cf pq
+    · simpa [e, hes, hz, hsa, hsab, hsb] using f_eSingularB cf hk hpq hsb
+    obtain ⟨p, q⟩ := pq
+    induction p with | mk p hp
+    induction q with | mk q hq
+    simp only [ZeroZ, P2.lift₂_mk] at hz
+    simp only [SingularA, P2.lift₂_mk] at hsa
+    simp only [SingularB, P2.lift₂_mk] at hsb
+    simp only [SingularAB, P2.lift₂_mk] at hsab
+    obtain h | h : (cf.u + cf.r) * q 0 - q 2 = 0 ∨ (cf.u + cf.r) * q 1 + cf.k * q 2 = 0 := by
+      simpa [SingularE, eDeno, cf.hr, hz] using hes
+    · grind
+    · grind
+  simpa [e, hes] using f_eNormal cf hk hpq hleft hright hes
