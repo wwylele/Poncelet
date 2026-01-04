@@ -7,6 +7,15 @@
 % can start with a \section or \chapter for instance.
 \chapter{Introduction}
 
+\begin{tikzpicture}[scale=1.25,thick,help lines/.style={thin,draw=black!50}]
+\tkzDefPoint(0,0){A}
+\tkzDefPoint(1.25+rand(),0.25+rand()){B}
+\tkzInterCC(A,B)(B,A) \tkzGetPoints{C}{X}
+\tkzDrawCircles[help lines](A,B B,A)
+\tkzLabelCircle[below=12pt](A,B)(180){$Inner$}
+\tkzLabelCircle[above=12pt](B,A)(180){$Outer$}
+\end{tikzpicture}
+
 This is a formalization of an "elementary" proof of \href{https://en.wikipedia.org/wiki/Poncelet%27s_closure_theorem}{Poncelet's closure theorem}:
 it only involves basic algebra and group laws of elliptic curves. It is more "low level" comparing
 to most modern proof of the theorem, where explicit curves and maps are constructed.
