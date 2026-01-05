@@ -500,11 +500,9 @@ deriving Decidable
 
 theorem SingularAB.q_eq_of_casePos [DecidableEq K] [hchar : NeZero (2 : K)]
     {pq : P2 K × P2 K} (h : SingularAB cf pq)
-    (hur : cf.u + cf.r = 0) (hpq : pq ∈ dom cf) :
-    (pq.2 = P2.mk ![1, cf.k, 0] (by simp) ∧
-      (pq.1 = P2.mk ![0, 0, 1] (by simp) ∨ (pq.1 = P2.mk ![1, cf.k, 0] (by simp)))) ∨
-    (pq.2 = P2.mk ![1, -cf.k, 0] (by simp) ∧
-      (pq.1 = P2.mk ![0, 0, 1] (by simp) ∨ (pq.1 = P2.mk ![1, -cf.k, 0] (by simp)))) := by
+    (hur : cf.u + cf.r = 0) (hpq : pq ∈ dom cf) (hz : ¬ ZeroZ pq) :
+    (pq.2 = P2.mk ![1, cf.k, 0] (by simp) ∧ pq.1 = P2.mk ![0, 0, 1] (by simp)) ∨
+    (pq.2 = P2.mk ![1, -cf.k, 0] (by simp) ∧ pq.1 = P2.mk ![0, 0, 1] (by simp)) := by
   have hk : cf.k ≠ 0 := by
     rw [← sq_eq_zero_iff.ne, cf.k_sq, hur]
     simp
@@ -545,25 +543,15 @@ theorem SingularAB.q_eq_of_casePos [DecidableEq K] [hchar : NeZero (2 : K)]
       have : p 0 * cf.u * p 2 * 2 = p 2 ^ 2 * (cf.u - cf.r) * (cf.u + cf.r) := by
         linear_combination -ho
       obtain h0 | h0 : p 0 = 0 ∨ p 2 = 0 := by simpa [hur, cf.hu, hchar.out] using this
-      · left
-        rw [P2.mk_eq_mk']
+      · rw [P2.mk_eq_mk']
         use p 2
         ext i
         fin_cases i
         · simpa using h0
         · simpa [h0, hk] using hp01.symm
         · simp
-      · right
-        rw [P2.mk_eq_mk']
-        use p 0
-        ext i
-        fin_cases i
-        · simp
-        · suffices p 1 = -(cf.k * p 1 * cf.k) by
-            simpa [hp01]
-          suffices p 1 = -(p 1 * cf.k ^ 2) by linear_combination this
-          simp [cf.k_sq, hur]
-        · simpa using h0
+      · contrapose! hz
+        simpa using h0
   · right
     simp only
     constructor
@@ -582,59 +570,35 @@ theorem SingularAB.q_eq_of_casePos [DecidableEq K] [hchar : NeZero (2 : K)]
       have : p 0 * cf.u * p 2 * 2 = p 2 ^ 2 * (cf.u - cf.r) * (cf.u + cf.r) := by
         linear_combination -ho
       obtain h0 | h0 : p 0 = 0 ∨ p 2 = 0 := by simpa [hur, cf.hu, hchar.out] using this
-      · left
-        rw [P2.mk_eq_mk']
+      · rw [P2.mk_eq_mk']
         use p 2
         ext i
         fin_cases i
         · simpa using h0
         · simpa [h0, hk] using hp01.symm
         · simp
-      · right
-        rw [P2.mk_eq_mk']
-        use p 0
-        ext i
-        fin_cases i
-        · simp
-        · suffices p 1 = -(cf.k * p 1 * cf.k) by
-            simpa [hp01]
-          suffices p 1 = -(p 1 * cf.k ^ 2) by linear_combination this
-          simp [cf.k_sq, hur]
-        · simpa using h0
+      · contrapose! hz
+        simpa using h0
 
 def eSingularABcasePos [DecidableEq K] [NeZero (2 : K)]
-    (pq : P2 K × P2 K) (hur : cf.u + cf.r = 0) : (elliptic cf).Point :=
+    (pq : P2 K × P2 K) : (elliptic cf).Point :=
   if pq.2 = P2.mk ![1, cf.k, 0] (by simp) then
-    if pq.1 = P2.mk ![0, 0, 1] (by simp) then
-      .some (show (elliptic cf).Nonsingular 0 0 by
-        rw [nonsingular_elliptic]
-        simp [cf.hu]
-      )
-    else
-      .some (show (elliptic cf).Nonsingular 1 (1 / cf.u) by
-        rw [nonsingular_elliptic]
-        have hr : cf.r = - cf.u := by linear_combination hur
-        simp [cf.hu, hr]
-      )
+    .some (show (elliptic cf).Nonsingular 0 0 by
+      rw [nonsingular_elliptic]
+      simp [cf.hu]
+    )
   else
-    if pq.1 = P2.mk ![0, 0, 1] (by simp) then
-      .zero
-    else
-      .some (show (elliptic cf).Nonsingular 1 (- 1 / cf.u) by
-        rw [nonsingular_elliptic]
-        have hr : cf.r = - cf.u := by linear_combination hur
-        simp [cf.hu, hr, div_pow]
-      )
+    .zero
 
 theorem f_eSingularABcasePos [DecidableEq K] [hchar : NeZero (2 : K)]
     {pq : P2 K × P2 K} (h : SingularAB cf pq) (hk : cf.k ≠ 0)
-    (hur : cf.u + cf.r = 0) (hpq : pq ∈ dom cf) :
-    f cf (eSingularABcasePos cf pq hur) = pq := by
+    (hur : cf.u + cf.r = 0) (hpq : pq ∈ dom cf) (hz : ¬ ZeroZ pq) :
+    f cf (eSingularABcasePos cf pq) = pq := by
   have hur' : cf.r + cf.u = 0 := by linear_combination hur
   have hr : cf.r = - cf.u := by linear_combination hur
-  obtain hcases := SingularAB.q_eq_of_casePos cf h hur hpq
+  obtain hcases := SingularAB.q_eq_of_casePos cf h hur hpq hz
   by_cases hq : pq.2 = P2.mk ![1, cf.k, 0] (by simp)
-  · obtain ⟨_, hpcases⟩ := hcases.resolve_right (by
+  · obtain ⟨_, hp⟩ := hcases.resolve_right (by
       apply not_and_of_not_left
       rw [hq]
       contrapose! hk with h
@@ -645,74 +609,32 @@ theorem f_eSingularABcasePos [DecidableEq K] [hchar : NeZero (2 : K)]
       rw [eq_neg_iff_add_eq_zero, ← two_mul] at this
       simpa [hchar.out] using this
     )
-    by_cases hp : pq.1 = P2.mk ![0, 0, 1] (by simp)
-    · have hs : SingularAbc cf 0 0 := by
-        simp [SingularAbc, fChordNormal, hur]
-      suffices (P2.mk ![0, 0, cf.u ^ 2] _,
-          P2.mk ![2 * cf.u * cf.k * (4 * cf.u ^ 2), -(cf.u * 2 * (4 * cf.u ^ 2)), 0] _) = pq by
-        simpa [eSingularABcasePos, hp, hq, f, fPoint, fChord, fPointRaw, fChordRaw, hs, hr]
-      ext
-      · simp_rw [hp]
-        rw [P2.mk_eq_mk']
-        use cf.u ^ 2
-        simp
-      · simp_rw [hq]
-        apply P2.mk_eq_mk_of_third_zero _ _ rfl rfl
-        simp only [Fin.isValue, Matrix.cons_val_zero, Matrix.cons_val_one, mul_one]
-        suffices 2 * cf.u * cf.k ^ 2 * (4 * cf.u ^ 2) = -(cf.u * 2 * (4 * cf.u ^ 2)) by
-          linear_combination this
-        rw [cf.k_sq, hur]
-        ring
-    · obtain hpcase := hpcases.resolve_left hp
-      have hs : ¬ SingularAbc cf 1 cf.u⁻¹ := by
-        suffices -cf.u - cf.u ≠ 0 by simpa [SingularAbc, fChordNormal, hr, hk, cf.hu, hchar.out]
-        rw [← neg_add', ← two_mul]
-        simp [hchar.out, cf.hu]
-      suffices (P2.mk ![-(2 * cf.u * (1 - cf.u ^ 2 + cf.u * cf.u)),
-            -(2 * cf.u ^ 2 * cf.k * cf.u⁻¹), 0] _,
-          P2.mk ![2 * cf.u ^ 2 * (-cf.u - cf.u) * cf.u⁻¹,
-            cf.k * ((-cf.u - cf.u) * (2 * cf.u)), 0] _) = pq by
-        simpa [eSingularABcasePos, hp, hq, f, fPoint, fChord, fPointRaw, fChordRaw, hs, hr,
-          fChordNormal]
-      ext
-      · simp_rw [hpcase]
-        apply P2.mk_eq_mk_of_third_zero _ _ rfl rfl
-        simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
-        field [cf.hu]
-      · simp_rw [hq]
-        apply P2.mk_eq_mk_of_third_zero _ _ rfl rfl
-        simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
-        field
-  · obtain ⟨hqeq, hpcases⟩ := hcases.resolve_left (by
+    have hs : SingularAbc cf 0 0 := by
+      simp [SingularAbc, fChordNormal, hur]
+    suffices (P2.mk ![0, 0, cf.u ^ 2] _,
+        P2.mk ![2 * cf.u * cf.k * (4 * cf.u ^ 2), -(cf.u * 2 * (4 * cf.u ^ 2)), 0] _) = pq by
+      simpa [eSingularABcasePos, hp, hq, f, fPoint, fChord, fPointRaw, fChordRaw, hs, hr]
+    ext
+    · simp_rw [hp]
+      rw [P2.mk_eq_mk']
+      use cf.u ^ 2
+      simp
+    · simp_rw [hq]
+      apply P2.mk_eq_mk_of_third_zero _ _ rfl rfl
+      simp only [Fin.isValue, Matrix.cons_val_zero, Matrix.cons_val_one, mul_one]
+      suffices 2 * cf.u * cf.k ^ 2 * (4 * cf.u ^ 2) = -(cf.u * 2 * (4 * cf.u ^ 2)) by
+        linear_combination this
+      rw [cf.k_sq, hur]
+      ring
+  · obtain ⟨hqeq, hp⟩ := hcases.resolve_left (by
       apply not_and_of_not_left
       exact hq
     )
-    by_cases hp : pq.1 = P2.mk ![0, 0, 1] (by simp)
-    · suffices (P2.mk ![cf.u + cf.r, 0, 1] _, P2.mk ![1, -cf.k, cf.u + cf.r] _) = pq by
-        simpa [eSingularABcasePos, hp, hq, f, fPoint, fChord, fPointRaw, fChordRaw]
-      ext
-      · simp [hp, hur]
-      · simp [hqeq, hur]
-    · obtain hpcases := hpcases.resolve_left hp
-      have hs : ¬ SingularAbc cf 1 (-1 / cf.u) := by
-        suffices -cf.u - cf.u ≠ 0 by simpa [SingularAbc, fChordNormal, hr, hk, cf.hu, hchar.out]
-        rw [← neg_add', ← two_mul]
-        simp [hchar.out, cf.hu]
-      suffices (P2.mk ![-(2 * cf.u * (1 - cf.u ^ 2 + cf.u * cf.u)),
-            -(2 * cf.u ^ 2 * cf.k * (-1 / cf.u)), 0] _,
-          P2.mk ![2 * cf.u ^ 2 * (-cf.u - cf.u) * (-1 / cf.u),
-            cf.k * ((-cf.u - cf.u) * (2 * cf.u)), 0] _)= pq by
-        simpa [eSingularABcasePos, hp, hq, f, fPoint, fChord, fPointRaw, fChordRaw, hs, hr,
-          fChordNormal]
-      ext
-      · simp_rw [hpcases]
-        apply P2.mk_eq_mk_of_third_zero _ _ rfl rfl
-        simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
-        field [cf.hu]
-      · simp_rw [hqeq]
-        apply P2.mk_eq_mk_of_third_zero _ _ rfl rfl
-        simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
-        field
+    suffices (P2.mk ![cf.u + cf.r, 0, 1] _, P2.mk ![1, -cf.k, cf.u + cf.r] _) = pq by
+      simpa [eSingularABcasePos, hp, hq, f, fPoint, fChord, fPointRaw, fChordRaw]
+    ext
+    · simp [hp, hur]
+    · simp [hqeq, hur]
 
 ------------- SingularAB general --------------
 
@@ -1400,6 +1322,7 @@ theorem fPoint_eNormal [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0
   obtain ⟨p, q⟩ := pq
   induction p with | mk p hp
   induction q with | mk q hq
+  obtain ⟨ho, hi, hpq⟩ := mem_dom cf hp hq |>.mp hpq
   have hes : eDeno cf p q ≠ 0 := by simpa [SingularE] using hes
   have hp2 : p 2 ≠ 0 := by
     contrapose! hes
@@ -1426,13 +1349,114 @@ theorem fPoint_eNormal [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0
   · simp only [Fin.isValue, Matrix.cons_val]
     field_simp
 
+theorem fChord_eNormal_singularAbc [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0)
+    {p q : Fin 3 → K} (hp : p ≠ 0) (hq : q ≠ 0)
+    (hmem : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf)
+    (hleft : P2.mk p hp ≠ P2.mk ![-1, 0, 1] (by simp))
+    (hright : P2.mk p hp ≠ P2.mk ![1, 0, 1] (by simp))
+    (hes : ¬SingularE cf ⟨P2.mk p hp, P2.mk q hq⟩)
+    (hs : SingularAbc cf (eNume cf p q / eDeno cf p q) (eyNormal cf (P2.mk p hp, P2.mk q hq))) :
+    fChord cf (eNormal cf hk hmem hleft hright hes) = P2.mk q hq := by
+  obtain _ := cf.hr
+  obtain _ := cf.hu
+  have : eDeno cf p q ≠ 0 := by simpa [SingularE] using hes
+  have hp2 : p 2 ≠ 0 := by
+    contrapose! hes
+    simp [SingularE, eDeno, hes]
+  obtain hc := hs.c_factor_eq_zero cf
+    ((nonsingular_exNormal_eyNormal cf hk hmem hleft hright hes))
+  field_simp at hc
+  --unfold eNume eDeno at hc
+
+  obtain ha := hs.a_eq_zero
+  simp only [eyNormal, exNormal_mk, P2.lift₂_mk] at ha
+  field_simp at ha
+  --unfold eNume eDeno at ha
+
+  obtain hxy := hs.xy_linear cf
+    ((nonsingular_exNormal_eyNormal cf hk hmem hleft hright hes))
+  simp only [eyNormal, exNormal_mk, P2.lift₂_mk] at hxy
+  field_simp at hxy
+  unfold eNume eDeno at hxy
+
+  simp only [fChord, fChordRaw, eNormal, exNormal_mk, hs, ↓reduceIte]
+  by_cases hq2 : q 2 = 0
+  · sorry
+  conv_rhs => rw [← P2.mk'_eq]
+  refine P2.mk'_eq_mk'_of_third _ (by simpa using hq2) ?_ ?_
+  · simp
+    sorry
+  · simp
+    sorry
+
+
+theorem fChord_eNormal [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
+    (hmem : pq ∈ dom cf)
+    (hleft : pq.1 ≠ P2.mk ![-1, 0, 1] (by simp))
+    (hright : pq.1 ≠ P2.mk ![1, 0, 1] (by simp))
+    (hes : ¬SingularE cf pq) :
+    fChord cf (eNormal cf hk hmem hleft hright hes) = pq.2 := by
+  obtain _ := cf.hr
+  obtain _ := cf.hu
+  obtain ⟨p, q⟩ := pq
+  induction p with | mk p hp
+  induction q with | mk q hq
+  obtain ⟨ho, hi, hpq⟩ := mem_dom cf hp hq |>.mp hmem
+  have hes : eDeno cf p q ≠ 0 := by simpa [SingularE] using hes
+  have hp2 : p 2 ≠ 0 := by
+    contrapose! hes
+    simp [eDeno, hes]
+  by_cases hs : SingularAbc cf (eNume cf p q / eDeno cf p q) (eyNormal cf (P2.mk p hp, P2.mk q hq))
+  · exact fChord_eNormal_singularAbc cf hk hp hq hmem hleft hright hes hs
+  simp only [fChord, fChordRaw, eNormal, exNormal_mk, hs, ↓reduceIte]
+  simp only [fChordNormal, eyNormal, exNormal_mk, P2.lift₂_mk]
+  by_cases hq2 : q 2 = 0
+  · refine P2.mk_eq_mk_of_third_zero _ _ ?_ (by simpa using hq2) ?_
+    · simp only [Matrix.cons_val, mul_eq_zero]
+      right
+      field_simp
+      unfold eNume eDeno
+      rw [hq2]
+      linear_combination
+        hi * (-8*p 2^2*q 0^2*cf.u*cf.r^3*cf.k^4 - 4*p 2^2*q 0^2*cf.r^4*cf.k^4
+            + 4*p 2^2*q 0^2*cf.r^2*cf.k^6 - 8*p 2^2*q 0^2*cf.u*cf.r^3*cf.k^2
+            - 4*p 2^2*q 0^2*cf.r^4*cf.k^2 + 8*p 2^2*q 0^2*cf.r^2*cf.k^4
+            + 4*p 2^2*q 0^2*cf.r^2*cf.k^2) +
+        cf.k_sq * (-4*p 2^2*q 0^2*q 1^2*cf.u^4*cf.r^2
+          - 8*p 2^2*q 0^2*q 1^2*cf.u^3*cf.r^3 - 4*p 2^2*q 0^2*q 1^2*cf.u^2*cf.r^4
+          - 4*p 2^2*q 0^4*cf.u^2*cf.r^2*cf.k^2 - 4*p 2^2*q 0^2*q 1^2*cf.u^2*cf.r^2*cf.k^2
+          - 4*p 2^2*q 0^4*cf.r^2*cf.k^4 - 4*p 2^2*q 0^2*q 1^2*cf.r^2*cf.k^4
+          - 4*p 2^2*q 0^4*cf.r^2*cf.k^2 - 4*p 2^2*q 0^2*q 1^2*cf.r^2*cf.k^2) +
+        hq2 * (-8*p 2^2*q 0^2*q 2*cf.u*cf.r^3*cf.k^4 - 4*p 2^2*q 0^2*q 2*cf.r^4*cf.k^4
+          + 4*p 2^2*q 0^2*q 2*cf.r^2*cf.k^6 - 8*p 2^2*q 0^2*q 2*cf.u*cf.r^3*cf.k^2
+          - 4*p 2^2*q 0^2*q 2*cf.r^4*cf.k^2 + 8*p 2^2*q 0^2*q 2*cf.r^2*cf.k^4
+          + 4*p 2^2*q 0^2*q 2*cf.r^2*cf.k^2)
+    · simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
+      field_simp
+      unfold eNume eDeno
+      simp [hq2]
+      -- grobner with hq2
+      sorry
+  conv_rhs => rw [← P2.mk'_eq]
+  refine P2.mk'_eq_mk'_of_third _ (by simpa using hq2) ?_ ?_
+  · simp only [Matrix.cons_val_zero, Matrix.cons_val]
+    field_simp
+    unfold eNume eDeno
+    -- grobner?
+    sorry
+  · simp only [Matrix.cons_val_one, Matrix.cons_val_zero, Matrix.cons_val]
+    field_simp
+    unfold eNume eDeno
+    -- grobner?
+    sorry
+
 theorem f_eNormal [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
     (hpq : pq ∈ dom cf)
     (hleft : pq.1 ≠ P2.mk ![-1, 0, 1] (by simp))
     (hright : pq.1 ≠ P2.mk ![1, 0, 1] (by simp))
     (hes : ¬SingularE cf pq) :
     f cf (eNormal cf hk hpq hleft hright hes) = pq := by
-  sorry
+  rw [f, fChord_eNormal cf hk hpq hleft hright, fPoint_eNormal cf hk hpq hleft hright]
 
 def e [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
     (hpq : pq ∈ dom cf)
@@ -1444,8 +1468,8 @@ def e [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
     else if hsa : SingularA cf pq then
       eSingularA cf hk hpq hsa
     else if SingularAB cf pq then
-      if hur : cf.u + cf.r = 0 then
-        eSingularABcasePos cf pq hur
+      if cf.u + cf.r = 0 then
+        eSingularABcasePos cf pq
       else
         eSingularAB cf pq
     else if hsb : SingularB cf pq then
@@ -1467,7 +1491,7 @@ theorem f_e [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
     · simpa [e, hes, hz, hsa] using f_eSingularA cf hk hpq hsa
     by_cases hsab : SingularAB cf pq
     · by_cases hur : cf.u + cf.r = 0
-      · simpa [e, hes, hz, hsa, hsab, hur] using f_eSingularABcasePos cf hsab hk hur hpq
+      · simpa [e, hes, hz, hsa, hsab, hur] using f_eSingularABcasePos cf hsab hk hur hpq hz
       simpa [e, hes, hz, hsa, hsab, hur] using f_eSingularAB cf hsab hk hur hpq
     by_cases hsb : SingularB cf pq
     · simpa [e, hes, hz, hsa, hsab, hsb] using f_eSingularB cf hk hpq hsb hz hleft hright
