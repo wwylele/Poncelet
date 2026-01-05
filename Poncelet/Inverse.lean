@@ -1100,6 +1100,10 @@ theorem fChord_eSingularB [DecidableEq K] [hchar : NeZero (2 : K)]
     (hleft : pq.1 ≠ P2.mk ![-1, 0, 1] (by simp))
     (hright : pq.1 ≠ P2.mk ![1, 0, 1] (by simp)) :
     fChord cf (eSingularB cf hk hpq h hz hleft hright) = pq.2 := by
+  have hk2 : (cf.u + cf.r)^2 - 1 ≠ 0 := by
+    rw [← cf.k_sq]
+    simpa using hk
+  have hur0 := h.u_add_r_ne_zero
   obtain _ := cf.hr
   obtain _ := cf.hu
   rw [h.q_eq cf hpq]
@@ -1118,29 +1122,61 @@ theorem fChord_eSingularB [DecidableEq K] [hchar : NeZero (2 : K)]
       ((cf.u + cf.r) ^ 2*p 0 +
       (-cf.u^3 - cf.u^2*cf.r+ cf.u*cf.r^2+ cf.r^3- 4*cf.u+ 2*cf.r)*p 2) = 0 := by
       linear_combination hc - (cf.u + cf.r) ^ 2 * hpeq
-
     have hc'' : 2 * p 2 * ((cf.u + cf.r)^2 - 1) * (cf.u + cf.r)^2 *
       ((-cf.u^3*cf.r - cf.u^2*cf.r^2 + cf.u*cf.r^3 + cf.r^4 + 2*cf.u^2 - 4*cf.u*cf.r)*p 2 +
-      (cf.u^2*cf.r + 2*cf.u*cf.r^2 + cf.r^3 - 4*cf.u)*p 0
-      ) = 0 := by
+      (cf.u^2*cf.r + 2*cf.u*cf.r^2 + cf.r^3 - 4*cf.u)*p 0) = 0 := by
       linear_combination hc - (cf.u + cf.r) ^ 4 * hpeq
-    sorry
-
-
+    have hc'' :
+      ((-cf.u^3*cf.r - cf.u^2*cf.r^2 + cf.u*cf.r^3 + cf.r^4 + 2*cf.u^2 - 4*cf.u*cf.r)*p 2 +
+      (cf.u^2*cf.r + 2*cf.u*cf.r^2 + cf.r^3 - 4*cf.u)*p 0) = 0 := by
+      simpa [hchar.out, hp2, hk2, hur0] using hc''
+    have hc' : p 0 + (cf.r - cf.u) * p 2 = 0 ∨
+      (cf.u + cf.r) ^ 2 * p 0 +
+      (-cf.u ^ 3 - cf.u ^ 2 * cf.r + cf.u * cf.r ^ 2
+       + cf.r ^ 3 - 4 * cf.u + 2 * cf.r) * p 2 = 0 := by
+      simpa [hk2, hur0] using hc'
+    obtain hc' | hc' := hc'
+    · have hp0 : p 0 = (cf.u - cf.r) * p 2 := by linear_combination hc'
+      rw [hp0] at hc''
+      have h : 2 * p 2 * cf.u ^ 2 = 0 := by linear_combination -hc''
+      simp [hchar.out, hp2, cf.hu] at h
+    have hp0 : p 0 = -(-cf.u ^ 3 - cf.u ^ 2 * cf.r + cf.u * cf.r ^ 2
+       + cf.r ^ 3 - 4 * cf.u + 2 * cf.r) * p 2 / (cf.u + cf.r) ^ 2 := by
+       field_simp
+       linear_combination hc'
+    rw [hp0] at hc''
+    field_simp at hc''
+    have hc'' : 2 * p 2 * (cf.u^4 - 2*cf.u^2*cf.r^2 + cf.r^4 + 8*cf.u^2 - 4*cf.u*cf.r) = 0 := by
+      linear_combination -hc''
+    have hc'' : cf.u^4 - 2*cf.u^2*cf.r^2 + cf.r^4 + 8*cf.u^2 - 4*cf.u*cf.r = 0 := by
+      simpa [hp2, hchar.out] using hc''
+    simp only [fChord, fChordRaw, eSingularB, hs, ↓reduceIte]
+    simp only [exSingularB, P2.lift₂_mk]
+    conv_rhs => rw [← P2.mk'_eq]
+    refine P2.mk'_eq_mk'_of_third _ (by simpa using hur0) ?_ ?_
+    · simp only [Matrix.cons_val_zero, Matrix.cons_val]
+      field_simp
+      linear_combination 2 * (cf.u + cf.r) * hc''
+    · simp only [Matrix.cons_val_one, Matrix.cons_val_zero, Matrix.cons_val]
+      rw [hp0]
+      field_simp
+      rw [cf.k_sq]
+      linear_combination -2 * (cf.u + cf.r) *
+        (-cf.u^3 - cf.u^2*cf.r + cf.u*cf.r^2 + cf.r^3 + 2*cf.u) *hc''
   simp only [fChord, fChordRaw, eSingularB, hs, ↓reduceIte]
   simp only [fChordNormal, exSingularB, P2.lift₂_mk, eySingularB]
   conv_rhs => rw [← P2.mk'_eq]
-  refine P2.mk'_eq_mk'_of_third _ (by simpa using h.u_add_r_ne_zero) ?_ ?_
+  refine P2.mk'_eq_mk'_of_third _ (by simpa using hur0) ?_ ?_
   · simp only [Matrix.cons_val_zero, Matrix.cons_val]
     field_simp
-    linear_combination 2 * (cf.u + cf.r)^2 *
+    linear_combination 2 *
       (-cf.u^5*p 2 - 3*cf.u^4*cf.r*p 2 - 2*cf.u^3*cf.r^2*p 2 + 2*cf.u^2*cf.r^3*p 2
       + 3*cf.u*cf.r^4*p 2 + cf.r^5*p 2 + cf.u^4*p 0 + 4*cf.u^3*cf.r*p 0
       + 6*cf.u^2*cf.r^2*p 0 + 4*cf.u*cf.r^3*p 0 + cf.r^4*p 0 - 2*cf.u^3*p 2
       - 4*cf.u^2*cf.r*p 2 - 2*cf.u*cf.r^2*p 2 + 4*cf.u*p 2) * hpeq
   · simp only [ Matrix.cons_val_one, Matrix.cons_val_zero, Matrix.cons_val]
     field_simp
-    linear_combination 8 * p 2 * cf.u * (cf.u + cf.r)^2 * hpeq
+    linear_combination 8 * p 2 * cf.u * hpeq
 
 theorem f_eSingularB [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
     (hpq : pq ∈ dom cf) (h : SingularB cf pq) (hz : ¬ ZeroZ pq)
