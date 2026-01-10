@@ -1,7 +1,8 @@
 import Poncelet.Circle
 import Poncelet.Elliptic
+import Poncelet.Grobner
+import Poncelet.Heavy.Inverse1
 import Poncelet.Inverse
-import Poncelet.Long
 import Poncelet.P2
 import Poncelet.Test
 import Poncelet.Transfer

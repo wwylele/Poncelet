@@ -164,6 +164,18 @@ structure CMono (char : ℕ) (n : ℕ) where
   coeff : ℤ
   exp : Vector ℕ n
   coeff_ne_zero : ¬ (char : ℤ) ∣ coeff
+deriving DecidableEq
+
+instance [hchar : IsChar char] : Inhabited (CMono char n) where
+  default := {
+    coeff := 1
+    exp := 0
+    coeff_ne_zero := by
+      have h := hchar.eq_zero_or_prime
+      suffices char ≠ 1 by simpa [Int.natCast_dvd]
+      contrapose h
+      simp [h, Nat.not_prime_one]
+  }
 
 def CMono.eval (v : Fin n → K) (m : CMono char n) :=
   m.coeff * ∏ e : Fin n, v e ^ m.exp.get e
@@ -231,6 +243,7 @@ def ea : CMono 0 3 := ⟨
 structure CPoly (char : ℕ) (n : ℕ) where
   terms : List (CMono char n)
   ordered : terms.Pairwise (fun a b ↦ b.exp < a.exp)
+deriving DecidableEq
 
 instance : Zero (CPoly char n) where
   zero := {
@@ -539,6 +552,14 @@ theorem CPoly.eval_ofNat [CharP K char] (c : ℕ) (v : Fin n → K) :
     symm
     simpa [ringChar.spec, ringChar.eq, Int.natCast_dvd, Int.natAbs_natCast] using h
 
+instance : NatCast (CPoly char n) where
+  natCast m := ofNat(m)
+
+@[simp]
+theorem CPoly.eval_natCast [CharP K char] (c : ℕ) (v : Fin n → K) :
+    (c : CPoly char n).eval v = c :=
+  CPoly.eval_ofNat c v
+
 example : (7 : CPoly 0 4).eval ![1, 2 , 3, 4] = (7 : ℚ) := by simp
 
 example : One (CPoly 0 4) := inferInstance
@@ -594,9 +615,7 @@ def eb : CPoly 0 9 := ⟨[
 #reduce (eb * eb).terms.length
 #eval! (eb * eb * eb * eb * eb).terms.length
 
-variable (K) in
-def CPoly.reduce [CharP K char] (a b : CPoly char n) : CPoly char n × Bool :=
-  have hc : IsChar char := ⟨CharP.char_is_prime_or_zero K char⟩
+def CPoly.reduce [hc : IsChar char] (a b : CPoly char n) : CPoly char n × Bool :=
   match b.terms with
   | [] => ⟨a, false⟩
   | bx :: bs =>
@@ -629,8 +648,9 @@ def CPoly.reduce [CharP K char] (a b : CPoly char n) : CPoly char n × Bool :=
   else
     ⟨a, false⟩
 
-theorem CPoly.eq_zero_of_reduce_eq_zero [CharP K char] {a b : CPoly char n} {v : Fin n → K}
-    (hb : b.eval v = 0) (ha : (a.reduce K b).1.eval v = 0) :
+theorem CPoly.eq_zero_of_reduce_eq_zero [CharP K char]
+    [IsChar char] {a b : CPoly char n} {v : Fin n → K}
+    (hb : b.eval v = 0) (ha : (a.reduce b).1.eval v = 0) :
     a.eval v = 0 := by
   unfold reduce at ha
   cases hbeq : b.terms with
@@ -647,21 +667,20 @@ theorem CPoly.eq_zero_of_reduce_eq_zero [CharP K char] {a b : CPoly char n} {v :
     simp
   · exact ha
 
-variable (K) in
-def CPoly.reduceAll [CharP K char] (a : CPoly char n) (b : List (CPoly char n)) :
+def CPoly.reduceAll [IsChar char] (a : CPoly char n) (b : List (CPoly char n)) :
     CPoly char n × Bool :=
   match b with
   | [] => ⟨a, false⟩
   | bx :: bs =>
   match CPoly.reduceAll a bs with
   | ⟨a', r⟩ =>
-  match a'.reduce K bx with
+  match a'.reduce bx with
   | ⟨a'', r'⟩ =>
   ⟨a'', r || r'⟩
 
-theorem CPoly.eq_zero_of_reduceAll_eq_zero [CharP K char] {a : CPoly char n}
+theorem CPoly.eq_zero_of_reduceAll_eq_zero [CharP K char] [IsChar char] {a : CPoly char n}
     {b : List (CPoly char n)} {v : Fin n → K} (hb : b.Forall (·.eval v = 0))
-    (ha : (a.reduceAll K b).1.eval v = 0) :
+    (ha : (a.reduceAll b).1.eval v = 0) :
     a.eval v = 0 := by
   induction b with
   | nil => simpa using ha
@@ -670,20 +689,20 @@ theorem CPoly.eq_zero_of_reduceAll_eq_zero [CharP K char] {a : CPoly char n}
     simp only [reduceAll] at ha
     exact hi hb.2 <| CPoly.eq_zero_of_reduce_eq_zero hb.1 ha
 
-def CPoly.reduceRepeat (K : Type u_1) [Field K]
-    [CharP K char] (a : CPoly char n) (b : List (CPoly char n))
+def CPoly.reduceRepeat
+    [IsChar char] (a : CPoly char n) (b : List (CPoly char n))
     (fuel : ℕ) : CPoly char n :=
   match fuel with
   | 0 => a
   | n + 1 =>
-  match a.reduceAll K b with
+  match a.reduceAll b with
   | ⟨a', false⟩ => a'
-  | ⟨a', true⟩ => a'.reduceRepeat K b n
+  | ⟨a', true⟩ => a'.reduceRepeat b n
 
-theorem CPoly.eq_zero_of_reduceRepeat_eq_zero [CharP K char] {a : CPoly char n}
+theorem CPoly.eq_zero_of_reduceRepeat_eq_zero [CharP K char] [IsChar char] {a : CPoly char n}
     {b : List (CPoly char n)} {v : Fin n → K} (hb : b.Forall (·.eval v = 0))
     {fuel : ℕ}
-    (ha : (a.reduceRepeat K b fuel).eval v = 0) :
+    (ha : (a.reduceRepeat b fuel).eval v = 0) :
     a.eval v = 0 := by
   induction fuel generalizing a with
   | zero => simpa using ha
@@ -703,3 +722,8 @@ open CPoly
 def lll : CPoly 0 9 := (X 0 - X 1 * X 2) ^ 2 + X 3 ^ 2 - X 4 ^ 2 * X 2 ^ 2
 
 #reduce (lll).eval ![0,1/3,2,3,4,5,6,7,(8:ℚ)]
+
+
+
+
+--example : target.reduceRepeat ℚ basis 15000 = 0 := by native_decide

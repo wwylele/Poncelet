@@ -1,4 +1,5 @@
 import Poncelet.Elliptic
+import Poncelet.Heavy.Inverse1
 
 open WeierstrassCurve.Affine
 
@@ -1162,7 +1163,7 @@ def eyNormal (pq : P2 K × P2 K) : K :=
     grind
   ) pq.1 pq.2
 
-theorem equation_exNormal_eyNormal [DecidableEq K] [hchar : NeZero (2 : K)]
+theorem equation_exNormal_eyNormal [DecidableEq K] [CharZero K]
     (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
     (hpq : pq ∈ dom cf)
     (hes : ¬SingularE cf pq) :
@@ -1184,14 +1185,13 @@ theorem equation_exNormal_eyNormal [DecidableEq K] [hchar : NeZero (2 : K)]
     cf.r ^ 2 * 2 ^ 2 * cf.k ^ 2 * p 2 ^ 2 *
     (cf.r ^ 2 * (eNume cf p q ^ 3 * eDeno cf p q)
     + (1 - cf.u ^ 2 - cf.r ^ 2) * (eNume cf p q ^ 2 * eDeno cf p q ^ 2)
-    + cf.u ^ 2 * eNume cf p q * eDeno cf p q ^ 3)   by
+    + cf.u ^ 2 * eNume cf p q * eDeno cf p q ^ 3) by
     linear_combination this
   unfold eNume eDeno
   obtain hk := cf.k_sq
-  -- grobner?
-  sorry
+  exact inverse1 (p 0) (p 1) (p 2) (q 0) (q 1) (q 2) cf.u cf.r cf.k ho hi hpq cf.k_sq
 
-theorem nonsingular_exNormal_eyNormal [DecidableEq K] [hchar : NeZero (2 : K)]
+theorem nonsingular_exNormal_eyNormal [DecidableEq K] [CharZero K]
     (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
     (hpq : pq ∈ dom cf)
     (hleft : pq.1 ≠ P2.mk ![-1, 0, 1] (by simp))
@@ -1213,7 +1213,7 @@ theorem nonsingular_exNormal_eyNormal [DecidableEq K] [hchar : NeZero (2 : K)]
     contrapose! hes with hp2
     simp [eDeno, hp2]
   obtain hx2 | hy : cf.r * (eNume cf p q / eDeno cf p q) + cf.u = 0 ∨ p 1 = 0 := by
-    simpa [eyNormal, cf.hr, hk, hp2, hchar.out] using hy
+    simpa [eyNormal, cf.hr, hk, hp2] using hy
   · have hx2 : eNume cf p q / eDeno cf p q = - cf.u / cf.r := by
       grind
     rw [nonsingular_elliptic] at hs
@@ -1223,7 +1223,7 @@ theorem nonsingular_exNormal_eyNormal [DecidableEq K] [hchar : NeZero (2 : K)]
     field_simp at hx
     have : 2 * cf.u * ((cf.u + cf.r) ^ 2 - 1) = 0 := by
       linear_combination hx
-    have : (cf.u + cf.r) ^ 2 - 1 = 0 := by simpa [cf.hu, hchar.out] using this
+    have : (cf.u + cf.r) ^ 2 - 1 = 0 := by simpa [cf.hu] using this
     contrapose! hk
     rw [← sq_eq_zero_iff, cf.k_sq, this]
   obtain ⟨hu, hx⟩ | ⟨hu, hx⟩ := hux
@@ -1303,14 +1303,14 @@ theorem nonsingular_exNormal_eyNormal [DecidableEq K] [hchar : NeZero (2 : K)]
       rw [← sq_eq_zero_iff, cf.k_sq, hu]
       ring
 
-def eNormal [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
+def eNormal [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
     (hpq : pq ∈ dom cf)
     (hleft : pq.1 ≠ P2.mk ![-1, 0, 1] (by simp))
     (hright : pq.1 ≠ P2.mk ![1, 0, 1] (by simp))
     (hes : ¬SingularE cf pq) :=
   Point.some (nonsingular_exNormal_eyNormal cf hk hpq hleft hright hes)
 
-theorem fPoint_eNormal [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
+theorem fPoint_eNormal [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
     (hpq : pq ∈ dom cf)
     (hleft : pq.1 ≠ P2.mk ![-1, 0, 1] (by simp))
     (hright : pq.1 ≠ P2.mk ![1, 0, 1] (by simp))
@@ -1349,7 +1349,7 @@ theorem fPoint_eNormal [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0
   · simp only [Fin.isValue, Matrix.cons_val]
     field_simp
 
-theorem fChord_eNormal_singularAbc [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0)
+theorem fChord_eNormal_singularAbc [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0)
     {p q : Fin 3 → K} (hp : p ≠ 0) (hq : q ≠ 0)
     (hmem : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf)
     (hleft : P2.mk p hp ≠ P2.mk ![-1, 0, 1] (by simp))
@@ -1357,6 +1357,7 @@ theorem fChord_eNormal_singularAbc [DecidableEq K] [hchar : NeZero (2 : K)] (hk 
     (hes : ¬SingularE cf ⟨P2.mk p hp, P2.mk q hq⟩)
     (hs : SingularAbc cf (eNume cf p q / eDeno cf p q) (eyNormal cf (P2.mk p hp, P2.mk q hq))) :
     fChord cf (eNormal cf hk hmem hleft hright hes) = P2.mk q hq := by
+  obtain ⟨ho, hi, hpq⟩ := mem_dom cf hp hq |>.mp hmem
   obtain _ := cf.hr
   obtain _ := cf.hu
   have : eDeno cf p q ≠ 0 := by simpa [SingularE] using hes
@@ -1366,7 +1367,9 @@ theorem fChord_eNormal_singularAbc [DecidableEq K] [hchar : NeZero (2 : K)] (hk 
   obtain hc := hs.c_factor_eq_zero cf
     ((nonsingular_exNormal_eyNormal cf hk hmem hleft hright hes))
   field_simp at hc
-  --unfold eNume eDeno at hc
+  unfold eNume eDeno at hc
+  have p01 : p 0 ^ 2 + p 1 ^ 2 = 0 := by
+    sorry
 
   obtain ha := hs.a_eq_zero
   simp only [eyNormal, exNormal_mk, P2.lift₂_mk] at ha
@@ -1385,12 +1388,13 @@ theorem fChord_eNormal_singularAbc [DecidableEq K] [hchar : NeZero (2 : K)] (hk 
   conv_rhs => rw [← P2.mk'_eq]
   refine P2.mk'_eq_mk'_of_third _ (by simpa using hq2) ?_ ?_
   · simp
+
     sorry
   · simp
     sorry
 
 
-theorem fChord_eNormal [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
+theorem fChord_eNormal [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
     (hmem : pq ∈ dom cf)
     (hleft : pq.1 ≠ P2.mk ![-1, 0, 1] (by simp))
     (hright : pq.1 ≠ P2.mk ![1, 0, 1] (by simp))
@@ -1450,7 +1454,7 @@ theorem fChord_eNormal [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0
     -- grobner?
     sorry
 
-theorem f_eNormal [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
+theorem f_eNormal [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
     (hpq : pq ∈ dom cf)
     (hleft : pq.1 ≠ P2.mk ![-1, 0, 1] (by simp))
     (hright : pq.1 ≠ P2.mk ![1, 0, 1] (by simp))
