@@ -1,5 +1,9 @@
 import Poncelet.Elliptic
 import Poncelet.Heavy.Inverse1
+import Poncelet.Heavy.Inverse2
+import Poncelet.Heavy.Inverse3
+import Poncelet.Heavy.Inverse4
+import Poncelet.Heavy.Inverse5
 
 open WeierstrassCurve.Affine
 
@@ -1338,14 +1342,12 @@ theorem fPoint_eNormal [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K
     _ =
     P2.mk p hp by
     simpa [fPoint, fPointRaw, eNormal, eyNormal]
-
   simp_rw [← P2.mk'_eq hp]
   apply P2.mk'_eq_mk'_of_third _ hp2
   · simp only [Fin.isValue, Matrix.cons_val_zero, Matrix.cons_val]
     field_simp
     unfold eNume eDeno
-    --grobner
-    sorry
+    exact inverse2 (p 0) (p 1) (p 2) (q 0) (q 1) (q 2) cf.u cf.r cf.k ho hi hpq cf.k_sq
   · simp only [Fin.isValue, Matrix.cons_val]
     field_simp
 
@@ -1438,21 +1440,19 @@ theorem fChord_eNormal [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K
     · simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
       field_simp
       unfold eNume eDeno
-      simp [hq2]
-      -- grobner with hq2
-      sorry
+      simp only [hq2, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, zero_pow,
+        mul_zero, add_zero, sub_zero, zero_add] at ⊢ hi hpq
+      exact inverse5 (p 0) (p 1) (p 2) (q 0) (q 1) cf.u cf.r cf.k ho hi hpq cf.k_sq
   conv_rhs => rw [← P2.mk'_eq]
   refine P2.mk'_eq_mk'_of_third _ (by simpa using hq2) ?_ ?_
   · simp only [Matrix.cons_val_zero, Matrix.cons_val]
     field_simp
     unfold eNume eDeno
-    -- grobner?
-    sorry
+    exact inverse3 (p 0) (p 1) (p 2) (q 0) (q 1) (q 2) cf.u cf.r cf.k ho hi hpq cf.k_sq
   · simp only [Matrix.cons_val_one, Matrix.cons_val_zero, Matrix.cons_val]
     field_simp
     unfold eNume eDeno
-    -- grobner?
-    sorry
+    exact inverse4 (p 0) (p 1) (p 2) (q 0) (q 1) (q 2) cf.u cf.r cf.k ho hi hpq cf.k_sq
 
 theorem f_eNormal [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
     (hpq : pq ∈ dom cf)

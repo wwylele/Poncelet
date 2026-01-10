@@ -3,7 +3,7 @@ import Mathlib
 open scoped MonomialOrder
 
 variable {K : Type*} [Field K]
-variable {char : ℕ} {n : ℕ} /-{order : MonomialOrder (Fin n)}-/
+variable {char : ℕ} {n : ℕ}
 
 @[simp]
 theorem Vector.get_zero {α : Type*} [Zero α] (i : Fin n) : (0 : Vector α n).get i = 0 := by
@@ -19,13 +19,12 @@ instance Vector.addCommMonoid {α : Type*} [AddCommMonoid α] :
   add_zero := Vector.add_zero _root_.add_zero
   nsmul := nsmulRec
 
-#reduce decide (#v[1, 2 ,3] < #v[3, 2, 1])
 
 attribute [-instance] Vector.instLE
 attribute [-instance] Vector.instLT
 attribute [-instance] Vector.instOrd
 
-
+----- lex order ---------------------------------------------------------------------------
 
 def Vector.lt {α : Type*} [LinearOrder α] (a b : Vector α n) : Bool :=
   List.lex a.toList b.toList
@@ -73,11 +72,6 @@ instance {α : Type*} [LinearOrder α] : LinearOrder (Vector α n) where
     change Decidable (Vector.lt a b)
     infer_instance
 
-#reduce decide (#v[1, 2 ,3] < #v[3, 2, 1])
-
-/-instance {α : Type*} [LinearOrder α] : LinearOrder (Vector α n) :=
-  LinearOrder.lift' (Vector.toList) (by intro a b; simp [Vector.toList_inj])-/
-
 instance {α : Type*} [AddCommMonoid α] [LinearOrder α] [IsOrderedCancelAddMonoid α] :
     IsOrderedCancelAddMonoid (Vector α n) := by
   apply IsOrderedCancelAddMonoid.of_add_lt_add_left
@@ -99,57 +93,12 @@ instance {α : Type*} [AddCommMonoid α] [LinearOrder α] [IsOrderedCancelAddMon
   congrm ?_ ∨ (∃ (i : ℕ) (h1 : _) (h2 : _), (∀ (j : ℕ) (hj : _), $(by simp)) ∧ $(by simp))
   simp [x, y ,z]
 
-
-/-
-def Vector.toFinsupp {α : Type*} [Zero α] [DecidableEq α] (a : Vector α n) : Fin n →₀ α :=
-  Finsupp.mk (Finset.univ.filter (a.get · ≠ 0)) a.get (by simp)
-
-@[simp]
-theorem Vector.toFinsupp_inj_iff {α : Type*} [Zero α] [DecidableEq α] {a b : Vector α n} :
-    a.toFinsupp = b.toFinsupp ↔ a = b := by
-  constructor
-  · intro h
-    ext i hi
-    simpa using congr($h ⟨i, hi⟩)
-  · intro h
-    rw [h]
-
-@[simp]
-theorem Vector.toFinsupp_apply {α : Type*} [Zero α] [DecidableEq α] (a : Vector α n)
-    (i : Fin n) : a.toFinsupp i = a.get i := rfl
-
-def Vector.ofFinsupp {α : Type*} [Zero α] [DecidableEq α] (a : Fin n →₀ α) : Vector α n :=
-  Vector.ofFn a
-
-@[simp]
-theorem Vector.get_ofFinsupp {α : Type*} [Zero α] [DecidableEq α] (a : Fin n →₀ α)
-    (i : Fin n) : (Vector.ofFinsupp a).get i = a i := by
-  simp [ofFinsupp]
--/
-
+------------------------------------------------------------------------------------------
 
 @[simp]
 theorem Vector.get_add {α : Type*} [Add α] (a b : Vector α n) (i : Fin n) :
     (a + b).get i = a.get i + b.get i := by
   simp [Vector.get_eq_getElem]
-
-/-
-@[simps]
-def Vector.addEquivFinsupp {α : Type*} [AddCommMonoid α] [DecidableEq α] :
-    Vector α n ≃+ (Fin n →₀ α) where
-  toFun := toFinsupp
-  invFun := ofFinsupp
-  left_inv a := by
-    ext i h
-    simp_rw [← Vector.get_eq_getElem _ ⟨i, h⟩]
-    simp
-  right_inv a := by
-    ext i
-    simp
-  map_add' a b := by
-    ext i
-    simp
--/
 
 class IsChar (char : ℕ) where
   eq_zero_or_prime : Nat.Prime char ∨ char = 0
@@ -300,32 +249,6 @@ def CPoly.addTerms (ab : List (CMono char n) × List (CMono char n)) : List (CMo
         } :: addTerms ⟨as, bs⟩
       else
         addTerms ⟨as, bs⟩
-
-/-
-def CPoly.addTerms (a b : List (CMono char n)) : List (CMono char n) :=
-  match a with
-  | [] => b
-  | ax :: as =>
-  match b with
-  | [] => a
-  | bx :: bs =>
-    if ax.exp < bx.exp then
-      bx :: addTerms (ax :: as) bs
-    else if bx.exp < ax.exp then
-      ax :: addTerms as (bx :: bs)
-    else
-      if h : ax.coeff + bx.coeff ≠ 0 then
-        {
-          coeff := ax.coeff + bx.coeff
-          exp := ax.exp
-          coeff_ne_zero := h
-        } :: addTerms as bs
-      else
-        addTerms as bs-/
-
-
-def ccc : List (CMono 0 3) := [⟨5, #v[1,2,3], by simp⟩, ⟨5, #v[1,2,2], by simp⟩]
-#reduce (CPoly.addTerms ⟨ccc, ccc⟩)
 
 theorem CPoly.exists_exp_mem_addTerms {a b : List (CMono char n)}
     {c : CMono char n} (h : c ∈ addTerms ⟨a, b⟩) :
@@ -612,9 +535,6 @@ def eb : CPoly 0 9 := ⟨[
   ⟨4, #v[0,0,1,2,4,3,1,8,7], by simp⟩],
   (by decide)⟩
 
-#reduce (eb * eb).terms.length
-#eval! (eb * eb * eb * eb * eb).terms.length
-
 def CPoly.reduce [hc : IsChar char] (a b : CPoly char n) : CPoly char n × Bool :=
   match b.terms with
   | [] => ⟨a, false⟩
@@ -701,8 +621,7 @@ def CPoly.reduceRepeat
 
 theorem CPoly.eq_zero_of_reduceRepeat_eq_zero [CharP K char] [IsChar char] {a : CPoly char n}
     {b : List (CPoly char n)} {v : Fin n → K} (hb : b.Forall (·.eval v = 0))
-    {fuel : ℕ}
-    (ha : (a.reduceRepeat b fuel).eval v = 0) :
+    (fuel : ℕ) (ha : (a.reduceRepeat b fuel).eval v = 0) :
     a.eval v = 0 := by
   induction fuel generalizing a with
   | zero => simpa using ha
@@ -716,14 +635,3 @@ theorem CPoly.eq_zero_of_reduceRepeat_eq_zero [CharP K char] [IsChar char] {a : 
       apply eq_zero_of_reduceAll_eq_zero hb
       rw [h]
       apply ih ha
-
-open CPoly
-
-def lll : CPoly 0 9 := (X 0 - X 1 * X 2) ^ 2 + X 3 ^ 2 - X 4 ^ 2 * X 2 ^ 2
-
-#reduce (lll).eval ![0,1/3,2,3,4,5,6,7,(8:ℚ)]
-
-
-
-
---example : target.reduceRepeat ℚ basis 15000 = 0 := by native_decide
