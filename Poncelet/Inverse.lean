@@ -4,6 +4,7 @@ import Poncelet.Heavy.Inverse2
 import Poncelet.Heavy.Inverse3
 import Poncelet.Heavy.Inverse4
 import Poncelet.Heavy.Inverse5
+import Poncelet.Heavy.Inverse6
 
 open WeierstrassCurve.Affine
 
@@ -1362,7 +1363,7 @@ theorem fChord_eNormal_singularAbc [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0
   obtain ⟨ho, hi, hpq⟩ := mem_dom cf hp hq |>.mp hmem
   obtain _ := cf.hr
   obtain _ := cf.hu
-  have : eDeno cf p q ≠ 0 := by simpa [SingularE] using hes
+  have heDeno0 : eDeno cf p q ≠ 0 := by simpa [SingularE] using hes
   have hp2 : p 2 ≠ 0 := by
     contrapose! hes
     simp [SingularE, eDeno, hes]
@@ -1391,7 +1392,8 @@ theorem fChord_eNormal_singularAbc [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0
     linear_combination hi
   simp only [fChord, fChordRaw, eNormal, exNormal_mk, hs, ↓reduceIte]
   by_cases hq2 : q 2 = 0
-  · have hq1 : q 1 ^ 2 = - q 0 ^ 2 := by simpa [hq2] using hi'
+  · rw [hq2] at hi hpq
+    have hq1 : q 1 ^ 2 = - q 0 ^ 2 := by simpa [hq2] using hi'
     have hq0ne0 : q 0 ≠ 0 := by
       by_contra! hq0
       suffices q = 0 from hq this
@@ -1400,35 +1402,62 @@ theorem fChord_eNormal_singularAbc [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0
       · simpa using hq0
       · simpa [hq0] using hq1
       · exact hq2
+    have hq1ne0 : q 1 ≠ 0 := by
+      contrapose! hq0ne0 with h
+      simpa [h] using hq1
     have hDeno : eDeno cf p q = (cf.u + cf.r) ^ 2 * cf.r * q 0 * q 1 * p 2 := by
       simp_rw [eDeno, hq2]
       ring
+    have hur0 : cf.u + cf.r ≠ 0 := by
+      contrapose! heDeno0 with h
+      simp [hDeno, h]
     have hNume : eNume cf p q =
         (2 * cf.u * cf.k * q 0 ^ 2 +
         cf.u * ((cf.u + cf.r) ^ 2 - 2) * q 0 * q 1) * p 2 := by
       simp_rw [eNume, hq2]
       ring
-    /-have hp01 : -p 1 ^ 2 = p 0 ^ 2 := by
-      simpa [hq1, hq2, mul_pow, ← neg_mul, hq0ne0] using hpq'
-    rw [hp0, hp1] at hp01
-    field_simp at hp01
-    rw [hNume, hDeno] at hp01-/
-    /-have ha := hs.a_eq_zero cf
-    simp only [eyNormal, exNormal_mk, P2.lift₂_mk, hp1] at ha
+    obtain ha := hs.a_eq_zero cf
+    simp only [eyNormal, exNormal_mk, P2.lift₂_mk] at ha
     field_simp at ha
-    simp_rw [hDeno, hNume, hp2] at ha
-
-
-    have : cf.u ^ 2 - cf.r ^ 2 = 0 := by
-      sorry-/
-    /-have hp01 : -p 1 ^ 2 = p 0 ^ 2 := by
-      simpa [hq1, hq2, mul_pow, ← neg_mul, hq0ne0] using hpq'
-    have hp01' : p 1 ^ 2 = -p 0 ^ 2 := by
-      linear_combination -hp01
-    rw [hp01'] at ho
-    have : 2 * cf.u * p 0 * p 2 = (cf.u ^ 2 - cf.r ^ 2) * p 2 ^ 2 := by
-      linear_combination -ho-/
-    sorry
+    simp_rw [hDeno, hNume] at ha
+    have : 4 * cf.u^2 * cf.r^3 * p 2^3 * q 0^3 * cf.k^2 * q 1 * (((cf.u+cf.r)^2-1)*q 1 + cf.k*q 0) *
+        (cf.k * ((cf.u + cf.r) ^ 2 - 2) * q 1 + 2 * ((cf.u + cf.r) ^ 2 - 1) * q 0) *
+        ((cf.u ^ 2 - cf.r ^ 2) * p 2 + 2 * cf.u * p 0)  = 0 := by
+      apply inverse6 (p 0) (p 1) (p 2) (q 0) (q 1) cf.u cf.r cf.k
+        (by linear_combination hi)
+        (by linear_combination hpq)
+        cf.k_sq
+        (by linear_combination ha)
+    obtain h | h | h : ((cf.u + cf.r) ^ 2 - 1) * q 1 + cf.k * q 0 = 0
+        ∨ cf.k * ((cf.u + cf.r) ^ 2 - 2) * q 1 + 2 * ((cf.u + cf.r) ^ 2 - 1) * q 0 = 0
+        ∨ (cf.u ^ 2 - cf.r ^ 2) * (l * (4 * cf.u ^ 2 * cf.k)) + 2 * cf.u * p 0 = 0 := by
+        simpa [cf.hu, cf.hr, hp2, hl0, hk, hq0ne0, hq1ne0, or_assoc] using this
+    · have : ((cf.u + cf.r) ^ 2 - 1) * q 1 = -cf.k * q 0 := by linear_combination h
+      have : ((cf.u + cf.r) ^ 2 - 1) ^ 2 * q 1 ^ 2 = cf.k ^ 2 * q 0 ^ 2 := by
+        linear_combination congr($this ^ 2)
+      rw [hq1, cf.k_sq] at this
+      have : -(cf.u + cf.r) ^ 2 * ((cf.u + cf.r) ^ 2 - 1) * q 0 ^ 2 = 0 := by
+        linear_combination this
+      simp [hq0ne0, hur0, ← cf.k_sq, hk] at this
+    · have : cf.k * ((cf.u + cf.r) ^ 2 - 2) * q 1 = -2 * ((cf.u + cf.r) ^ 2 - 1) * q 0 := by
+        linear_combination h
+      have : cf.k ^ 2 * ((cf.u + cf.r) ^ 2 - 2) ^ 2 * q 1 ^ 2 =
+          4 * ((cf.u + cf.r) ^ 2 - 1) ^ 2 * q 0 ^ 2 := by
+        linear_combination congr($this ^ 2)
+      rw [hq1, cf.k_sq] at this
+      have : ((cf.u + cf.r) ^ 2 - 1) * q 0 ^ 2 * (cf.u + cf.r) ^ 4 = 0 := by
+        linear_combination -this
+      simp [hq0ne0, ← cf.k_sq, hk, hur0] at this
+    rw [hp0] at h
+    have : 8 * cf.u ^ 2 * l * cf.k * (cf.u - cf.r) * (cf.u + cf.r) = 0 := by
+      linear_combination h
+    have hur : cf.u = cf.r := by
+      simpa [hl0, hk, hur0, cf.hu, sub_eq_zero] using this
+    refine P2.mk_eq_mk_of_third_zero _ _ (by simp [hur]) hq2 ?_
+    simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
+    field_simp
+    simp_rw [hNume, hDeno, hur]
+    linear_combination 32 * cf.k * q 0 * p 2 * cf.r ^ 6 * hq1
   rw [hp1', hp0, hp2, hi'] at hpq'
   have hq02 : 4 * l ^ 2 * cf.u ^ 2 * q 2 * cf.k ^ 2 *
       (((cf.u ^ 2 - cf.r ^ 2) ^ 2 + 4 * cf.u ^ 2) * q 2 - 4 * cf.u * (cf.u ^ 2 - cf.r ^ 2) * q 0)
