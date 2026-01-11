@@ -1366,35 +1366,106 @@ theorem fChord_eNormal_singularAbc [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0
   have hp2 : p 2 ≠ 0 := by
     contrapose! hes
     simp [SingularE, eDeno, hes]
-  obtain hc := hs.c_factor_eq_zero cf
-    ((nonsingular_exNormal_eyNormal cf hk hmem hleft hright hes))
-  field_simp at hc
-  unfold eNume eDeno at hc
-  have p01 : p 0 ^ 2 + p 1 ^ 2 = 0 := by
-    sorry
-
-  obtain ha := hs.a_eq_zero
-  simp only [eyNormal, exNormal_mk, P2.lift₂_mk] at ha
-  field_simp at ha
-  --unfold eNume eDeno at ha
-
-  obtain hxy := hs.xy_linear cf
-    ((nonsingular_exNormal_eyNormal cf hk hmem hleft hright hes))
-  simp only [eyNormal, exNormal_mk, P2.lift₂_mk] at hxy
-  field_simp at hxy
-  unfold eNume eDeno at hxy
-
+  have hpoint := hs.fPoint_eq cf (nonsingular_exNormal_eyNormal cf hk hmem hleft hright hes)
+  have hpe := fPoint_eNormal cf hk hmem hleft hright hes
+  unfold eNormal at hpe
+  rw [hpe] at hpoint
+  simp only at hpoint
+  obtain ⟨l, hl0, hl⟩ := (P2.mk_eq_mk _ _).mp hpoint
+  have hp0 : p 0 = l * (2 * cf.u * cf.k * (cf.u ^ 2 - cf.r ^ 2)) := by
+    simpa using congr($hl 0)
+  have hp1 : p 1 = l * (
+      (cf.r * (cf.u + cf.r) ^ 2 * (eNume cf p q / eDeno cf p q) -
+      cf.u * ((cf.u + cf.r) ^ 2 - 2)) * (cf.u ^ 2 - cf.r ^ 2)) := by
+    simpa using congr($hl 1)
+  have hp2 : p 2 = l * (4 * cf.u ^ 2 * cf.k) := by
+    simpa using congr($hl 2)
+  have hp1' : p 1 ^ 2 = -(2 * l * cf.u * cf.k * (cf.u ^ 2 - cf.r ^ 2)) ^ 2 := by
+    rw [hp0, hp2] at ho
+    linear_combination ho
+  have hpq : p 1 * q 1 = p 2 * q 2 - p 0 * q 0 := by
+    linear_combination hpq
+  have hpq' : p 1 ^ 2 * q 1 ^ 2 = (p 2 * q 2 - p 0 * q 0) ^ 2 := by
+    rw [← mul_pow, hpq]
+  have hi' : q 1 ^ 2 = q 2 ^ 2 - q 0 ^ 2 := by
+    linear_combination hi
   simp only [fChord, fChordRaw, eNormal, exNormal_mk, hs, ↓reduceIte]
   by_cases hq2 : q 2 = 0
-  · sorry
+  · have hq1 : q 1 ^ 2 = - q 0 ^ 2 := by simpa [hq2] using hi'
+    have hq0ne0 : q 0 ≠ 0 := by
+      by_contra! hq0
+      suffices q = 0 from hq this
+      ext i
+      fin_cases i
+      · simpa using hq0
+      · simpa [hq0] using hq1
+      · exact hq2
+    have hDeno : eDeno cf p q = (cf.u + cf.r) ^ 2 * cf.r * q 0 * q 1 * p 2 := by
+      simp_rw [eDeno, hq2]
+      ring
+    have hNume : eNume cf p q =
+        (2 * cf.u * cf.k * q 0 ^ 2 +
+        cf.u * ((cf.u + cf.r) ^ 2 - 2) * q 0 * q 1) * p 2 := by
+      simp_rw [eNume, hq2]
+      ring
+    /-have hp01 : -p 1 ^ 2 = p 0 ^ 2 := by
+      simpa [hq1, hq2, mul_pow, ← neg_mul, hq0ne0] using hpq'
+    rw [hp0, hp1] at hp01
+    field_simp at hp01
+    rw [hNume, hDeno] at hp01-/
+    /-have ha := hs.a_eq_zero cf
+    simp only [eyNormal, exNormal_mk, P2.lift₂_mk, hp1] at ha
+    field_simp at ha
+    simp_rw [hDeno, hNume, hp2] at ha
+
+
+    have : cf.u ^ 2 - cf.r ^ 2 = 0 := by
+      sorry-/
+    /-have hp01 : -p 1 ^ 2 = p 0 ^ 2 := by
+      simpa [hq1, hq2, mul_pow, ← neg_mul, hq0ne0] using hpq'
+    have hp01' : p 1 ^ 2 = -p 0 ^ 2 := by
+      linear_combination -hp01
+    rw [hp01'] at ho
+    have : 2 * cf.u * p 0 * p 2 = (cf.u ^ 2 - cf.r ^ 2) * p 2 ^ 2 := by
+      linear_combination -ho-/
+    sorry
+  rw [hp1', hp0, hp2, hi'] at hpq'
+  have hq02 : 4 * l ^ 2 * cf.u ^ 2 * q 2 * cf.k ^ 2 *
+      (((cf.u ^ 2 - cf.r ^ 2) ^ 2 + 4 * cf.u ^ 2) * q 2 - 4 * cf.u * (cf.u ^ 2 - cf.r ^ 2) * q 0)
+      = 0 := by
+    linear_combination -hpq'
+  have hq02 : ((cf.u ^ 2 - cf.r ^ 2) ^ 2 + 4 * cf.u ^ 2) * q 2 -
+      4 * cf.u * (cf.u ^ 2 - cf.r ^ 2) * q 0 = 0 := by
+    simpa [hl0, cf.hu, hq2, hk] using hq02
+  have hq02' : 4 * cf.u * (cf.u ^ 2 - cf.r ^ 2) * q 0 =
+      ((cf.u ^ 2 - cf.r ^ 2) ^ 2 + 4 * cf.u ^ 2) * q 2 := by
+    linear_combination -hq02
   conv_rhs => rw [← P2.mk'_eq]
   refine P2.mk'_eq_mk'_of_third _ (by simpa using hq2) ?_ ?_
-  · simp
-
-    sorry
-  · simp
-    sorry
-
+  · simp only [Matrix.cons_val_zero, Matrix.cons_val]
+    linear_combination 2 * cf.u * cf.k * hq02
+  · simp only [Matrix.cons_val_one, Matrix.cons_val_zero, Matrix.cons_val]
+    have hur : cf.u ^ 2 - cf.r ^ 2 ≠ 0 := by
+      contrapose! hq2 with hur
+      simpa [hur, cf.hu] using hq02
+    have hp1ne0 : p 1 ≠ 0 := by
+      contrapose! hur with hp1ne0
+      simpa [hp1ne0, hl0, cf.hu, hk] using hp1'
+    rw [← mul_left_inj' (show l * p 1 * (cf.u ^ 2 - cf.r ^ 2) ≠ 0 by
+      simp [hl0, hp1ne0, hur] )]
+    suffices p 1 ^ 2 * q 2 * ((cf.u ^ 2 - cf.r ^ 2) ^ 2 - 4 * cf.u ^ 2) =
+        8 * l * cf.u ^ 2 * cf.k * (cf.u ^ 2 - cf.r ^ 2) ^ 2 * (p 1 * q 1) by
+      rw [hp1] at ⊢ this
+      linear_combination this
+    rw [hp1', hpq]
+    suffices -(2 * l * cf.u * cf.k * (cf.u ^ 2 - cf.r ^ 2)) ^ 2 * q 2 *
+        ((cf.u ^ 2 - cf.r ^ 2) ^ 2 - 4 * cf.u ^ 2) =
+        8 * l * cf.u ^ 2 * cf.k * (cf.u ^ 2 - cf.r ^ 2) ^ 2 * p 2 * q 2 -
+        2 * l * cf.u * cf.k * (cf.u ^ 2 - cf.r ^ 2) * p 0 *
+        (4 * cf.u * (cf.u ^ 2 - cf.r ^ 2) * q 0) by
+      linear_combination this
+    rw [hq02', hp0, hp2]
+    ring
 
 theorem fChord_eNormal [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
     (hmem : pq ∈ dom cf)
