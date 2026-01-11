@@ -1562,43 +1562,49 @@ theorem f_eNormal [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K × P
     f cf (eNormal cf hk hpq hleft hright hes) = pq := by
   rw [f, fChord_eNormal cf hk hpq hleft hright, fPoint_eNormal cf hk hpq hleft hright]
 
-def e [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
-    (hpq : pq ∈ dom cf)
-    (hleft : pq.1 ≠ P2.mk ![-1, 0, 1] (by simp))
-    (hright : pq.1 ≠ P2.mk ![1, 0, 1] (by simp)) :=
-  if hes : SingularE cf pq then
-    if hz : ZeroZ pq then
-      eZeroZ cf hk hpq hz
-    else if hsa : SingularA cf pq then
-      eSingularA cf hk hpq hsa
-    else if SingularAB cf pq then
-      if cf.u + cf.r = 0 then
-        eSingularABcasePos cf pq
+def e [DecidableEq K] [CharZero K] (pq : P2 K × P2 K) :=
+  if hk : cf.k ≠ 0 then
+    if hpq : pq ∈ dom₀ cf then
+      if hes : SingularE cf pq then
+        if hz : ZeroZ pq then
+          eZeroZ cf hk ((mem_dom₀' cf).mp hpq).1 hz
+        else if hsa : SingularA cf pq then
+          eSingularA cf hk ((mem_dom₀' cf).mp hpq).1 hsa
+        else if SingularAB cf pq then
+          if cf.u + cf.r = 0 then
+            eSingularABcasePos cf pq
+          else
+            eSingularAB cf pq
+        else if hsb : SingularB cf pq then
+          eSingularB cf hk ((mem_dom₀' cf).mp hpq).1 hsb hz
+            ((mem_dom₀' cf).mp hpq).2.2 ((mem_dom₀' cf).mp hpq).2.1
+        else
+          .zero -- Unreachable
       else
-        eSingularAB cf pq
-    else if hsb : SingularB cf pq then
-      eSingularB cf hk hpq hsb hz hleft hright
+        eNormal cf hk ((mem_dom₀' cf).mp hpq).1
+          ((mem_dom₀' cf).mp hpq).2.2 ((mem_dom₀' cf).mp hpq).2.1 hes
     else
-      .zero -- Unreachable
+      .zero
   else
-    eNormal cf hk hpq hleft hright hes
+    .zero
 
 theorem f_e [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
-    (hpq : pq ∈ dom cf)
-    (hleft : pq.1 ≠ P2.mk ![-1, 0, 1] (by simp))
-    (hright : pq.1 ≠ P2.mk ![1, 0, 1] (by simp)) :
-    f cf (e cf hk hpq hleft hright) = pq := by
+    (hpq : pq ∈ dom₀ cf) :
+    f cf (e cf pq) = pq := by
+  have hpq' := hpq
+  let ⟨hpq', hright, hleft⟩ := (mem_dom₀' cf).mp hpq'
   by_cases hes : SingularE cf pq
   · by_cases hz : ZeroZ pq
-    · simpa [e, hes, hz] using f_eZeroZ cf hk hpq hz
+    · simpa [e, hes, hz, hk, hpq] using f_eZeroZ cf hk hpq' hz
     by_cases hsa : SingularA cf pq
-    · simpa [e, hes, hz, hsa] using f_eSingularA cf hk hpq hsa
+    · simpa [e, hes, hz, hsa, hk, hpq] using f_eSingularA cf hk hpq' hsa
     by_cases hsab : SingularAB cf pq
     · by_cases hur : cf.u + cf.r = 0
-      · simpa [e, hes, hz, hsa, hsab, hur] using f_eSingularABcasePos cf hsab hk hur hpq hz
-      simpa [e, hes, hz, hsa, hsab, hur] using f_eSingularAB cf hsab hk hur hpq
+      · simpa [e, hes, hz, hsa, hsab, hur, hk, hpq]
+        using f_eSingularABcasePos cf hsab hk hur hpq' hz
+      simpa [e, hes, hz, hsa, hsab, hur, hk, hpq] using f_eSingularAB cf hsab hk hur hpq'
     by_cases hsb : SingularB cf pq
-    · simpa [e, hes, hz, hsa, hsab, hsb] using f_eSingularB cf hk hpq hsb hz hleft hright
+    · simpa [e, hes, hz, hsa, hsab, hsb, hk, hpq] using f_eSingularB cf hk hpq' hsb hz hleft hright
     obtain ⟨p, q⟩ := pq
     induction p with | mk p hp
     induction q with | mk q hq
@@ -1610,4 +1616,4 @@ theorem f_e [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
       simpa [SingularE, eDeno, cf.hr, hz] using hes
     · grind
     · grind
-  simpa [e, hes] using f_eNormal cf hk hpq hleft hright hes
+  simpa [e, hes, hk, hpq] using f_eNormal cf hk hpq' hleft hright hes

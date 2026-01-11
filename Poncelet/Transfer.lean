@@ -1000,3 +1000,11 @@ theorem f_add_g [DecidableEq K] [CharZero K] (p : (elliptic cf).Point) :
     f cf (p + g cf) = next cf (f cf p) := by
   rw [next, ← f_w_sub, ← f_o_sub, ← o_sub_w]
   congrm f cf $(by abel)
+
+theorem f_add_smul_g [DecidableEq K] [CharZero K] (p : (elliptic cf).Point) (n : ℕ) :
+    f cf (p + n • g cf) = (next cf)^[n] (f cf p) := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+    rw [Function.iterate_succ']
+    simp [add_smul, ← add_assoc, f_add_g, ih]

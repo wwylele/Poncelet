@@ -1,4 +1,5 @@
 import Poncelet.Circle
+import Poncelet.CircleConclude
 import Poncelet.Elliptic
 import Poncelet.Grobner
 import Poncelet.Heavy.Basis1

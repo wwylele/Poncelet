@@ -7,14 +7,14 @@
 % can start with a \section or \chapter for instance.
 \chapter{Introduction}
 
-\begin{tikzpicture}[scale=1.25,thick,help lines/.style={thin,draw=black!50}]
-\tkzDefPoint(0,0){A}
-\tkzDefPoint(1.25+rand(),0.25+rand()){B}
-\tkzInterCC(A,B)(B,A) \tkzGetPoints{C}{X}
-\tkzDrawCircles[help lines](A,B B,A)
-\tkzLabelCircle[below=12pt](A,B)(180){$Inner$}
-\tkzLabelCircle[above=12pt](B,A)(180){$Outer$}
-\end{tikzpicture}
+%\begin{tikzpicture}[scale=1.25,thick,help lines/.style={thin,draw=black!50}]
+%\tkzDefPoint(0,0){A}
+%\tkzDefPoint(1.25+rand(),0.25+rand()){B}
+%\tkzInterCC(A,B)(B,A) \tkzGetPoints{C}{X}
+%\tkzDrawCircles[help lines](A,B B,A)
+%\tkzLabelCircle[below=12pt](A,B)(180){$Inner$}
+%\tkzLabelCircle[above=12pt](B,A)(180){$Outer$}
+%\end{tikzpicture}
 
 This is a formalization of an "elementary" proof of \href{https://en.wikipedia.org/wiki/Poncelet%27s_closure_theorem}{Poncelet's closure theorem}:
 it only involves basic algebra and group laws of elliptic curves. It is more "low level" comparing
@@ -45,6 +45,8 @@ we can distinguish between repeated edges, so this is generally not an issue. Ho
 confusing when presented geometrically.
 
 \chapter{Two circles}
+
+\section{Configuration}
 
 We will first focus on a special case of the theorem: two circles. This later will turn out to be
 a good representation of most general cases. To make it even simpler, we will fix {\it Inner} to be
@@ -109,6 +111,8 @@ on the line of the edge. We also effectively defined directed edges: while each 
 associated vertices, we specify one of them as the "starting" vertices. Dually, this also assign
 a direction to vertices: we specify the "forward" edge among the two edges associated to the vertex.
 
+\section{Operation}
+
 We can think of the process of forming a polygon as iteratively generating new elements in $\mathrm{Dom}$
 from previous ones, where the new starting vertex is the ending vertex of the previous edge, and 
 the new forward edge is the edge associated with the new starting vertex, different from the previous
@@ -150,6 +154,9 @@ $\mathrm{rPoint}$ (reflect point) and $\mathrm{rChord}$ (reflect chord).
     \end{cases}
     \]
 \end{definition}
+Despite the case split, these are in fact rational functions on the $Outer \times Inner$ as an 
+algebraic curve. The special casing is to patch up $0/0$. This will be a common theme in more 
+functions to be defined.
 
 We verify that these are legitimate by proving their characterizing lemma
 \begin{lemma}
@@ -270,16 +277,23 @@ We characterize singular points with the following lemma
     One can then solve the system of equations for $V$ and $E$ to get the coordinates. 
 \end{proof}
 This tells us that the singular point only exists for a singular configuration, is unique if exists, 
-and is precisely the tangent point.
+and is precisely the tangent point. This allows us to define the domain of non-singular points:
 
-We now formalize the statement of a version of Poncelet's closure theorem
+\begin{definition}\label{dom0}\lean{dom₀}\leanok
+    The subset $\mathrm{Dom_0} \subset \mathbf{P}(2, K) \times \mathbf{P}(2, K)$ is the set 
+    $\mathrm{Dom}$ with $([1 : 0 : 1], [1 : 0 : 1])$ and $([-1 : 0 : 1], [-1 : 0 : 1])$ excluded.
+\end{definition}
+
+We now give the statement of a version of Poncelet's closure theorem
 \begin{theorem}
-    Given a two-circle configuration in field $K$, if for a natural number $n$, and some non-singular
-    $(V, E) \in \mathrm{Dom}$ it holds that $(\mathrm{next})^n(V, E) = (V, E)$, then the same holds for 
-    the same $n$ and all $(V, E) \in \mathrm{Dom}$.
+    Given a two-circle configuration in field $K$, if for a natural number $n$, and some
+    $(V, E) \in \mathrm{Dom_0}$ it holds that $(\mathrm{next})^n(V, E) = (V, E)$, then the same holds for 
+    the same $n$ and all $(V, E) \in \mathrm{Dom_0}$.
 \end{theorem}
 
 \chapter{Elliptic curve}
+
+\section{Curve and points}
 
 To prove the Poncelet's closure theorem for the two-circle configuration, we will construct a bijection
 between $\mathrm{Dom}$ and a certain elliptic curve $E$, and show that the function $\mathrm{next}$ maps
@@ -355,6 +369,8 @@ It is easy to show that they have the following relation
     \leanok
     Use the formula for group addition on elliptic curves
 \end{proof}
+
+\section{Mapping}
 
 Next, we define the mapping $f : E_0 \to \mathrm{Dom}$ as follows
 \begin{definition}\label{f}\lean{f, mapsTo_f}\leanok
@@ -446,6 +462,71 @@ configuration with the following theorems
 \begin{proof}
     \leanok
     Use $g = o - w$ and $\mathrm{next} = \mathrm{rChord} \circ \mathrm{rPoint}$.
+\end{proof}
+
+\begin{corollary}
+    \lean{f_add_smul_g}
+    \label{f_add_smul_g}
+    \uses{f, g, next}
+    \leanok
+    For all $p \in E_0$, $n \in \mathbb{N}$,
+    \[
+    f(p + n g) = \mathrm{next}^{n}(f (p))
+    \]
+\end{corollary}
+
+\section{Inverse}
+
+We will also define the inverse mapping $e : \mathrm{Dom_0} \to E_0$. We start with the following functions
+\[
+    eN([x:y:z], [a:b:c]) = (kx + ((u + r) ^ 2 - 1)  y)  c ^ 2
+  + (2  u  k a ^ 2 + u ((u + r) ^ 2 - 2)  a  b
+  + (r (u + r) - 2)  k a  c +
+  (2 - (u + r) (u + 2  r))   b  c - u  k c ^ 2)  z
+\]
+\[
+    eD([x:y:z], [a:b:c]) = (r  ((u + r)  a - c)  ((u + r)  b + k  c))  z
+\]
+\[
+    e_0([x:y:z]E) = \left(\frac{eN([x:y:z], E)}{eD([x:y:z], E)}, 
+        -\left(r  \frac{eN([x:y:z], E)}{eD([x:y:z], E)} + u\right)^2\frac{y}{r^2kz} \right)
+\]
+However, these functions hit $0/0$ at several points. The full definition of $e$ is
+\begin{definition}\label{e}\lean{e}\leanok
+For $k \ne 0$, define
+\[
+e([x:y:z], [a:b:c]) = \begin{cases}
+\left(-\frac{u}{r}, -\frac{yuk}{xr^2}\right) & (z = 0)\\
+\left(\frac{(u + r) ^ 2 y}{2 kr z}, -\frac{(u + r) ^ 2 y}{2 kr^2 z} \right) & ((u + r)  a - c = 0, (u + r)  b + k  c \ne 0) \\
+(0, 0) & ((u + r)  a - c = 0, (u + r)  b + k  c = 0, u + r = 0, [a:b:c]=[1:k:0]) \\
+\infty & ((u + r)  a - c = 0, (u + r)  b + k  c = 0, u + r = 0, [a:b:c]\ne[1:k:0]) \\
+\infty & ((u + r)  a - c = 0, (u + r)  b + k  c = 0, u + r \ne 0, [a:b:c]=[u+r,0,1]) \\
+w & ((u + r)  a - c = 0, (u + r)  b + k  c = 0, u + r \ne 0, [a:b:c]\ne[u+r,0,1]) \\
+\left(\frac{(u + r) ^ 2  (x+ (r - u) z)}{2 r z}, 
+\frac{(u + r) 
+    ((u r + r ^ 2 - 1) (u + r)x +
+    (r^4 + r^3 u - r^2  u^2 - r u^3 - u^2 - r^2) z)
+}{2 r ^ 2z}
+\right) & ((u + r)  a - c \ne 0, (u + r)  b + k  c = 0) \\
+e_0([x:y:z], [a:b:c]) & (\mbox{all other cases})
+\end{cases}
+\]
+\end{definition}
+
+We then verify that $e$ is the right inverse of $f$ on $\mathrm{Dom_0}$:
+\begin{theorem}
+    \lean{f_e}
+    \label{f_e}
+    \uses{f, e}
+    \leanok
+    When $k \ne 0$, for all $(V, E) \in \mathrm{Dom_0}$,
+    \[
+    f(e(V, E)) = (V, E)
+    \]
+\end{theorem}
+\begin{proof}
+    \leanok
+    Just expand by definition and verify with a powerful computer.
 \end{proof}
 
 

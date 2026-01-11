@@ -1045,6 +1045,53 @@ theorem o_sub_w [DecidableEq K] [hchar : NeZero (2 : K)] : o cf - w cf = g cf :=
     field_simp
     grind
 
+theorem f_injective_inf [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0)
+    {p : (elliptic cf).Point} (h : f cf p = f cf (.zero)) :
+    p = .zero := by
+  unfold f fPoint fChord at h
+  obtain ⟨hp, hq⟩ := Prod.ext_iff.mp h
+  simp only at hp hq
+  obtain ⟨l, hl0, hl⟩ := (P2.mk_eq_mk _ _).mp hp
+  obtain ⟨m, hm0, hm⟩ := (P2.mk_eq_mk _ _).mp hq
+  cases p with
+  | zero => rfl
+  | @some x y hxy =>
+  obtain ⟨heq, hnonsingular⟩ := (nonsingular_elliptic cf _ _).mp hxy
+  unfold fPointRaw at hl
+  have : cf.r ^ 2 * (cf.u + cf.r) * x ^ 2 + 2 * cf.r * (1 - cf.r ^ 2 - cf.r * cf.u) * x +
+      cf.u ^ 2 * (cf.u + cf.r) = l * (cf.u + cf.r) ∧
+      y = 0 ∧ (cf.r * x + cf.u) ^ 2 = l := by
+    simpa [hl0, hchar.out, cf.hr, hk] using hl
+  obtain ⟨h1, hy, h2⟩ := this
+  have h : 2 * l * cf.r * ((cf.u + cf.r) ^ 2 - 1) * x = 0 := by
+    linear_combination -congr($h1 * $h2.symm)
+  have hx : x = 0 := by
+    simpa [hl0, hchar.out, cf.hr, ← cf.k_sq, hk] using h
+  unfold fChordRaw at hm
+  simp [hx, hy] at hm
+  sorry
+
+theorem f_injective [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0) :
+    Function.Injective (f cf) := by
+  intro a b h
+  cases a with
+  | zero =>
+    cases b with
+    | zero => rfl
+    | @some xb yb hb => exact (f_injective_inf cf hk h.symm).symm
+  | @some xa ya ha =>
+  cases b with
+  | zero =>
+    exact f_injective_inf cf hk h
+  | @some xb yb hb =>
+  unfold f fPoint fChord at h
+  obtain ⟨hp, hq⟩ := Prod.ext_iff.mp h
+  simp only at hp hq
+  obtain ⟨l, hl0, hl⟩ := (P2.mk_eq_mk _ _).mp hp
+  obtain ⟨m, hm0, hm⟩ := (P2.mk_eq_mk _ _).mp hq
+
+  sorry
+
 /-
 
 Special points

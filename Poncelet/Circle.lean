@@ -782,3 +782,99 @@ theorem next_eq_self' [DecidableEq K] [hchar : NeZero (2 : K)]
           · exact hp1
           · simpa [hp] using hp2
         grind
+
+/-- The non-singular part of `dom` -/
+def dom₀ : Set (P2 K × P2 K) :=
+  dom cf \
+  {⟨P2.mk ![1, 0, 1] (by simp), P2.mk ![1, 0, 1] (by simp)⟩,
+   ⟨P2.mk ![-1, 0, 1] (by simp), P2.mk ![-1, 0, 1] (by simp)⟩}
+
+instance [DecidableEq K] : DecidablePred (· ∈ dom₀ cf) := by
+  unfold dom₀
+  infer_instance
+
+theorem mem_dom₀ {pq : P2 K × P2 K} :
+    pq ∈ dom₀ cf ↔ pq ∈ dom cf ∧
+    pq ≠ ⟨P2.mk ![1, 0, 1] (by simp), P2.mk ![1, 0, 1] (by simp)⟩ ∧
+    pq ≠ ⟨P2.mk ![-1, 0, 1] (by simp), P2.mk ![-1, 0, 1] (by simp)⟩ := by
+  simp [dom₀]
+
+theorem mem_dom₀' {pq : P2 K × P2 K} :
+    pq ∈ dom₀ cf ↔ pq ∈ dom cf ∧
+    pq.1 ≠ P2.mk ![1, 0, 1] (by simp) ∧
+    pq.1 ≠ P2.mk ![-1, 0, 1] (by simp) := by
+  simp_rw [dom₀, Set.mem_diff, Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+  by_cases hmem : pq ∈ dom cf
+  · congrm(_ ∧ ?_ ∧ ?_)
+    · contrapose!
+      refine ⟨by grind, fun h ↦ ?_⟩
+      ext
+      · exact h
+      obtain ⟨p, q⟩ := pq
+      induction p with | mk p hp
+      induction q with | mk q hq
+      obtain ⟨l, hl0, hl⟩ := (P2.mk_eq_mk _ _).mp h
+      have hp02 : p 0 = p 2 := by
+        trans l
+        · simpa using congr($hl 0)
+        · simpa using congr($hl 2).symm
+      have hp1 : p 1 = 0 := by simpa using congr($hl 1)
+      have hp2 : p 2 ≠ 0 := by
+        by_contra! hp2
+        suffices p = 0 from hp this
+        ext i
+        fin_cases i
+        · exact hp02.trans hp2
+        · exact hp1
+        · exact hp2
+      obtain ⟨ho, hi, hpq⟩ := (mem_dom _ _ _).mp hmem
+      have hq02 : q 0 = q 2 := by simpa [hp02, hp1, hp2] using hpq
+      simp only
+      rw [P2.mk_eq_mk']
+      use q 0
+      ext i
+      fin_cases i
+      · simp
+      · simpa [hq02] using hi
+      · simpa using hq02.symm
+    · contrapose!
+      refine ⟨by grind, fun h ↦ ?_⟩
+      ext
+      · exact h
+      obtain ⟨p, q⟩ := pq
+      induction p with | mk p hp
+      induction q with | mk q hq
+      obtain ⟨l, hl0, hl⟩ := (P2.mk_eq_mk _ _).mp h
+      have hp02 : p 0 = -p 2 := by
+        trans -l
+        · simpa using congr($hl 0)
+        · simpa using congr($hl 2).symm
+      have hp1 : p 1 = 0 := by simpa using congr($hl 1)
+      have hp2 : p 2 ≠ 0 := by
+        by_contra! hp2
+        suffices p = 0 from hp this
+        ext i
+        fin_cases i
+        · simpa [hp02] using hp2
+        · exact hp1
+        · exact hp2
+      obtain ⟨ho, hi, hpq⟩ := (mem_dom _ _ _).mp hmem
+      have hq02 : q 2 = -q 0 := by simpa [hp02, hp1, hp2, ← mul_neg] using hpq.symm
+      simp only
+      rw [P2.mk_eq_mk']
+      use -q 0
+      ext i
+      fin_cases i
+      · simp
+      · simpa [hq02] using hi
+      · simpa using hq02
+  · simp [hmem]
+
+theorem next_ne_self [DecidableEq K] [hchar : NeZero (2 : K)]
+    {pq : P2 K × P2 K} (h : pq ∈ dom₀ cf) :
+    next cf (pq) ≠ pq := by
+  intro heq
+  obtain ⟨hmem, hright, hleft⟩ := (mem_dom₀ cf).mp h
+  obtain h | h := (next_eq_self' cf hmem).mp heq
+  · simp [h] at hright
+  · simp [h] at hleft
