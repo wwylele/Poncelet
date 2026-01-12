@@ -1008,3 +1008,178 @@ theorem f_add_smul_g [DecidableEq K] [CharZero K] (p : (elliptic cf).Point) (n :
   | succ n ih =>
     rw [Function.iterate_succ']
     simp [add_smul, ← add_assoc, f_add_g, ih]
+
+theorem f_injective_inf [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0)
+    {p : (elliptic cf).Point} (h : f cf p = f cf (.zero)) :
+    p = .zero := by
+  unfold f fPoint fChord at h
+  obtain ⟨hp, hq⟩ := Prod.ext_iff.mp h
+  simp only at hp hq
+  obtain ⟨l, hl0, hl⟩ := (P2.mk_eq_mk _ _).mp hp
+  obtain ⟨m, hm0, hm⟩ := (P2.mk_eq_mk _ _).mp hq
+  cases p with
+  | zero => rfl
+  | @some x y hxy =>
+  obtain ⟨heq, hnonsingular⟩ := (nonsingular_elliptic cf _ _).mp hxy
+  unfold fPointRaw at hl
+  have : cf.r ^ 2 * (cf.u + cf.r) * x ^ 2 + 2 * cf.r * (1 - cf.r ^ 2 - cf.r * cf.u) * x +
+      cf.u ^ 2 * (cf.u + cf.r) = l * (cf.u + cf.r) ∧
+      y = 0 ∧ (cf.r * x + cf.u) ^ 2 = l := by
+    simpa [hl0, cf.hr, hk] using hl
+  obtain ⟨h1, hy, h2⟩ := this
+  have h : 2 * l * cf.r * ((cf.u + cf.r) ^ 2 - 1) * x = 0 := by
+    linear_combination -congr($h1 * $h2.symm)
+  have hx : x = 0 := by
+    simpa [hl0, cf.hr, ← cf.k_sq, hk] using h
+  by_cases hs : SingularAbc cf 0 0
+  · obtain hur : cf.u + cf.r = 0 := (singularAbc_zero_iff _).mp hs
+    have hr : cf.r = -cf.u := by linear_combination hur
+    have : 2 * cf.u * cf.k * (4 * cf.u ^ 2) = m ∧ cf.u * 2 * (4 * cf.u ^ 2) = m * cf.k := by
+      simpa [fChordRaw, hx, hy, hs, hr] using hm
+    obtain ⟨h1, h2⟩ := this
+    have : 8 * (1 - cf.k ^ 2) * m * cf.u ^ 3 = 0 := by
+      linear_combination -congr($h1 * $h2.symm)
+    simp [cf.hu, hm0, cf.k_sq, hr] at this
+  simp [fChordRaw, hx, hy, hs, fChordNormal] at hm
+  grind
+
+theorem f_injective [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) :
+    Function.Injective (f cf) := by
+  obtain _ := cf.hu
+  obtain _ := cf.hr
+  intro a b h
+  cases a with
+  | zero =>
+    cases b with
+    | zero => rfl
+    | @some xb yb hb => exact (f_injective_inf cf hk h.symm).symm
+  | @some xa ya ha =>
+  cases b with
+  | zero =>
+    exact f_injective_inf cf hk h
+  | @some xb yb hb =>
+  have h' := h
+  unfold f fPoint at h
+  obtain ⟨hp, hq⟩ := Prod.ext_iff.mp h
+  simp only at hp hq
+  obtain ⟨l, hl0, hl⟩ := (P2.mk_eq_mk _ _).mp hp
+  unfold fPointRaw at hl
+  simp only [Matrix.smul_cons, smul_eq_mul, Matrix.smul_empty, Matrix.vecCons_inj,
+    and_true] at hl
+  obtain ⟨hlx, hly, hlz⟩ := hl
+  by_cases hxeq : xa = xb
+  · rw [hxeq] at hlx hlz
+    by_cases hz0 : cf.r * xb + cf.u = 0
+    · have hx : xb = -cf.u / cf.r := by
+        field_simp
+        linear_combination hz0
+      have hx0 : cf.r ^ 2 * (cf.u + cf.r) * xb ^ 2 +
+          2 * cf.r * (1 - cf.r ^ 2 - cf.r * cf.u) * xb + cf.u ^ 2 * (cf.u + cf.r) ≠ 0 := by
+        by_contra! hx0
+        rw [hx] at hx0
+        field_simp at hx0
+        have : 2 * cf.u * ((cf.u + cf.r) ^ 2 - 1) = 0 := by
+          linear_combination hx0
+        simp [cf.hu, ← cf.k_sq, hk] at this
+      have hl1 : l = 1 := by
+        rw [← mul_left_inj' hx0]
+        linear_combination -hlx
+      simpa [hxeq, hl1, hk, cf.hr] using hly
+    have hl1 : l = 1 := by
+      rw [← mul_left_inj' hz0, ← mul_left_inj' hz0]
+      linear_combination -hlz
+    simpa [hxeq, hl1, hk, cf.hr] using hly
+  have hrxu : cf.r * xa + cf.u ≠ 0 := by
+    by_contra! hrxu
+    have hrxu' : cf.r * xb + cf.u = 0 := by
+      simpa [hrxu, hl0] using hlz.symm
+    have : cf.r * xa = cf.r * xb := by
+      linear_combination hrxu - hrxu'
+    simp [hxeq, cf.hr] at this
+  have hrxu' : cf.r * xb + cf.u ≠ 0 := by
+    contrapose! hrxu
+    simpa [hrxu] using hlz
+  have hleq : l = (cf.r * xa + cf.u) ^ 2 / (cf.r * xb + cf.u) ^ 2 := by
+    field_simp
+    linear_combination -hlz
+  rw [hleq] at hlx
+  let v := (cf.r ^ 2 * (cf.u + cf.r) * xa ^ 2 +
+      2 * cf.r * (1 - cf.r ^ 2 - cf.r * cf.u) * xa + cf.u ^ 2 * (cf.u + cf.r)) /
+      (cf.r * xa + cf.u) ^ 2
+  have hxa : cf.r ^ 2 * (cf.u + cf.r - v) * xa ^ 2 +
+      2 * cf.r * (1 - cf.r ^ 2 - cf.r * cf.u - cf.u * v) * xa +
+      cf.u ^ 2 * (cf.u + cf.r - v) = 0 := by
+    simp_rw [v]
+    field
+  have hxb : cf.r ^ 2 * (cf.u + cf.r - v) * xb ^ 2 +
+      2 * cf.r * (1 - cf.r ^ 2 - cf.r * cf.u - cf.u * v) * xb +
+      cf.u ^ 2 * (cf.u + cf.r - v) = 0 := by
+    simp_rw [v]
+    field_simp at ⊢ hlx
+    linear_combination -hlx
+  by_cases hv0 : cf.u + cf.r - v = 0
+  · have hv0' : v = cf.u + cf.r := by linear_combination -hv0
+    rw [hv0'] at hxa hxb
+    have : (2 * cf.r * ((cf.u + cf.r) ^ 2 - 1)) * xa =
+        (2 * cf.r * ((cf.u + cf.r) ^ 2 - 1)) * xb := by
+      linear_combination hxb - hxa
+    simp [cf.hr, ← cf.k_sq, hk, hxeq] at this
+  have hxab : xa * xb = cf.u ^ 2 / cf.r ^ 2 := by
+    let p := Polynomial.C (cf.r ^ 2 * (cf.u + cf.r - v)) * Polynomial.X ^ 2
+      + Polynomial.C (2 * cf.r * (1 - cf.r ^ 2 - cf.r * cf.u - cf.u * v)) * Polynomial.X
+      + Polynomial.C (cf.u ^ 2 * (cf.u + cf.r - v))
+    have hpa : p.eval xa = 0 := by simpa [p] using hxa
+    have hpb : p.eval xb = 0 := by simpa [p] using hxb
+    obtain h := Polynomial.mul_eq_of_natDegree_eq_two (by simp [cf.hr, hv0]) rfl hpa hpb hxeq
+    rw [mul_div_mul_right _ _ hv0] at h
+    exact h
+  have hxa0 : xa ≠ 0 := fun h ↦ by
+    symm at hxab
+    simp [h, cf.hu, cf.hr] at hxab
+  have hxb0 : xb ≠ 0 := fun h ↦ by
+    symm at hxab
+    simp [h, cf.hu, cf.hr] at hxab
+  have hxao : Point.some ha ≠ o cf := fun h ↦ by
+    simp [o, hxa0] at h
+  have hxb : xb = cf.u ^ 2 / (cf.r ^ 2 * xa) := by
+    field_simp at ⊢ hxab
+    linear_combination hxab
+  obtain hlyz := congr($hly * $hlz.symm)
+  rw [hxb] at hlyz
+  field_simp at hlyz
+  have hlyz : cf.r ^ 2 * xa ^ 2 * yb * (cf.r * xa + cf.u) ^ 2 =
+      ya * cf.u ^ 2 * (cf.r * xa + cf.u) ^ 2 := by
+    linear_combination hlyz
+  rw [mul_eq_mul_right_iff] at hlyz
+  obtain hlyz := hlyz.resolve_right (by simpa using hrxu)
+  have hosub : Point.some hb = o cf - Point.some ha := by
+    rw [o_sub cf _ hxao]
+    rw [Point.some.injEq]
+    constructor
+    · exact hxb
+    · field_simp
+      linear_combination hlyz
+  have hi : InnerCircle cf (f cf (Point.some ha)).1 := by
+    simpa [hosub, f_o_sub, rChord_eq_self cf (mapsTo_f cf (by simp))] using h'.symm
+  have : (cf.r ^ 2 * (cf.u + cf.r) * xa ^ 2 + 2 * cf.r * (1 - cf.r ^ 2 - cf.r * cf.u) * xa +
+      cf.u ^ 2 * (cf.u + cf.r)) ^ 2 +
+      (2 * cf.r ^ 2 * cf.k * ya) ^ 2 = ((cf.r * xa + cf.u) ^ 2) ^ 2 := by
+    simpa [InnerCircle, f, fPoint, fPointRaw] using hi
+  have : (cf.r ^ 2 * (cf.u + cf.r) * xa ^ 2 + 2 * cf.r * (1 - cf.r ^ 2 - cf.r * cf.u) * xa +
+      cf.u ^ 2 * (cf.u + cf.r)) ^ 2 +
+      (2 * cf.r) ^ 2 * cf.k ^ 2 * (cf.r ^ 2 * ya ^ 2)= ((cf.r * xa + cf.u) ^ 2) ^ 2 := by
+    linear_combination this
+  rw [nonsingular_elliptic cf] at ha
+  obtain ⟨heq, hs⟩ := ha
+  rw [cf.k_sq, heq] at this
+  have hx : ((cf.u + cf.r) ^ 2 - 1) * (cf.r * xa + cf.u) ^ 2 * (cf.r * xa - cf.u) ^ 2 = 0 := by
+    linear_combination this
+  have hx : cf.r * xa - cf.u = 0 := by
+    simpa [← cf.k_sq, hk, hrxu] using hx
+  have hx : xa = cf.u / cf.r := by
+    field_simp
+    linear_combination hx
+  rw [hx] at hxb
+  rw [hx, hxb] at hxeq
+  absurd hxeq
+  field

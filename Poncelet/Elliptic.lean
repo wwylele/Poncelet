@@ -286,24 +286,10 @@ theorem SingularAbc.c_factor_eq_zero [DecidableEq K] [hchar : NeZero (2 : K)] {x
     simpa [fChordNormal, this] using congr($h 2)
   exact h.rx_add_u_ne_zero cf hxy
 
-theorem SingularAbc.c_factor_add [DecidableEq K] [hchar : NeZero (2 : K)] {x1 y1 x2 y2 : K}
-    (h1 : SingularAbc cf x1 y1) (h2 : SingularAbc cf x2 y2)
-    (hxy1 : (elliptic cf).Nonsingular x1 y1) (hxy2 : (elliptic cf).Nonsingular x2 y2)
-    (h : x1 ≠ x2) (hur : cf.u + cf.r ≠ 0) :
-    x1 + x2 = (2 * cf.u * (cf.u + cf.r) ^ 2 - 4 * cf.u) / ((cf.u + cf.r) ^ 2 * cf.r) := by
-  let p := Polynomial.C ((cf.u + cf.r) ^ 2 * cf.r ^ 2) * Polynomial.X ^ 2
-    + Polynomial.C (4 * cf.u * cf.r - 2 * cf.u * cf.r * (cf.u + cf.r) ^ 2) * Polynomial.X
-    + Polynomial.C ((cf.u + cf.r) ^ 2 * cf.u ^ 2)
-  have hc2 : (cf.u + cf.r) ^ 2 * cf.r ^ 2 ≠ 0 := by simp [cf.hr, hur]
-  have hdeg : p.natDegree = 2 := by
-    unfold p
-    compute_degree <;> grind
-  have hp1 : Polynomial.eval x1 p = 0 := by
-    simp [p]
-    linear_combination h1.c_factor_eq_zero cf hxy1
-  have hp2 : Polynomial.eval x2 p = 0 := by
-    simp [p]
-    linear_combination h2.c_factor_eq_zero cf hxy2
+theorem Polynomial.roots_eq_of_natDegree_eq_two {K : Type*} [CommRing K] [IsDomain K]
+    {p : Polynomial K} (hdeg : p.natDegree = 2) {x1 x2 : K}
+    (hp1 : p.eval x1 = 0) (hp2 : p.eval x2 = 0) (h : x1 ≠ x2) :
+    p.roots = {x1, x2} := by
   have hp0 : p ≠ 0 := by
     contrapose! hdeg
     simp [hdeg]
@@ -316,14 +302,57 @@ theorem SingularAbc.c_factor_add [DecidableEq K] [hchar : NeZero (2 : K)] {x1 y1
     rw [ht] at hm2
     simpa [h.symm] using hm2
   obtain ⟨cf.u, hu⟩ := Multiset.exists_cons_of_mem hm2'
-  have hroots : p.roots = {x1, x2} := by
-    symm
-    simpa [hdeg, ht, hu] using Polynomial.card_roots' p
+  symm
+  simpa [hdeg, ht, hu] using Polynomial.card_roots' p
+
+theorem Polynomial.add_eq_of_natDegree_eq_two {K : Type*} [Field K]
+    {p : Polynomial K} {a b c : K} (ha : a ≠ 0)
+    (hp : p = C a * X ^ 2 + C b * X + C c)
+    {x1 x2 : K}
+    (hp1 : p.eval x1 = 0) (hp2 : p.eval x2 = 0) (h : x1 ≠ x2) :
+    x1 + x2 = -b / a := by
+  have hdeg : p.natDegree = 2 := by
+    rw [hp]
+    compute_degree <;> grind
+  obtain hroots := roots_eq_of_natDegree_eq_two hdeg hp1 hp2 h
+  rw [hp] at hroots
   obtain hxx := Polynomial.eq_neg_mul_add_of_roots_quadratic_eq_pair hroots
-  obtain _ := cf.hr
   field_simp
-  rw [← mul_left_inj' cf.hr]
   linear_combination hxx
+
+theorem Polynomial.mul_eq_of_natDegree_eq_two {K : Type*} [Field K]
+    {p : Polynomial K} {a b c : K} (ha : a ≠ 0)
+    (hp : p = C a * X ^ 2 + C b * X + C c)
+    {x1 x2 : K}
+    (hp1 : p.eval x1 = 0) (hp2 : p.eval x2 = 0) (h : x1 ≠ x2) :
+    x1 * x2 = c / a := by
+  have hdeg : p.natDegree = 2 := by
+    rw [hp]
+    compute_degree <;> grind
+  obtain hroots := roots_eq_of_natDegree_eq_two hdeg hp1 hp2 h
+  rw [hp] at hroots
+  obtain hxx := Polynomial.eq_mul_mul_of_roots_quadratic_eq_pair hroots
+  field_simp
+  linear_combination -hxx
+
+theorem SingularAbc.c_factor_add [DecidableEq K] [hchar : NeZero (2 : K)] {x1 y1 x2 y2 : K}
+    (h1 : SingularAbc cf x1 y1) (h2 : SingularAbc cf x2 y2)
+    (hxy1 : (elliptic cf).Nonsingular x1 y1) (hxy2 : (elliptic cf).Nonsingular x2 y2)
+    (h : x1 ≠ x2) (hur : cf.u + cf.r ≠ 0) :
+    x1 + x2 = (2 * cf.u * (cf.u + cf.r) ^ 2 - 4 * cf.u) / ((cf.u + cf.r) ^ 2 * cf.r) := by
+  let p := Polynomial.C ((cf.u + cf.r) ^ 2 * cf.r ^ 2) * Polynomial.X ^ 2
+    + Polynomial.C (4 * cf.u * cf.r - 2 * cf.u * cf.r * (cf.u + cf.r) ^ 2) * Polynomial.X
+    + Polynomial.C ((cf.u + cf.r) ^ 2 * cf.u ^ 2)
+  have hc2 : (cf.u + cf.r) ^ 2 * cf.r ^ 2 ≠ 0 := by simp [cf.hr, hur]
+  have hp1 : Polynomial.eval x1 p = 0 := by
+    simp [p]
+    linear_combination h1.c_factor_eq_zero cf hxy1
+  have hp2 : Polynomial.eval x2 p = 0 := by
+    simp [p]
+    linear_combination h2.c_factor_eq_zero cf hxy2
+  obtain h := Polynomial.add_eq_of_natDegree_eq_two hc2 (rfl) hp1 hp2 h
+  field_simp at h ⊢
+  linear_combination h
 
 theorem SingularAbc.y_eq_reduced_aux [DecidableEq K] [hchar : NeZero (2 : K)] {x y : K}
     (h : SingularAbc cf x y)
@@ -1044,53 +1073,6 @@ theorem o_sub_w [DecidableEq K] [hchar : NeZero (2 : K)] : o cf - w cf = g cf :=
     simp [hx, elliptic]
     field_simp
     grind
-
-theorem f_injective_inf [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0)
-    {p : (elliptic cf).Point} (h : f cf p = f cf (.zero)) :
-    p = .zero := by
-  unfold f fPoint fChord at h
-  obtain ⟨hp, hq⟩ := Prod.ext_iff.mp h
-  simp only at hp hq
-  obtain ⟨l, hl0, hl⟩ := (P2.mk_eq_mk _ _).mp hp
-  obtain ⟨m, hm0, hm⟩ := (P2.mk_eq_mk _ _).mp hq
-  cases p with
-  | zero => rfl
-  | @some x y hxy =>
-  obtain ⟨heq, hnonsingular⟩ := (nonsingular_elliptic cf _ _).mp hxy
-  unfold fPointRaw at hl
-  have : cf.r ^ 2 * (cf.u + cf.r) * x ^ 2 + 2 * cf.r * (1 - cf.r ^ 2 - cf.r * cf.u) * x +
-      cf.u ^ 2 * (cf.u + cf.r) = l * (cf.u + cf.r) ∧
-      y = 0 ∧ (cf.r * x + cf.u) ^ 2 = l := by
-    simpa [hl0, hchar.out, cf.hr, hk] using hl
-  obtain ⟨h1, hy, h2⟩ := this
-  have h : 2 * l * cf.r * ((cf.u + cf.r) ^ 2 - 1) * x = 0 := by
-    linear_combination -congr($h1 * $h2.symm)
-  have hx : x = 0 := by
-    simpa [hl0, hchar.out, cf.hr, ← cf.k_sq, hk] using h
-  unfold fChordRaw at hm
-  simp [hx, hy] at hm
-  sorry
-
-theorem f_injective [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0) :
-    Function.Injective (f cf) := by
-  intro a b h
-  cases a with
-  | zero =>
-    cases b with
-    | zero => rfl
-    | @some xb yb hb => exact (f_injective_inf cf hk h.symm).symm
-  | @some xa ya ha =>
-  cases b with
-  | zero =>
-    exact f_injective_inf cf hk h
-  | @some xb yb hb =>
-  unfold f fPoint fChord at h
-  obtain ⟨hp, hq⟩ := Prod.ext_iff.mp h
-  simp only at hp hq
-  obtain ⟨l, hl0, hl⟩ := (P2.mk_eq_mk _ _).mp hp
-  obtain ⟨m, hm0, hm⟩ := (P2.mk_eq_mk _ _).mp hq
-
-  sorry
 
 /-
 
