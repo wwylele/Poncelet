@@ -50,6 +50,14 @@ theorem proj_two {x y : V} (hx : x ≠ 0) (hy : y ≠ 0) (h : ⟪x, y⟫ = 0) (v
   simp [hv, h, h',
     inner_add_left, inner_smul_left, inner_smul_right, norm_add_sq_real, norm_smul, mul_pow, field]
 
+theorem inner_swap {x y : V} (hx : x ≠ 0) (hy : y ≠ 0) (h : ⟪x, y⟫ = 0) {u v : V} (hu : u ≠ 0) :
+    (∃ a : ℝ, a • u = v) ↔ ⟪v, x⟫ * ⟪u, y⟫ = ⟪v, y⟫ * ⟪u, x⟫ := by
+  constructor
+  · rintro ⟨a, rfl⟩
+    simp_rw [real_inner_smul_left]
+    ring
+  intro h
+  sorry
 
 def edge {n : ℕ} [NeZero n]
     (a : Fin n → P) (i : Fin n) :=
@@ -139,8 +147,7 @@ def sendPoint (p : P) : P2 ℝ := P2.mk ![
   ⟪p -ᵥ cf.i.center, cf.yDir -ᵥ cf.i.center⟫ / (dist cf.yDir cf.i.center * cf.i.radius),
   1] (by simp)
 
-theorem mem_o_iff (p : P) :
-    p ∈ cf.o ↔ OuterCircle (cf.toConfig) (cf.sendPoint p) := by
+theorem mem_o_iff (p : P) : p ∈ cf.o ↔ OuterCircle cf.toConfig (cf.sendPoint p) := by
   rw [OuterCircle, sendPoint, EuclideanGeometry.mem_sphere]
   simp only [P2.lift_mk, Matrix.cons_val_zero, Matrix.cons_val, mul_one,
     Matrix.cons_val_one, one_pow]
@@ -150,22 +157,89 @@ theorem mem_o_iff (p : P) :
   rw [div_left_inj' (by simpa using cf.i_pos.ne.symm)]
   rw [div_sub' (by simpa using cf.center), div_pow, ← real_inner_self_eq_norm_mul_norm]
   rw [← inner_sub_left]
-  rw [vsub_sub_vsub_comm, vsub_self, sub_zero]
+  rw [vsub_sub_vsub_cancel_right]
   rw [show ⟪p -ᵥ cf.i.center, cf.yDir -ᵥ cf.i.center⟫ =
         ⟪p -ᵥ cf.o.center, cf.yDir -ᵥ cf.i.center⟫ by
-    rw [← sub_eq_zero, ← inner_sub_left, vsub_sub_vsub_comm, vsub_self, zero_sub,
-      neg_vsub_eq_vsub_rev]
+    rw [← sub_eq_zero, ← inner_sub_left, vsub_sub_vsub_cancel_left]
     apply inner_yDir_center_o]
   rw [proj_two (by simpa using cf.center) (by simpa using cf.yDir_ne_center_i)
     cf.inner_yDir_center_o]
   exact (sq_eq_sq₀ (by simp) cf.o_pos.le).symm
 
+noncomputable def dirVec {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.direction = 1) :
+    p.direction :=
+  have : FiniteDimensional ℝ V := FiniteDimensional.of_finrank_pos (by simp [hrank.out])
+  (Module.finrank_pos_iff_exists_ne_zero.mp
+    (show 0 < Module.finrank ℝ p.direction by simp [hp])).choose
+
+theorem dirVec_ne_zero {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.direction = 1) :
+    dirVec hp ≠ 0 :=
+  have : FiniteDimensional ℝ V := FiniteDimensional.of_finrank_pos (by simp [hrank.out])
+  (Module.finrank_pos_iff_exists_ne_zero.mp
+    (show 0 < Module.finrank ℝ p.direction by simp [hp])).choose_spec
+
+theorem eq_span_dirVec {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.direction = 1) :
+    p.direction = Submodule.span ℝ {(dirVec hp).val} := by
+  rw [finrank_eq_one_iff_of_nonzero _ (dirVec_ne_zero hp)] at hp
+  symm
+  ext x
+
+  sorry
+
+noncomputable def linePoint {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.direction = 1) :
+    P :=
+  ((AffineSubspace.nonempty_iff_ne_bot p).mpr fun h ↦ by
+    rw [h, AffineSubspace.direction_bot] at hp
+    simp at hp
+  ).some
+
+omit hrank in
+theorem linePoint_mem {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.direction = 1) :
+    linePoint hp ∈ p :=
+  ((AffineSubspace.nonempty_iff_ne_bot p).mpr fun h ↦ by
+    rw [h, AffineSubspace.direction_bot] at hp
+    simp at hp
+  ).some_mem
+
 noncomputable
 def sendChord (p : AffineSubspace ℝ P) : P2 ℝ :=
-  if Module.finrank ℝ p.direction = 1 then
-    sorry
+  if hp : Module.finrank ℝ p.direction = 1 then
+    P2.mk ![
+      ⟪(dirVec hp).val, cf.yDir -ᵥ cf.i.center⟫ / (dist cf.yDir cf.i.center),
+      -⟪(dirVec hp).val, cf.o.center -ᵥ cf.i.center⟫ / (dist cf.o.center cf.i.center),
+      (⟪linePoint hp -ᵥ cf.i.center, cf.o.center -ᵥ cf.i.center⟫ *
+        ⟪(dirVec hp).val, cf.yDir -ᵥ cf.i.center⟫
+      - ⟪linePoint hp -ᵥ cf.i.center, cf.yDir -ᵥ cf.i.center⟫ *
+        ⟪(dirVec hp).val, cf.o.center -ᵥ cf.i.center⟫)
+        / (dist cf.yDir cf.i.center * dist cf.o.center cf.i.center * cf.i.radius)
+    ] (by sorry)
   else
     P2.mk ![0, 0, 1] (by simp)
+
+theorem mem_iff_incidence_sendChord (p : P) {q : AffineSubspace ℝ P}
+    (hq : Module.finrank ℝ q.direction = 1) :
+    p ∈ q ↔ Incidence cf.toConfig (cf.sendPoint p) (cf.sendChord q) := by
+  rw [Incidence, sendPoint, sendChord]
+  simp only [Fin.isValue, hq, ↓reduceDIte, P2.lift₂_mk, Matrix.cons_val_zero,
+    Matrix.cons_val_one, Matrix.cons_val, one_mul]
+  simp_rw [div_mul_div_comm]
+  rw [show dist cf.o.center cf.i.center * cf.i.radius * dist cf.yDir cf.i.center
+    = dist cf.yDir cf.i.center * dist cf.o.center cf.i.center * cf.i.radius by ring]
+  rw [show dist cf.yDir cf.i.center * cf.i.radius * dist cf.o.center cf.i.center
+    = dist cf.yDir cf.i.center * dist cf.o.center cf.i.center * cf.i.radius by ring]
+  rw [← add_div]
+  rw [div_left_inj' (by simp [cf.yDir_ne_center_i, cf.center, cf.i_pos.ne.symm])]
+  rw [mul_neg, ← sub_eq_add_neg]
+  rw [sub_eq_sub_iff_sub_eq_sub]
+  simp_rw [← sub_mul, ← inner_sub_left, vsub_sub_vsub_cancel_right]
+  conv_lhs => rw [← AffineSubspace.mk'_eq (linePoint_mem hq), AffineSubspace.mem_mk',
+    eq_span_dirVec hq, Submodule.mem_span_singleton]
+  exact inner_swap (by simpa using cf.center) (by simpa using cf.yDir_ne_center_i)
+    cf.inner_yDir_center_o (by simpa using dirVec_ne_zero hq)
+
+theorem isTangent_i_iff {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.direction = 1) :
+    cf.i.IsTangent p ↔ InnerCircle cf.toConfig (cf.sendChord p) := by
+  sorry
 
 end EuConfig
 /-
