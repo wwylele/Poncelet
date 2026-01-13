@@ -71,7 +71,7 @@ structure EuConfig where
   i : Sphere P
   o_pos : 0 < o.radius
   i_pos : 0 < i.radius
-  inside : ∀ p ∈ o, i.radius < dist p i.center
+  inside : ∀ p ∈ i, dist p o.center < o.radius
   center : o.center ≠ i.center
 
 namespace EuConfig
@@ -128,6 +128,9 @@ def toConfig : Config ℝ where
     apply sub_nonneg_of_le
     rw [one_le_sq_iff_one_le_abs, abs_div]
     rw [one_le_div (by simpa using cf.i_pos.ne.symm)]
+    rw [(abs_add_eq_add_abs_iff _ _).mpr (Or.inl ⟨by simp, cf.o_pos.le⟩)]
+    suffices |cf.i.radius| ≤ |cf.o.radius| from this.trans (by simp)
+
     sorry
 
 noncomputable
