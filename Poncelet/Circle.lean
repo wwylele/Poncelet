@@ -98,6 +98,11 @@ theorem mem_dom {p q : Fin 3 → K} (hp : p ≠ 0) (hq : q ≠ 0) :
     q 0 ^ 2 + q 1 ^ 2 = q 2 ^ 2 ∧
     p 0 * q 0 + p 1 * q 1 = p 2 * q 2) := by rfl
 
+theorem encard_dom_fix1_le (p : P2 K) : Set.encard {pq ∈ dom cf | pq.1 = p} ≤ 2 := by sorry
+
+
+theorem encard_dom_fix2_le (q : P2 K) : Set.encard {pq ∈ dom cf | pq.2 = q} ≤ 2 := by sorry
+
 /-- Reflect the vertex across the edge, expressed in raw coordinates. -/
 def rPoint' [DecidableEq K] (p q : Fin 3 → K) : Fin 3 → K :=
   if q 2 = 0 then
@@ -247,6 +252,9 @@ def rPoint [DecidableEq K] (pq : P2 K × P2 K) : P2 K × P2 K :=
   simp_rw [hl, hm, Pi.smul_apply, smul_eq_mul]
   ring
   ) pq.1 pq.2, pq.2⟩
+
+theorem snd_rPoint [DecidableEq K] (pq : P2 K × P2 K) :
+    (rPoint cf pq).2 = pq.2 := rfl
 
 theorem rPoint_mk [DecidableEq K] [hchar : NeZero (2 : K)]
     {p q : Fin 3 → K} (hp : p ≠ 0) (hq : q ≠ 0)
@@ -559,6 +567,9 @@ def rChord [DecidableEq K] (pq : P2 K × P2 K) : P2 K × P2 K :=
       simp_rw [hl, hm, Pi.smul_apply, smul_eq_mul]
       ring
   ) pq.1 pq.2⟩
+
+theorem fst_rChord [DecidableEq K] (pq : P2 K × P2 K) :
+    (rChord cf pq).1 = pq.1 := rfl
 
 theorem rChord_mk [DecidableEq K] [hchar : NeZero (2 : K)] {p q : Fin 3 → K}
     (hp : p ≠ 0) (hq : q ≠ 0)

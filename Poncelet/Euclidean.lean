@@ -130,19 +130,15 @@ theorem inner_swap {x y : V} (hx : x ≠ 0) (hy : y ≠ 0) (h : ⟪x, y⟫ = 0) 
     field_simp
     linear_combination -habcd
 
-def edge {n : ℕ} [NeZero n]
-    (a : Fin n → P) (i : Fin n) :=
-  affineSpan ℝ {a i, a (i + 1)}
-
 def IsProperPolygon
     {n : ℕ} [NeZero n] (a : Fin n → P) :=
-  ∀ i, a i ≠ a (i + 1) ∧ edge a i ≠ edge a (i + 1)
+  ∀ i, a i ≠ a (i + 1) ∧ affineSpan ℝ {a i, a (i + 1)} ≠ affineSpan ℝ {a (i + 1), a (i + 2)}
 
 def Inscribe {n : ℕ} [NeZero n] (a : Fin n → P) (s : Sphere P) :=
   ∀ i, a i ∈ s
 
 def Circumscribe {n : ℕ} [NeZero n] (a : Fin n → P) (s : Sphere P) :=
-  ∀ i, s.IsTangent (edge a i)
+  ∀ i, s.IsTangent (affineSpan ℝ {a i, a (i + 1)})
 
 variable (P) in
 structure EuConfig where
@@ -224,7 +220,33 @@ def sendPoint (p : P) : P2 ℝ := P2.mk ![
   ⟪p -ᵥ cf.i.center, cf.yDir -ᵥ cf.i.center⟫ / (dist cf.yDir cf.i.center * cf.i.radius),
   1] (by simp)
 
-theorem mem_o_iff (p : P) : p ∈ cf.o ↔ OuterCircle cf.toConfig (cf.sendPoint p) := by
+theorem sendPoint_inj {p q : P} (h : cf.sendPoint p = cf.sendPoint q) :
+    p = q := by
+  unfold sendPoint at h
+  obtain ⟨l, hl⟩ := (P2.mk_eq_mk' _ _).mp h
+  have hl1 : l = 1 := by simpa using congr($hl 2).symm
+  have h0 : dist cf.o.center cf.i.center * cf.i.radius ≠ 0 := by
+    simp [cf.center, cf.i_pos.ne.symm]
+  have h0' : (dist cf.yDir cf.i.center * cf.i.radius) ≠ 0 := by
+    simp [cf.yDir_ne_center_i, cf.i_pos.ne.symm]
+  obtain hx : ⟪p -ᵥ cf.i.center, cf.o.center -ᵥ cf.i.center⟫ =
+    ⟪q -ᵥ cf.i.center, cf.o.center -ᵥ cf.i.center⟫ := by simpa [hl1, h0] using congr($hl 0)
+  obtain hy : ⟪p -ᵥ cf.i.center, cf.yDir -ᵥ cf.i.center⟫ =
+    ⟪q -ᵥ cf.i.center, cf.yDir -ᵥ cf.i.center⟫ := by simpa [hl1, h0'] using congr($hl 1)
+  obtain hxy := cf.inner_yDir_center_o
+  obtain hyx := real_inner_comm (cf.o.center -ᵥ cf.i.center) _ ▸ hxy
+  obtain ⟨a, b, hv⟩ := basis_two (by simpa using cf.center)
+    (by simpa using cf.yDir_ne_center_i) hxy (p -ᵥ cf.i.center)
+  obtain ⟨c, d, hu⟩ := basis_two (by simpa using cf.center)
+    (by simpa using cf.yDir_ne_center_i) hxy (q -ᵥ cf.i.center)
+  have hac : a = c := by
+    simpa [hu, hv, inner_add_left, real_inner_smul_left, hyx, cf.center] using hx
+  have hbd : b = d := by
+    simpa [hu, hv, inner_add_left, real_inner_smul_left, hxy, cf.yDir_ne_center_i] using hy
+  rw [← (vsub_left_injective cf.i.center).eq_iff]
+  rw [hu, hv, hac, hbd]
+
+theorem mem_o_iff {p : P} : p ∈ cf.o ↔ OuterCircle cf.toConfig (cf.sendPoint p) := by
   rw [OuterCircle, sendPoint, EuclideanGeometry.mem_sphere]
   simp only [P2.lift_mk, Matrix.cons_val_zero, Matrix.cons_val, mul_one,
     Matrix.cons_val_one, one_pow]
@@ -242,6 +264,9 @@ theorem mem_o_iff (p : P) : p ∈ cf.o ↔ OuterCircle cf.toConfig (cf.sendPoint
   rw [proj_two (by simpa using cf.center) (by simpa using cf.yDir_ne_center_i)
     cf.inner_yDir_center_o]
   exact (sq_eq_sq₀ (by simp) cf.o_pos.le).symm
+
+theorem not_innerCircle_of_mem_o {p : P} (hp : p ∈ cf.o) :
+    ¬ InnerCircle cf.toConfig (cf.sendPoint p) := by sorry
 
 noncomputable def dirVec {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.direction = 1) :
     p.direction :=
@@ -307,7 +332,12 @@ def sendChord (p : AffineSubspace ℝ P) : P2 ℝ :=
   else
     P2.mk ![0, 0, 1] (by simp)
 
-theorem mem_iff_incidence_sendChord (p : P) {q : AffineSubspace ℝ P}
+theorem sendChord_inj {p q : AffineSubspace ℝ P}
+    (hp : Module.finrank ℝ p.direction = 1)
+    (hq : Module.finrank ℝ q.direction = 1) (h : cf.sendChord p = cf.sendChord q) :
+    p = q := by sorry
+
+theorem mem_iff_incidence_sendChord {p : P} {q : AffineSubspace ℝ P}
     (hq : Module.finrank ℝ q.direction = 1) :
     p ∈ q ↔ Incidence cf.toConfig (cf.sendPoint p) (cf.sendChord q) := by
   rw [Incidence, sendPoint, sendChord]
@@ -352,63 +382,172 @@ theorem isTangent_i_iff {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.di
     rw [← mul_left_inj' (show ‖(dirVec hp : V)‖ ^ 2 *
       ‖cf.yDir -ᵥ cf.i.center‖ ^ 2 * ‖cf.o.center -ᵥ cf.i.center‖ ^ 2 ≠ 0 by
       simp [cf.yDir_ne_center_i, cf.center, dirVec_ne_zero])]
-    rw [dist_eq_norm_vsub]
+    rw [dist_eq_norm_vsub']
   congrm($(by ring) = ?_)
+  have : linePoint hp -ᵥ orthogonalProjection p cf.i.center ∈ p.direction := by
+    apply AffineSubspace.vsub_mem_direction (linePoint_mem hp)
+    apply EuclideanGeometry.orthogonalProjection_mem
+  have : ∃ l : ℝ, l • dirVec hp = linePoint hp -ᵥ orthogonalProjection p cf.i.center := by
+    rw [← Submodule.mem_span_singleton]
+    rw [← eq_span_dirVec]
+    exact this
+  obtain ⟨l, hl⟩ := this
+  have hlinePoint : linePoint hp -ᵥ cf.i.center =
+      (orthogonalProjection p cf.i.center).val -ᵥ cf.i.center + l • dirVec hp := by
+    rw [hl, add_comm, vsub_add_vsub_cancel]
+  simp_rw [hlinePoint]
+  simp_rw [inner_add_left, add_mul, real_inner_smul_left, mul_assoc l]
+  rw [add_sub_add_comm, ← mul_sub]
+  obtain hxy := cf.inner_yDir_center_o
+  obtain hxy' := real_inner_comm (cf.o.center -ᵥ cf.i.center) _ ▸ hxy
+  rw [(inner_swap (by simpa using cf.center) (by simpa using cf.yDir_ne_center_i)
+    hxy (by simpa using dirVec_ne_zero hp)).mp
+    (show ∃ a, a • (dirVec hp).val = (dirVec hp).val from ⟨1, by simp⟩)]
+  rw [sub_self, mul_zero, add_zero]
+  rw [pow_two ‖(orthogonalProjection p cf.i.center).val -ᵥ cf.i.center‖]
+  rw [pow_two ‖(dirVec hp).val‖]
+  obtain ⟨a, b, hv⟩ := basis_two (by simpa using cf.center)
+    (by simpa using cf.yDir_ne_center_i) hxy (dirVec hp).val
+  obtain ⟨c, d, hu⟩ := basis_two (by simpa using cf.center)
+    (by simpa using cf.yDir_ne_center_i) hxy
+    ((orthogonalProjection p cf.i.center).val -ᵥ cf.i.center)
+  set x := cf.o.center -ᵥ cf.i.center
+  set y := cf.yDir -ᵥ cf.i.center
+  simp_rw [hu, hv]
+  simp_rw [inner_add_left, real_inner_smul_left, hxy, hxy']
+  rw [norm_add_sq_eq_norm_sq_add_norm_sq_real (by
+    simp [real_inner_smul_left, real_inner_smul_right, hxy])]
+  rw [norm_add_sq_eq_norm_sq_add_norm_sq_real (by
+    simp [real_inner_smul_left, real_inner_smul_right, hxy])]
+  simp_rw [← pow_two]
+  simp_rw [norm_smul, mul_pow, Real.norm_eq_abs, sq_abs]
+  simp_rw [real_inner_self_eq_norm_sq]
+  suffices (a * c * ‖x‖ ^ 2 + b * d * ‖y‖ ^ 2) ^ 2 * ‖x‖ ^ 2 * ‖y‖ ^ 2 = 0 by
+    linear_combination this
+  suffices a * c * ‖x‖ ^ 2 + b * d * ‖y‖ ^ 2 = 0 by simp [this]
+  suffices ⟪(dirVec hp).val, (orthogonalProjection p cf.i.center).val -ᵥ cf.i.center⟫ = 0 by
+    simp_rw [hu, hv, inner_add_left, inner_add_right, real_inner_smul_left,
+      real_inner_smul_right, hxy, hxy', real_inner_self_eq_norm_sq] at this
+    linear_combination this
+  refine (Submodule.mem_orthogonal p.direction _).mp ?_ _ (dirVec hp).prop
+  apply EuclideanGeometry.orthogonalProjection_vsub_mem_direction_orthogonal
+
+theorem not_tangentOuterCircle_of_isTangent {p : AffineSubspace ℝ P}
+    (hp : Module.finrank ℝ p.direction = 1) (hi : cf.i.IsTangent p) :
+    ¬ TangentOuterCircle cf.toConfig (cf.sendChord p) := by
 
   sorry
+
+theorem rChord_sendPoint_sendChord {p : P} {q1 q2 : AffineSubspace ℝ P}
+    (hqne : q1 ≠ q2) (hq1 : Module.finrank ℝ q1.direction = 1)
+    (hq2 : Module.finrank ℝ q2.direction = 1)
+    (ho : p ∈ cf.o) (hi1 : cf.i.IsTangent q1) (hi2 : cf.i.IsTangent q2)
+    (hpq1 : p ∈ q1) (hpq2 : p ∈ q2) :
+    rChord cf.toConfig ⟨sendPoint cf p, sendChord cf q1⟩ = ⟨sendPoint cf p, sendChord cf q2⟩ := by
+  have hmem1 : ⟨sendPoint cf p, sendChord cf q1⟩ ∈ dom cf.toConfig :=
+    ⟨cf.mem_o_iff.mp ho, (cf.isTangent_i_iff hq1).mp hi1,
+    (cf.mem_iff_incidence_sendChord hq1).mp hpq1⟩
+  have hmem2 : ⟨sendPoint cf p, sendChord cf q2⟩ ∈ dom cf.toConfig :=
+    ⟨cf.mem_o_iff.mp ho, (cf.isTangent_i_iff hq2).mp hi2,
+    (cf.mem_iff_incidence_sendChord hq2).mp hpq2⟩
+  obtain hmemr := mapsTo_rChord cf.toConfig hmem1
+  obtain hne := (rChord_eq_self cf.toConfig hmem1).not.mpr (cf.not_innerCircle_of_mem_o ho)
+  have : {⟨cf.sendPoint p, cf.sendChord q1⟩, ⟨cf.sendPoint p, cf.sendChord q2⟩,
+      rChord cf.toConfig ⟨sendPoint cf p, sendChord cf q1⟩}
+      ⊆ {pq ∈ dom cf.toConfig | pq.1 = cf.sendPoint p} := by
+    intro x hx
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+    obtain hx | hx | hx := hx
+    · simp [hx, hmem1]
+    · simp [hx, hmem2]
+    · simp [hx, hmemr, fst_rChord]
+  obtain hcard := (Set.encard_le_encard this).trans (encard_dom_fix1_le _ _)
+  contrapose! hcard with h
+  rw [Set.encard_eq_three.mpr ?_]
+  · norm_num
+  use ⟨cf.sendPoint p, cf.sendChord q1⟩, ⟨cf.sendPoint p, cf.sendChord q2⟩,
+      rChord cf.toConfig ⟨sendPoint cf p, sendChord cf q1⟩
+  refine ⟨fun h ↦ hqne ?_, Ne.symm hne, Ne.symm h, rfl⟩
+  exact cf.sendChord_inj hq1 hq2 (by simpa using h)
+
+theorem rPoint_sendPoint_sendChord {p1 p2 : P} {q : AffineSubspace ℝ P}
+    (hpne : p1 ≠ p2)
+    (hq : Module.finrank ℝ q.direction = 1)
+    (ho1 : p1 ∈ cf.o) (ho2 : p2 ∈ cf.o) (hi : cf.i.IsTangent q)
+    (hpq1 : p1 ∈ q) (hpq2 : p2 ∈ q) :
+    rPoint cf.toConfig ⟨sendPoint cf p1, sendChord cf q⟩ = ⟨sendPoint cf p2, sendChord cf q⟩ := by
+  have hmem1 : ⟨sendPoint cf p1, sendChord cf q⟩ ∈ dom cf.toConfig :=
+    ⟨cf.mem_o_iff.mp ho1, (cf.isTangent_i_iff hq).mp hi,
+    (cf.mem_iff_incidence_sendChord hq).mp hpq1⟩
+  have hmem2 : ⟨sendPoint cf p2, sendChord cf q⟩ ∈ dom cf.toConfig :=
+    ⟨cf.mem_o_iff.mp ho2, (cf.isTangent_i_iff hq).mp hi,
+    (cf.mem_iff_incidence_sendChord hq).mp hpq2⟩
+  obtain hmemr := mapsTo_rPoint cf.toConfig hmem1
+  obtain hne := (rPoint_eq_self cf.toConfig hmem1).not.mpr
+    (cf.not_tangentOuterCircle_of_isTangent hq hi)
+  have : {⟨cf.sendPoint p1, cf.sendChord q⟩, ⟨cf.sendPoint p2, cf.sendChord q⟩,
+      rPoint cf.toConfig ⟨sendPoint cf p1, sendChord cf q⟩}
+      ⊆ {pq ∈ dom cf.toConfig | pq.2 = cf.sendChord q} := by
+    intro x hx
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+    obtain hx | hx | hx := hx
+    · simp [hx, hmem1]
+    · simp [hx, hmem2]
+    · simp [hx, hmemr, snd_rPoint]
+  obtain hcard := (Set.encard_le_encard this).trans (encard_dom_fix2_le _ _)
+  contrapose! hcard with h
+  rw [Set.encard_eq_three.mpr ?_]
+  · norm_num
+  use ⟨cf.sendPoint p1, cf.sendChord q⟩, ⟨cf.sendPoint p2, cf.sendChord q⟩,
+      rPoint cf.toConfig ⟨sendPoint cf p1, sendChord cf q⟩
+  refine ⟨fun h ↦ hpne ?_, Ne.symm hne, Ne.symm h, rfl⟩
+  exact cf.sendPoint_inj (by simpa using h)
+
+theorem next_sendPoint_sendChord {n : ℕ} [NeZero n] {a : Fin n → P}
+    (ho : Inscribe a cf.o) (hi : Circumscribe a cf.i)
+    (ha : IsProperPolygon a) (i : Fin n) :
+    next cf.toConfig ⟨sendPoint cf (a i), sendChord cf (affineSpan ℝ {a i, a (i + 1)})⟩ =
+      ⟨sendPoint cf (a (i + 1)), sendChord cf (affineSpan ℝ {a (i + 1), a (i + 2)})⟩ := by
+  rw [next]
+  rw [cf.rPoint_sendPoint_sendChord (ha i).1 (finrank_direction_affineSpan_eq_two (ha i).1)
+    (ho i) (ho (i + 1)) (hi i)
+    (mem_affineSpan ℝ <| (by simp)) (mem_affineSpan ℝ <| (by simp))]
+  rw [cf.rChord_sendPoint_sendChord (ha i).2 (finrank_direction_affineSpan_eq_two (ha i).1)
+    (finrank_direction_affineSpan_eq_two (by convert (ha (i + 1)).1 using 2; grind))
+    (ho (i + 1)) (hi i) (by convert hi (i + 1) using 5; grind)
+    (mem_affineSpan ℝ <| (by simp)) (mem_affineSpan ℝ <| (by simp))]
+
+theorem iterate_next_sendPoint_sendChord {n : ℕ} [NeZero n] {a : Fin n → P}
+    (ho : Inscribe a cf.o) (hi : Circumscribe a cf.i)
+    (ha : IsProperPolygon a) (k : ℕ) (i : Fin n) :
+    (next cf.toConfig)^[k] ⟨sendPoint cf (a i), sendChord cf (affineSpan ℝ {a i, a (i + 1)})⟩ =
+      ⟨sendPoint cf (a (i + Fin.ofNat n k)),
+      sendChord cf (affineSpan ℝ {a (i + Fin.ofNat n k), a (i + Fin.ofNat n k + 1)})⟩ := by
+  induction k with
+  | zero => simp [-Fin.ofNat_eq_cast]
+  | succ k ih =>
+  rw [Function.iterate_succ_apply', ih]
+  rw [cf.next_sendPoint_sendChord ho hi ha]
+  congrm (cf.sendPoint (a ?h1), cf.sendChord (affineSpan ℝ {a ?h1, a ?h2}))
+  · rw [← Fin.val_eq_val]
+    simp_rw [Fin.val_add, Fin.val_ofNat]
+    simp only [Nat.add_mod_mod, Fin.coe_ofNat_eq_mod, Nat.mod_add_mod]
+    grind
+  · rw [← Fin.val_eq_val]
+    simp_rw [Fin.val_add, Fin.val_ofNat]
+    simp only [Nat.add_mod_mod, Fin.coe_ofNat_eq_mod, Nat.mod_add_mod]
+    grind
+
+theorem iterate_next_sendPoint_sendChord_eq_self {n : ℕ} [NeZero n] {a : Fin n → P}
+    (ho : Inscribe a cf.o) (hi : Circumscribe a cf.i)
+    (ha : IsProperPolygon a) (i : Fin n) :
+    (next cf.toConfig)^[n] ⟨sendPoint cf (a i), sendChord cf (affineSpan ℝ {a i, a (i + 1)})⟩ =
+      ⟨sendPoint cf (a i), sendChord cf (affineSpan ℝ {a i, a (i + 1)})⟩ := by
+  simp [cf.iterate_next_sendPoint_sendChord ho hi ha n i]
 
 end EuConfig
 /-
 
-
-def sendChord (outer inner : Sphere P) (p : AffineSubspace ℝ P) : P2 ℝ := sorry
-
-theorem isTangent_inner_iff_inner_sendChord
-    (hor : 0 < outer.radius) (hir : 0 < inner.radius)
-    (hsphere : ∀ p ∈ outer, inner.radius < dist p inner.center)
-    (hcenter : outer.center ≠ inner.center) {q : AffineSubspace ℝ P}
-    (hq : Module.finrank ℝ q.direction = 1) :
-    inner.IsTangent q ↔ InnerCircle (config hor hir hsphere hcenter) (sendChord outer inner q) := by
-  sorry
-
-theorem mem_iff_incidence
-    (hor : 0 < outer.radius) (hir : 0 < inner.radius)
-    (hsphere : ∀ p ∈ outer, inner.radius < dist p inner.center)
-    (hcenter : outer.center ≠ inner.center) (p : P) {q : AffineSubspace ℝ P}
-    (hq : Module.finrank ℝ q.direction = 1) :
-    p ∈ q ↔ Incidence (config hor hir hsphere hcenter)
-      (sendPoint outer inner p) (sendChord outer inner q) := by
-  sorry
-
-def receivePoint (outer inner : Sphere P) (p : P2 ℝ) : P :=
-  sorry
-
-def receiveChord (outer inner : Sphere P) (p : P2 ℝ) : AffineSubspace ℝ P :=
-  sorry
-
-def IsFinitePoint (p : P2 ℝ) : Prop :=
-  sorry
-
-theorem sendPoint_receivePoint (hor : 0 < outer.radius) (hir : 0 < inner.radius)
-    (hsphere : ∀ p ∈ outer, inner.radius < dist p inner.center)
-    (hcenter : outer.center ≠ inner.center) {p : P2 ℝ} (h : IsFinitePoint p) :
-    sendPoint outer inner (receivePoint outer inner p) = p := by
-  sorry
-
-theorem receivePoint_sendPoint (hor : 0 < outer.radius) (hir : 0 < inner.radius)
-    (hsphere : ∀ p ∈ outer, inner.radius < dist p inner.center)
-    (hcenter : outer.center ≠ inner.center) (p : P) :
-    receivePoint outer inner (sendPoint outer inner p) = p := by
-  sorry
-
-theorem isTangent_iff_eq_rPoint (hor : 0 < outer.radius) (hir : 0 < inner.radius)
-    (hsphere : ∀ p ∈ outer, inner.radius < dist p inner.center)
-    (hcenter : outer.center ≠ inner.center) {p1 p2 : P} (h : p1 ≠ p2) :
-    inner.IsTangent (affineSpan ℝ {p1, p2}) ↔
-    sendPoint outer inner p2 =
-    (rPoint (config hor hir hsphere hcenter)
-      ⟨sendPoint outer inner p1, sendChord outer inner (affineSpan ℝ {p1, p2})⟩).1 := by
-  sorry
 
 
 theorem poncelet {outer inner : Sphere P} (hor : 0 < outer.radius) (hir : 0 < inner.radius)
