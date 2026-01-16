@@ -3,53 +3,59 @@ import Poncelet.Circle
 
 open EuclideanGeometry Real RealInnerProductSpace
 
--- by blizzard_inc from Discord
+-- by droplet739 from Discord
 theorem radius_lt_of_inside {V P : Type*} [NormedAddCommGroup V] [NormedSpace ℝ V]
     [MetricSpace P] [NormedAddTorsor V P] [Nontrivial V]
     (i o : Sphere P) (hi : 0 < i.radius)
     (hinside : ∀ p ∈ i, dist p o.center < o.radius) :
     i.radius < o.radius := by
-  suffices ∃ p ∈ i, ∃ c ≥ 1, (c : ℝ) • (p -ᵥ i.center) = p -ᵥ o.center by
-    obtain ⟨p, hp, c, hc', h⟩ := this
-    have hc : 0 < c := by linarith
-    apply lt_of_le_of_lt _ (hinside p hp)
-    rw [mem_sphere] at hp
-    rw [dist_eq_norm_vsub, ← hp, dist_eq_norm_vsub,]
-    trans ‖(p -ᵥ o.center) + (o.center -ᵥ i.center)‖
-    · simp
-    · simp only [vsub_add_vsub_cancel]
-      rw [← one_mul (‖ p -ᵥ i.center‖), ← h,norm_smul,Real.norm_of_nonneg hc.le]
-      apply mul_le_mul_of_nonneg_right hc' (norm_nonneg _)
-  suffices ∃ v ≠ 0, ∃ x ≥ 0, (x : ℝ) • (v : V) = i.center -ᵥ o.center by
-    obtain ⟨v,hv₁,x,hx,h⟩ := this
-    use ((i.radius / ‖v‖) • v +ᵥ i.center)
-    constructor
-    · rw [mem_sphere, dist_eq_norm_vsub, vadd_vsub, norm_smul, norm_div, norm_norm,
-        div_mul_cancel₀, norm_of_nonneg hi.le]
-      simpa
-    · use 1 + x/ (i.radius / ‖v‖)
-      constructor
-      · have : 0 < ‖v‖ := by simpa
-        simp only [ge_iff_le, le_add_iff_nonneg_right]
-        positivity
-      simp only [vadd_vsub]
-      trans (((i.radius / ‖v‖) • v) +ᵥ i.center) -ᵥ i.center + (i.center -ᵥ o.center)
-      · rw [vadd_vsub,← h,add_smul,one_smul]
-        rw [← mul_smul,div_mul_cancel₀]
-        simp only [ne_eq, div_eq_zero_iff, norm_eq_zero, not_or]
-        constructor
-        · exact hi.ne.symm
-        · exact hv₁
-      · simp [-vadd_vsub]
-  by_cases h : ‖i.center -ᵥ o.center‖ = 0
-  · simp only [norm_eq_zero, vsub_eq_zero_iff_eq] at h
-    rw [h]
-    obtain ⟨v,hv⟩ := exists_ne (0 : V)
-    use v,hv,0
-    simp
-  · set v := i.center -ᵥ o.center
-    use v,(by simpa using h),1
-    simp only [ge_iff_le, zero_le_one, one_smul, true_and]
+  simp only [dist_eq_norm_vsub] at hinside
+  let d : V := i.center -ᵥ o.center
+  contrapose! hinside
+  obtain ⟨y, hy_norm⟩ := exists_norm_eq V hi.le
+  have : 2 * i.radius ≤ ‖d + y‖ + ‖d - y‖ := by
+    grw [← norm_sub_le]
+    simp [← two_smul ℝ, norm_smul, hy_norm]
+  obtain h | h : o.radius ≤ ‖y + d‖ ∨ o.radius ≤ ‖-y + d‖ := by grind [neg_add_eq_sub]
+  · exact ⟨y +ᵥ i.center, by simp [mem_sphere, hy_norm], by simpa [d, vadd_vsub_assoc] using h⟩
+  · exact ⟨-y +ᵥ i.center, by simp [mem_sphere, hy_norm], by simpa [d, vadd_vsub_assoc] using h⟩
+
+-- by Aristotle
+lemma exists_dist_eq_dist_add_radius {V P : Type*} [NormedAddCommGroup V] [NormedSpace ℝ V]
+    [MetricSpace P] [NormedAddTorsor V P] [Nontrivial V]
+    (s : EuclideanGeometry.Sphere P) (c : P) (hs : 0 < s.radius) :
+    ∃ p ∈ s, dist p c = s.radius + dist s.center c := by
+  simp_rw [EuclideanGeometry.mem_sphere, dist_eq_norm_vsub]
+  obtain ⟨x, hx1, hx2⟩ : ∃ x : V, ‖x‖ = s.radius ∧ ‖x + (s.center -ᵥ c)‖ =
+      s.radius + ‖s.center -ᵥ c‖ := by
+    by_cases h : s.center = c
+    · obtain ⟨x, hx⟩ := exists_ne (0 : V)
+      use ‖s.radius / ‖x‖‖ • x
+      simp [h, norm_smul, abs_of_pos hs, hx]
+    · refine ⟨(s.radius / ‖s.center -ᵥ c‖) • (s.center -ᵥ c), ?_, ?_⟩
+      · rw [norm_smul, Real.norm_of_nonneg (div_nonneg hs.le (norm_nonneg _)),
+          div_mul_cancel₀ _ (norm_ne_zero_iff.mpr (vsub_ne_zero.mpr h))]
+      · have h' : (s.radius / ‖s.center -ᵥ c‖) • (s.center -ᵥ c) + (s.center -ᵥ c) =
+            (s.radius / ‖s.center -ᵥ c‖ + 1) • (s.center -ᵥ c) := by
+          rw [add_smul, one_smul]
+        rw [h', norm_smul,
+          Real.norm_of_nonneg (add_nonneg (div_nonneg hs.le (norm_nonneg _)) zero_le_one)]
+        have : ‖s.center -ᵥ c‖ ≠ 0 := by simpa using h
+        field
+  use x +ᵥ s.center
+  simp [hx1, hx2, vadd_vsub_assoc]
+
+theorem radius_lt_of_inside' {V P : Type*} [NormedAddCommGroup V] [NormedSpace ℝ V]
+    [MetricSpace P] [NormedAddTorsor V P] [Nontrivial V]
+    (i o : Sphere P) (hi : 0 < i.radius)
+    (hinside : ∀ p ∈ i, dist p o.center < o.radius)
+    {p : P} (hp : p ∈ o) :
+    i.radius < dist p i.center := by
+  obtain ⟨q, hq₁, hq₂⟩ := exists_dist_eq_dist_add_radius i o.center hi;
+  have hp_dist : dist p o.center = o.radius := by
+    exact mem_sphere.mp hp;
+  have := dist_triangle p i.center o.center
+  linarith [hinside q hq₁]
 
 variable {V P : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V]
     [MetricSpace P] [NormedAddTorsor V P] [hrank : Fact (Module.finrank ℝ V = 2)]
@@ -266,7 +272,21 @@ theorem mem_o_iff {p : P} : p ∈ cf.o ↔ OuterCircle cf.toConfig (cf.sendPoint
   exact (sq_eq_sq₀ (by simp) cf.o_pos.le).symm
 
 theorem not_innerCircle_of_mem_o {p : P} (hp : p ∈ cf.o) :
-    ¬ InnerCircle cf.toConfig (cf.sendPoint p) := by sorry
+    ¬ InnerCircle cf.toConfig (cf.sendPoint p) := by
+  simp only [InnerCircle, sendPoint, P2.lift_mk, Matrix.cons_val_zero,
+    Matrix.cons_val_one, Matrix.cons_val, one_pow]
+  simp_rw [div_pow, mul_pow, ← div_div, ← add_div, dist_eq_norm_vsub]
+  rw [proj_two (by simp [cf.center]) (by simp [cf.yDir_ne_center_i])
+    (by simpa using cf.inner_yDir_center_o)]
+  rw [div_eq_one_iff_eq (by simpa using cf.i_pos.ne.symm)]
+  rw [sq_eq_sq₀ (by simp) cf.i_pos.le]
+  rw [← dist_eq_norm_vsub]
+  apply ne_of_gt
+  have : Nontrivial V := by
+    have : FiniteDimensional ℝ V := FiniteDimensional.of_finrank_pos (by simp [hrank.out])
+    apply (Module.finrank_pos_iff_of_free ℝ _).mp
+    simp [hrank.out]
+  apply radius_lt_of_inside' cf.i cf.o cf.i_pos cf.inside hp
 
 noncomputable def dirVec {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.direction = 1) :
     p.direction :=
@@ -279,6 +299,10 @@ theorem dirVec_ne_zero {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.dir
   have : FiniteDimensional ℝ V := FiniteDimensional.of_finrank_pos (by simp [hrank.out])
   (Module.finrank_pos_iff_exists_ne_zero.mp
     (show 0 < Module.finrank ℝ p.direction by simp [hp])).choose_spec
+
+theorem dirVec_ne_zero' {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.direction = 1) :
+    (dirVec hp : V) ≠ 0 := by
+  simpa using dirVec_ne_zero hp
 
 theorem eq_span_dirVec {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.direction = 1) :
     p.direction = Submodule.span ℝ {(dirVec hp).val} := by
@@ -302,25 +326,24 @@ theorem linePoint_mem {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.dire
   ).some_mem
 
 noncomputable
-def sendChord (p : AffineSubspace ℝ P) : P2 ℝ :=
-  if hp : Module.finrank ℝ p.direction = 1 then
-    P2.mk ![
-      ⟪(dirVec hp).val, cf.yDir -ᵥ cf.i.center⟫ / (dist cf.yDir cf.i.center),
-      -⟪(dirVec hp).val, cf.o.center -ᵥ cf.i.center⟫ / (dist cf.o.center cf.i.center),
-      (⟪linePoint hp -ᵥ cf.i.center, cf.o.center -ᵥ cf.i.center⟫ *
-        ⟪(dirVec hp).val, cf.yDir -ᵥ cf.i.center⟫
-      - ⟪linePoint hp -ᵥ cf.i.center, cf.yDir -ᵥ cf.i.center⟫ *
-        ⟪(dirVec hp).val, cf.o.center -ᵥ cf.i.center⟫)
+def sendChord' (p : P) (d : V) (hd : d ≠ 0) : P2 ℝ :=
+  P2.mk ![
+      ⟪d, cf.yDir -ᵥ cf.i.center⟫ / (dist cf.yDir cf.i.center),
+      -⟪d, cf.o.center -ᵥ cf.i.center⟫ / (dist cf.o.center cf.i.center),
+      (⟪p -ᵥ cf.i.center, cf.o.center -ᵥ cf.i.center⟫ *
+        ⟪d, cf.yDir -ᵥ cf.i.center⟫
+      - ⟪p -ᵥ cf.i.center, cf.yDir -ᵥ cf.i.center⟫ *
+        ⟪d, cf.o.center -ᵥ cf.i.center⟫)
         / (dist cf.yDir cf.i.center * dist cf.o.center cf.i.center * cf.i.radius)
     ] (fun h ↦ by
-      have h0 : ⟪(dirVec hp).val, cf.yDir -ᵥ cf.i.center⟫ = 0 := by
+      have h0 : ⟪d, cf.yDir -ᵥ cf.i.center⟫ = 0 := by
         simpa [cf.yDir_ne_center_i] using congr($h 0)
-      have h1 : ⟪↑(dirVec hp), cf.o.center -ᵥ cf.i.center⟫ = 0 := by
+      have h1 : ⟪d, cf.o.center -ᵥ cf.i.center⟫ = 0 := by
         simpa [cf.center] using congr($h 1)
       obtain hxy := cf.inner_yDir_center_o
       obtain hyx := real_inner_comm (cf.o.center -ᵥ cf.i.center) _ ▸ hxy
       obtain ⟨a, b, hv⟩ := basis_two (by simpa using cf.center)
-        (by simpa using cf.yDir_ne_center_i) cf.inner_yDir_center_o (dirVec hp).val
+        (by simpa using cf.yDir_ne_center_i) cf.inner_yDir_center_o d
       rw [hv] at h0 h1
       have ha : a = 0 := by
         simpa [inner_add_left, real_inner_smul_left, hxy, hyx, cf.center, cf.yDir_ne_center_i]
@@ -328,20 +351,130 @@ def sendChord (p : AffineSubspace ℝ P) : P2 ℝ :=
       have hb : b = 0 := by
         simpa [inner_add_left, real_inner_smul_left, hxy, hyx, cf.center, cf.yDir_ne_center_i]
           using h0
-      simp [ha, hb, dirVec_ne_zero] at hv)
+      simp [ha, hb, hd] at hv)
+
+theorem sendChord'_eq {p1 p2 : P} {d1 d2 : V} {p : AffineSubspace ℝ P}
+    (hp : Module.finrank ℝ p.direction = 1)
+    (hp1 : p1 ∈ p) (hp2 : p2 ∈ p)
+    (hd1 : d1 ≠ 0) (hd2 : d2 ≠ 0)
+    (hdp1 : d1 ∈ p.direction) (hdp2 : d2 ∈ p.direction) :
+    cf.sendChord' p1 d1 hd1 = cf.sendChord' p2 d2 hd2 := by
+  have hy0 : dist cf.yDir cf.i.center ≠ 0 := by
+    simpa using cf.yDir_ne_center_i
+  have hd2' : (⟨d2, hdp2⟩ : p.direction) ≠ 0 := by
+    simpa using hd2
+  obtain ⟨l, hl⟩ := exists_smul_eq_of_finrank_eq_one hp hd2' ⟨d1, hdp1⟩
+  have hl : l • d2 = d1 := by simpa using hl
+  unfold sendChord'
+  rw [P2.mk_eq_mk']
+  use l
+  ext i
+  fin_cases i
+  · simp [← hl, real_inner_smul_left, field]
+  · simp [← hl, real_inner_smul_left, field]
+  · simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Fin.reduceFinMk, Matrix.cons_val, Pi.smul_apply,
+      Fin.isValue, smul_eq_mul]
+    simp_rw [← hl, real_inner_smul_left, ← mul_assoc, mul_comm _ l]
+    simp_rw [mul_assoc l, ← mul_sub, mul_div_assoc]
+    congr 2
+    rw [← sub_eq_zero, sub_sub_sub_comm]
+    simp_rw [← sub_mul, ← inner_sub_left, vsub_sub_vsub_cancel_right]
+    rw [sub_eq_zero]
+    rw [← inner_swap (by simpa using cf.center) (by simpa using cf.yDir_ne_center_i)
+      cf.inner_yDir_center_o hd2]
+    obtain ⟨m, hm⟩ := exists_smul_eq_of_finrank_eq_one hp hd2'
+      ⟨p1 -ᵥ p2, AffineSubspace.vsub_mem_direction hp1 hp2⟩
+    exact ⟨m, by simpa using hm⟩
+
+noncomputable
+def sendChord (p : AffineSubspace ℝ P) : P2 ℝ :=
+  if hp : Module.finrank ℝ p.direction = 1 then
+    cf.sendChord' (linePoint hp) (dirVec hp).val (by simpa using dirVec_ne_zero hp)
   else
     P2.mk ![0, 0, 1] (by simp)
+
+theorem sendChord_eq {g : P} {d : V} {p : AffineSubspace ℝ P}
+    (hp : Module.finrank ℝ p.direction = 1)
+    (hg : g ∈ p) (hd : d ≠ 0)
+    (hdp : d ∈ p.direction) :
+    cf.sendChord p = cf.sendChord' g d hd := by
+  simpa [sendChord, hp] using cf.sendChord'_eq hp (linePoint_mem _)
+    hg (by simpa using dirVec_ne_zero hp) hd (by simp) hdp
 
 theorem sendChord_inj {p q : AffineSubspace ℝ P}
     (hp : Module.finrank ℝ p.direction = 1)
     (hq : Module.finrank ℝ q.direction = 1) (h : cf.sendChord p = cf.sendChord q) :
-    p = q := by sorry
+    p = q := by
+  have : Nontrivial p.direction := by
+    have : FiniteDimensional ℝ p.direction := FiniteDimensional.of_finrank_pos (by simp [hp])
+    apply (Module.finrank_pos_iff_of_free ℝ _).mp
+    simp [hp]
+  have hpb : p ≠ ⊥ := fun h ↦ by
+    rw [h, AffineSubspace.direction_bot] at hp
+    simp at hp
+  have hqb : q ≠ ⊥ := fun h ↦ by
+    rw [h, AffineSubspace.direction_bot] at hq
+    simp at hq
+  obtain hpnonempty := (AffineSubspace.nonempty_iff_ne_bot p).mpr hpb
+  obtain hqnonempty := (AffineSubspace.nonempty_iff_ne_bot q).mpr hqb
+  obtain hxy := cf.inner_yDir_center_o
+  obtain hxy' := real_inner_comm (cf.o.center -ᵥ cf.i.center) _ ▸ hxy
+  by_cases hpara : p.direction = q.direction
+  · obtain ⟨mp, hmp⟩ := hpnonempty
+    obtain ⟨mq, hmq⟩ := hqnonempty
+    obtain ⟨⟨v, hvmemp⟩, hv⟩ := exists_ne (0 : p.direction)
+    have hv : v ≠ 0 := by simpa using hv
+    have hvmemq : v ∈ q.direction := hpara ▸ hvmemp
+    rw [cf.sendChord_eq hp hmp hv hvmemp, cf.sendChord_eq hq hmq hv hvmemq] at h
+    unfold sendChord' at h
+    obtain ⟨l, hl⟩ := (P2.mk_eq_mk' _ _).mp h
+    have hl1 : l = 1 := by
+      by_cases hx : ⟪v, cf.yDir -ᵥ cf.i.center⟫ = 0
+      · have hy : ⟪v, cf.o.center -ᵥ cf.i.center⟫ ≠ 0 := by
+          by_contra! hy
+          suffices v = 0 from hv this
+          obtain ⟨a, b, hv⟩ := basis_two (by simpa using cf.center)
+            (by simpa using cf.yDir_ne_center_i) hxy v
+          have ha : a = 0 := by
+            simpa [hv, inner_add_left, real_inner_smul_left, hxy, hxy', cf.center,
+              cf.yDir_ne_center_i] using hy
+          have hb : b = 0 := by
+            simpa [hv, inner_add_left, real_inner_smul_left, hxy, hxy', cf.center,
+              cf.yDir_ne_center_i] using hx
+          simpa [ha, hb] using hv
+        have : -⟪v, cf.o.center -ᵥ cf.i.center⟫ / dist cf.o.center cf.i.center ≠ 0 := by
+          simp [hy, cf.center]
+        simpa [this] using congr($hl 1)
+      · have : (⟪v, cf.yDir -ᵥ cf.i.center⟫ / dist cf.yDir cf.i.center) ≠ 0 := by
+          simp [hx, cf.yDir_ne_center_i]
+        simpa [this] using congr($hl 0)
+    have : (dist cf.yDir cf.i.center * dist cf.o.center cf.i.center * cf.i.radius) ≠ 0 := by
+      simp [cf.yDir_ne_center_i, cf.i_pos.ne.symm, cf.center]
+    obtain hz : ⟪mp -ᵥ cf.i.center, cf.o.center -ᵥ cf.i.center⟫ * ⟪v, cf.yDir -ᵥ cf.i.center⟫ -
+        ⟪mp -ᵥ cf.i.center, cf.yDir -ᵥ cf.i.center⟫ * ⟪v, cf.o.center -ᵥ cf.i.center⟫ =
+        ⟪mq -ᵥ cf.i.center, cf.o.center -ᵥ cf.i.center⟫ * ⟪v, cf.yDir -ᵥ cf.i.center⟫ -
+        ⟪mq -ᵥ cf.i.center, cf.yDir -ᵥ cf.i.center⟫ * ⟪v, cf.o.center -ᵥ cf.i.center⟫ := by
+      simpa [hl1, this] using congr($hl 2)
+    rw [sub_eq_sub_iff_sub_eq_sub] at hz
+    simp_rw [← sub_mul, ← inner_sub_left, vsub_sub_vsub_cancel_right] at hz
+    rw [← inner_swap (by simpa using cf.center) (by simpa using cf.yDir_ne_center_i)
+      cf.inner_yDir_center_o hv] at hz
+    obtain ⟨a, ha⟩ := hz
+    have hmpadd : mp = a • v +ᵥ mq := by
+      rw [eq_vadd_iff_vsub_eq]
+      exact ha.symm
+    have hmpmemq : mp ∈ q := by
+      rw [hmpadd]
+      exact AffineSubspace.vadd_mem_of_mem_direction (Submodule.smul_mem _ _ hvmemq) hmq
+    rw [← AffineSubspace.mk'_eq hmp, hpara]
+    apply AffineSubspace.mk'_eq hmpmemq
+  · sorry
 
 theorem mem_iff_incidence_sendChord {p : P} {q : AffineSubspace ℝ P}
     (hq : Module.finrank ℝ q.direction = 1) :
     p ∈ q ↔ Incidence cf.toConfig (cf.sendPoint p) (cf.sendChord q) := by
   rw [Incidence, sendPoint, sendChord]
-  simp only [Fin.isValue, hq, ↓reduceDIte, P2.lift₂_mk, Matrix.cons_val_zero,
+  simp only [sendChord', Fin.isValue, hq, ↓reduceDIte, P2.lift₂_mk, Matrix.cons_val_zero,
     Matrix.cons_val_one, Matrix.cons_val, one_mul]
   simp_rw [div_mul_div_comm]
   rw [show dist cf.o.center cf.i.center * cf.i.radius * dist cf.yDir cf.i.center
@@ -367,8 +500,10 @@ theorem isTangent_i_iff {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.di
   have : Nonempty p := by simpa using hnonempty
   have h_finite_dim : FiniteDimensional ℝ V := by
     exact FiniteDimensional.of_finrank_pos (by simp [hrank.1])
-  rw [InnerCircle, sendChord]
-  simp only [hp, ↓reduceDIte, P2.lift_mk, Matrix.cons_val_zero,
+  obtain hmem : (orthogonalProjection p cf.i.center).val ∈ p :=
+    EuclideanGeometry.orthogonalProjection_mem cf.i.center
+  rw [cf.sendChord_eq hp hmem (dirVec_ne_zero' hp) (dirVec hp).prop]
+  simp only [InnerCircle, sendChord', P2.lift_mk, Matrix.cons_val_zero,
     Matrix.cons_val_one, Matrix.cons_val]
   rw [neg_div, neg_sq]
   simp_rw [div_pow, dist_eq_norm_vsub]
@@ -384,26 +519,8 @@ theorem isTangent_i_iff {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.di
       simp [cf.yDir_ne_center_i, cf.center, dirVec_ne_zero])]
     rw [dist_eq_norm_vsub']
   congrm($(by ring) = ?_)
-  have : linePoint hp -ᵥ orthogonalProjection p cf.i.center ∈ p.direction := by
-    apply AffineSubspace.vsub_mem_direction (linePoint_mem hp)
-    apply EuclideanGeometry.orthogonalProjection_mem
-  have : ∃ l : ℝ, l • dirVec hp = linePoint hp -ᵥ orthogonalProjection p cf.i.center := by
-    rw [← Submodule.mem_span_singleton]
-    rw [← eq_span_dirVec]
-    exact this
-  obtain ⟨l, hl⟩ := this
-  have hlinePoint : linePoint hp -ᵥ cf.i.center =
-      (orthogonalProjection p cf.i.center).val -ᵥ cf.i.center + l • dirVec hp := by
-    rw [hl, add_comm, vsub_add_vsub_cancel]
-  simp_rw [hlinePoint]
-  simp_rw [inner_add_left, add_mul, real_inner_smul_left, mul_assoc l]
-  rw [add_sub_add_comm, ← mul_sub]
   obtain hxy := cf.inner_yDir_center_o
   obtain hxy' := real_inner_comm (cf.o.center -ᵥ cf.i.center) _ ▸ hxy
-  rw [(inner_swap (by simpa using cf.center) (by simpa using cf.yDir_ne_center_i)
-    hxy (by simpa using dirVec_ne_zero hp)).mp
-    (show ∃ a, a • (dirVec hp).val = (dirVec hp).val from ⟨1, by simp⟩)]
-  rw [sub_self, mul_zero, add_zero]
   rw [pow_two ‖(orthogonalProjection p cf.i.center).val -ᵥ cf.i.center‖]
   rw [pow_two ‖(dirVec hp).val‖]
   obtain ⟨a, b, hv⟩ := basis_two (by simpa using cf.center)
@@ -435,7 +552,23 @@ theorem isTangent_i_iff {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.di
 theorem not_tangentOuterCircle_of_isTangent {p : AffineSubspace ℝ P}
     (hp : Module.finrank ℝ p.direction = 1) (hi : cf.i.IsTangent p) :
     ¬ TangentOuterCircle cf.toConfig (cf.sendChord p) := by
-
+  obtain ⟨g, hg⟩ := hi
+  have hx0 : cf.o.center -ᵥ cf.i.center ≠ 0 := by
+    simpa using cf.center
+  have hy0 : cf.yDir -ᵥ cf.i.center ≠ 0 := by
+    simpa using cf.yDir_ne_center_i
+  have hi0 : cf.i.radius ≠ 0 := cf.i_pos.ne.symm
+  rw [cf.sendChord_eq hp hg.mem_space (by simpa using dirVec_ne_zero hp)
+    (dirVec hp).prop]
+  obtain hgmemi := hg.mem_sphere
+  simp only [TangentOuterCircle, sendChord', P2.lift_mk, Matrix.cons_val_zero,
+    Matrix.cons_val, Matrix.cons_val_one, toConfig]
+  simp_rw [dist_eq_norm_vsub]
+  set v := (dirVec hp : V)
+  set y := cf.yDir -ᵥ cf.i.center
+  set x := cf.o.center -ᵥ cf.i.center
+  set r := g -ᵥ cf.i.center
+  field_simp
   sorry
 
 theorem rChord_sendPoint_sendChord {p : P} {q1 q2 : AffineSubspace ℝ P}

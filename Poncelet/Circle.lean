@@ -103,19 +103,25 @@ theorem encard_dom_fix1_le [hchar : NeZero (2 : K)] (p : P2 K) :
   classical
   induction p with | mk p hp
   by_cases hp2 : p 2 = 0
-  · have hp1 : p 1 ≠ 0 := by
-      by_contra! hp1
+  · by_cases hp1 : p 1 = 0
+    · suffices {pq ∈ dom cf | pq.1 = P2.mk _ hp} = ∅ by
+        simp [this]
+      rw [Set.eq_empty_iff_forall_notMem]
+      intro pq
+      obtain ⟨p', q⟩ := pq
+      by_contra! hpq
+      obtain ⟨hpq, rfl⟩ : ⟨p', q⟩ ∈ dom cf ∧ p' = P2.mk p hp := by simpa using hpq
+      have hp0 : p 0 = 0 := by simpa [OuterCircle, hp2, hp1] using hpq.1
       suffices p = 0 from hp this
       ext i
       fin_cases i
-      · simpa [hp1, hp2] using sorry
-      · sorry
-      · sorry
-    suffices ∃ (hp1 : p 1 ≠ 0), {pq ∈ dom cf | pq.1 = P2.mk _ hp} ⊆ {⟨P2.mk _ hp, P2.mk ![p 1, -p 0, 0] sorry⟩} by
-      obtain ⟨_, this⟩ := this
+      · simpa using hp0
+      · simpa using hp1
+      · simpa using hp2
+    suffices {pq ∈ dom cf | pq.1 = P2.mk _ hp} ⊆
+        {⟨P2.mk _ hp, P2.mk ![p 1, -p 0, 0] (by simp [hp1])⟩} by
       apply (Set.encard_mono this).trans
       simp
-    refine ⟨sorry, ?_⟩
     intro pq h
     obtain ⟨p', q⟩ := pq
     obtain ⟨hpq, rfl⟩ : (p', q) ∈ dom cf ∧ p' = P2.mk p hp := by simpa using h
@@ -124,8 +130,17 @@ theorem encard_dom_fix1_le [hchar : NeZero (2 : K)] (p : P2 K) :
         ∧ q 0 ^ 2 + q 1 ^ 2 = q 2 ^ 2 ∧ p 0 * q 0 + p 1 * q 1 = 0 := by
       simpa [hp2] using hpq
     suffices P2.mk q hq = P2.mk ![p 1, -p 0, 0] _ by simpa
-    sorry
-
+    refine P2.mk_eq_mk_of_third_zero _ _ ?_ (by simp) ?_
+    · have ho : p 0 ^ 2 = - p 1 ^ 2 := by linear_combination ho
+      obtain hpq : p 0 * q 0 = -p 1 * q 1 := by linear_combination hpq
+      obtain hpq : p 0 ^ 2 * q 0 ^ 2 = p 1 ^ 2 * q 1 ^ 2 := by linear_combination congr($hpq ^ 2)
+      rw [ho] at hpq
+      have hpq : q 0 ^ 2 + q 1 ^ 2 = 0 := by
+        rw [← mul_left_inj' hp1, ← mul_left_inj' hp1]
+        linear_combination -hpq
+      simpa [hpq] using hi.symm
+    · simp only [Matrix.cons_val_one, Matrix.cons_val_zero]
+      linear_combination -hpq
   by_cases hq1 : ∃ (q0 q2 : K) (hq : ![q0, 0, q2] ≠ 0),
       ⟨P2.mk _ hp, P2.mk _ hq⟩ ∈ {pq ∈ dom cf | pq.1 = P2.mk _ hp}
   · obtain ⟨q0, q2, hq, hpq⟩ := hq1
@@ -144,21 +159,14 @@ theorem encard_dom_fix1_le [hchar : NeZero (2 : K)] (p : P2 K) :
         simp [hp02]
       · have hp02 : -p 0 = p 2 := by simpa [hi, hq2, ← neg_mul] using hpq
         simp [← hp02]
-    have hp2 : p 2 = p 0 * q0 / q2 := by
+    have hp2' : p 2 = p 0 * q0 / q2 := by
       field_simp
       linear_combination -hpq
     have hp0 : p 0 ≠ 0 := by
       by_contra! hp0
       suffices p = 0 from hp this
-      have hp20 : p 2 = 0 := by simpa [hp0] using hp2
-      ext i
-      fin_cases i
-      · simpa using hp0
-      · simpa [hp0, hp2] using ho
-      · simpa using hp20
-    have hp2ne0 : p 2 ≠ 0 := by
-      by_contra h
-      simp [h, hp0] at hp02
+      have hp20 : p 2 = 0 := by simpa [hp0] using hp2'
+      simp [hp20] at hp2
     suffices {pq ∈ dom cf | pq.1 = P2.mk _ hp} ⊆
         {⟨P2.mk _ hp, P2.mk _ hq⟩,
         ⟨P2.mk _ hp, P2.mk ![(p 2 ^ 2 - p 1 ^ 2) / (2 * p 0 * p 1), 1,
@@ -184,7 +192,7 @@ theorem encard_dom_fix1_le [hchar : NeZero (2 : K)] (p : P2 K) :
       fin_cases i
       · suffices q' 0 = q' 2 / q2 * q0 by simpa
         field_simp
-        rw [hp2, hq'1] at hpq'
+        rw [hp2', hq'1] at hpq'
         field_simp at hpq'
         rw [← mul_left_inj' hp0]
         linear_combination hpq'
@@ -214,29 +222,85 @@ theorem encard_dom_fix1_le [hchar : NeZero (2 : K)] (p : P2 K) :
       · simp only [Fin.reduceFinMk, Fin.isValue, Pi.smul_apply, Matrix.cons_val, smul_eq_mul]
         field_simp
         grind
-
   let poly : Polynomial K := Polynomial.C (p 2 ^ 2 - p 0 ^ 2) * Polynomial.X ^ 2
     - Polynomial.C (2 * p 0 * p 1) * Polynomial.X + Polynomial.C (p 2 ^ 2 - p 1 ^ 2)
+  have hpoly : poly ≠ 0 := by
+    by_contra!
+    unfold poly at this
+    have ha : p 2 ^ 2 - p 0 ^ 2 = 0 := by
+      by_contra ha
+      rw [← Polynomial.degree_eq_bot] at this
+      contrapose this
+      suffices (Polynomial.C (p 2 ^ 2 - p 0 ^ 2) * Polynomial.X ^ 2
+        - Polynomial.C (2 * p 0 * p 1) * Polynomial.X
+        + Polynomial.C (p 2 ^ 2 - p 1 ^ 2)).degree = 2 by rw [this]; simp
+      compute_degree!
+    rw [ha, Polynomial.C_0, zero_mul, zero_sub] at this
+    have hb : 2 * p 0 * p 1 = 0 := by
+      set b := 2 * p 0 * p 1
+      by_contra! hb
+      rw [← Polynomial.degree_eq_bot] at this
+      contrapose this
+      suffices (-(Polynomial.C b * Polynomial.X)
+        + Polynomial.C (p 2 ^ 2 - p 1 ^ 2)).degree = 1 by rw [this];simp
+      compute_degree!
+    have hc : p 2 ^ 2 - p 1 ^ 2 = 0 := by simpa [hb, -map_sub] using this
+    obtain h0 | h1 : p 0 = 0 ∨ p 1 = 0 := by simpa [hchar.out] using hb
+    · refine hp2 ?_
+      simpa [h0] using ha
+    · refine hp2 ?_
+      simpa [h1] using hc
   suffices {pq ∈ dom cf | pq.1 = P2.mk _ hp} ⊆
-    (fun x ↦ ⟨P2.mk _ hp, P2.mk ![x, 1, (p 0 * x + p 1) / p 2] sorry⟩) '' poly.roots.toFinset by
-
-    sorry
-
-  have h (q : Fin 3 → K) (hq : q ≠ 0)
-      (hpq : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) : False := by
-    rw [mem_dom] at hpq
-    obtain ⟨_, hi, hpq⟩ := hpq
-    by_cases hq1 : q 1 = 0
-    · sorry
-    have h : (p 2 ^ 2 - p 0 ^ 2) * (q 0 / q 1) ^ 2
-         - 2 * p 0 * p 1 * (q 0 / q 1) + (p 2 ^ 2 - p 1 ^ 2) = 0 := by
+    (fun x ↦ ⟨P2.mk _ hp, P2.mk ![x, 1, (p 0 * x + p 1) / p 2] (by simp)⟩) '' poly.roots.toFinset by
+    apply (Set.encard_mono this).trans
+    grw [Set.encard_image_le]
+    rw [Set.encard_coe_eq_coe_finsetCard, Nat.cast_le_ofNat]
+    grw [Multiset.toFinset_card_le]
+    grw [Polynomial.card_roots']
+    unfold poly
+    rw [Polynomial.natDegree_add_C]
+    grw [Polynomial.natDegree_sub_le]
+    apply max_le
+    · grw [Polynomial.natDegree_C_mul_le]
+      simp
+    · grw [Polynomial.natDegree_C_mul_le]
+      simp
+  intro pq h
+  obtain ⟨p', q⟩ := pq
+  obtain ⟨hpq, rfl⟩ : (p', q) ∈ dom cf ∧ p' = P2.mk p hp := by simpa using h
+  induction q with | mk q hq
+  have hq1 : q 1 ≠ 0 := by
+    contrapose! hq1
+    have hqeq : ![q 0, 0, q 2] = q := by
+      ext i
+      fin_cases i
+      · simp
+      · simpa using hq1.symm
+      · simp
+    refine ⟨q 0, q 2, ?_, ?_⟩
+    · convert hq
+    · convert h
+  rw [mem_dom] at hpq
+  obtain ⟨_, hi, hpq⟩ := hpq
+  suffices ∃ x, Polynomial.eval x poly = 0 ∧ P2.mk ![x, 1, (p 0 * x + p 1) / p 2] _ = P2.mk q hq by
+    simpa [hpoly]
+  use q 0 / q 1
+  constructor
+  · have h : (p 2 ^ 2 - p 0 ^ 2) * (q 0 / q 1) ^ 2
+        - 2 * p 0 * p 1 * (q 0 / q 1) + (p 2 ^ 2 - p 1 ^ 2) = 0 := by
       field_simp
       linear_combination p 2 ^ 2 * hi - congr($hpq ^ 2)
-    have : p 0 / p 1 ∈ (Polynomial.C (p 2 ^ 2 - p 0 ^ 2) * Polynomial.X ^ 2).roots := by
-      sorry
-    sorry
-  sorry
-
+    simpa [poly] using h
+  · symm
+    rw [P2.mk_eq_mk']
+    use q 1
+    ext i
+    fin_cases i
+    · simp [field]
+    · simp
+    · simp only [Fin.reduceFinMk, Fin.isValue, Pi.smul_apply, Matrix.cons_val, smul_eq_mul]
+      field_simp
+      linear_combination -hpq
 
 theorem encard_dom_fix2_le (q : P2 K) : Set.encard {pq ∈ dom cf | pq.2 = q} ≤ 2 := by
 
