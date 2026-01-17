@@ -40,7 +40,7 @@ instance [DecidableEq K] : DecidablePred (OuterCircle cf) := by
 is tangent to the outer circle. -/
 def TangentOuterCircle (p : P2 K) : Prop :=
   p.lift (fun p hp ↦
-      2 * cf.u * p 0 * p 2 + cf.u ^ 2 * p 1 ^ 2 = (1 + cf.u ^ 2 - cf.r ^ 2) * p 2 ^ 2)
+      (cf.r ^ 2 - cf.u ^ 2) * p 0 ^ 2 + 2 * cf.u * p 0 * p 2 + cf.r ^ 2 * p 1 ^ 2 = p 2 ^ 2)
     fun p q hp hq h ↦ by
     obtain ⟨l, h0, rfl⟩ := h
     simp_rw [Pi.smul_apply, smul_eq_mul]
@@ -66,6 +66,27 @@ def InnerCircle (_ : Config K) (p : P2 K) : Prop :=
 instance [DecidableEq K] : DecidablePred (InnerCircle cf) := by
   unfold InnerCircle P2.lift
   infer_instance
+
+theorem tangentOuterCircle_iff (p : P2 K) (hi : InnerCircle cf p) :
+    TangentOuterCircle cf p ↔
+      (p.lift (fun p hp ↦
+        2 * cf.u * p 0 * p 2 + cf.u ^ 2 * p 1 ^ 2 = (1 + cf.u ^ 2 - cf.r ^ 2) * p 2 ^ 2)
+        fun p q hp hq h ↦ by
+          obtain ⟨l, h0, rfl⟩ := h
+          simp_rw [Pi.smul_apply, smul_eq_mul]
+          conv_rhs =>
+            rw [← mul_left_inj' (sq_eq_zero_iff.ne.mpr h0)]
+          congrm ?_ = ?_ <;> ring) := by
+  induction p with | mk p hp
+  simp only [TangentOuterCircle, P2.lift_mk]
+  conv_lhs => rw [← sub_eq_zero]
+  conv_rhs => rw [← sub_eq_zero]
+  congrm(?_ = 0)
+  simp only [InnerCircle, P2.lift_mk] at hi
+  have : p 0 ^ 2 = p 2 ^ 2 - p 1 ^ 2 := by linear_combination hi
+  rw [this]
+  ring
+
 
 /-- The predicate that a point is on the line. -/
 def Incidence (_ : Config K) (p q : P2 K) : Prop :=
@@ -227,24 +248,9 @@ theorem encard_dom_fix1_le [hchar : NeZero (2 : K)] (p : P2 K) :
   have hpoly : poly ≠ 0 := by
     by_contra!
     unfold poly at this
-    have ha : p 2 ^ 2 - p 0 ^ 2 = 0 := by
-      by_contra ha
-      rw [← Polynomial.degree_eq_bot] at this
-      contrapose this
-      suffices (Polynomial.C (p 2 ^ 2 - p 0 ^ 2) * Polynomial.X ^ 2
-        - Polynomial.C (2 * p 0 * p 1) * Polynomial.X
-        + Polynomial.C (p 2 ^ 2 - p 1 ^ 2)).degree = 2 by rw [this]; simp
-      compute_degree!
-    rw [ha, Polynomial.C_0, zero_mul, zero_sub] at this
-    have hb : 2 * p 0 * p 1 = 0 := by
-      set b := 2 * p 0 * p 1
-      by_contra! hb
-      rw [← Polynomial.degree_eq_bot] at this
-      contrapose this
-      suffices (-(Polynomial.C b * Polynomial.X)
-        + Polynomial.C (p 2 ^ 2 - p 1 ^ 2)).degree = 1 by rw [this];simp
-      compute_degree!
-    have hc : p 2 ^ 2 - p 1 ^ 2 = 0 := by simpa [hb, -map_sub] using this
+    have ha : p 2 ^ 2 - p 0 ^ 2 = 0 := by simpa [-map_sub] using congr(Polynomial.coeff $this 2)
+    have hb : 2 * p 0 * p 1 = 0 := by simpa [-map_sub] using congr(Polynomial.coeff $this 1)
+    have hc : p 2 ^ 2 - p 1 ^ 2 = 0 := by simpa [-map_sub] using congr(Polynomial.coeff $this 0)
     obtain h0 | h1 : p 0 = 0 ∨ p 1 = 0 := by simpa [hchar.out] using hb
     · refine hp2 ?_
       simpa [h0] using ha
@@ -507,7 +513,11 @@ theorem rPoint_eq_self [DecidableEq K] [hchar : NeZero (2 : K)]
   obtain ⟨p, q⟩ := pq
   induction p with | mk p hp
   induction q with | mk q hq
-  simp [rPoint, TangentOuterCircle, P2.mk'_eq (rPoint'_ne_zero cf hp hq h),
+  obtain ⟨ho, hi, hpq⟩ := mem_dom cf hp hq |>.mp h
+  simp only
+  simp [rPoint,
+      tangentOuterCircle_iff cf (P2.mk q hq) (by simpa [InnerCircle] using hi),
+      P2.mk'_eq (rPoint'_ne_zero cf hp hq h),
     P2.mk_eq_mk' _ _, rPoint'_eq_self cf hp hq h]
 
 /-- Reflect the edge across the vertex, expressed in raw coordinates. -/
@@ -872,7 +882,8 @@ theorem next_eq_self' [DecidableEq K] [hchar : NeZero (2 : K)]
       (p 1 = 0 ∧ p 2 = p 0) ∧ q 1 = 0 ∧ q 2 = q 0 ∨
       (p 0 = -p 2 ∧ p 1 = 0) ∧ q 0 = -q 2 ∧ q 1 = 0 by
     simpa [P2.mk_eq_mk', funext_iff, Fin.forall_fin_succ]
-  simp only [InnerCircle, TangentOuterCircle, P2.lift_mk]
+  simp only [InnerCircle,
+    tangentOuterCircle_iff cf (P2.mk q hq) (by simpa [InnerCircle] using hi), P2.lift_mk]
   constructor
   · rintro ⟨h1, h2⟩
     have hp2 : p 2 ≠ 0 := by
