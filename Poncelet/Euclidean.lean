@@ -1,7 +1,13 @@
-import Mathlib
-import Poncelet.Circle
+import Poncelet.CircleConclude
 
 open EuclideanGeometry Real RealInnerProductSpace
+
+theorem exists_IsTangent {V P : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V]
+    [MetricSpace P] [NormedAddTorsor V P] [Fact (Module.finrank ℝ V = 2)]
+    {i : Sphere P} (hi : 0 < i.radius)
+    {p : P} (hp : i.radius ≤ dist p i.center) :
+    ∃ l : AffineSubspace ℝ P, Module.finrank ℝ l.direction = 1 ∧ p ∈ l ∧ i.IsTangent l := by
+  sorry
 
 -- by droplet739 from Discord
 theorem radius_lt_of_inside {V P : Type*} [NormedAddCommGroup V] [NormedSpace ℝ V]
@@ -223,6 +229,9 @@ def toConfig : Config ℝ where
       apply (Module.finrank_pos_iff_of_free ℝ _).mp
       simp [hrank.out]
     exact radius_lt_of_inside cf.i cf.o cf.i_pos cf.inside
+
+theorem u_add_r_sq : (cf.toConfig.u + cf.toConfig.r) ^ 2 ≠ 1 := by sorry
+theorem u_sub_r_sq : (cf.toConfig.u - cf.toConfig.r) ^ 2 ≠ 1 := by sorry
 
 noncomputable
 def sendPoint (p : P) : P2 ℝ := P2.mk ![
@@ -1048,6 +1057,15 @@ theorem isAffineLine_rChord_of_validPair {pq : P × AffineSubspace ℝ P} (h : c
   · simpa [snd_rPoint] using cf.isAffineLine_sendChord h.hq
   · simpa [snd_rPoint] using cf.isAffine_sendChord h.hq h.hi
 
+noncomputable
+def send_euNext {pq : P × AffineSubspace ℝ P} (h : cf.ValidPair pq) :
+    (fun pq ↦ ⟨cf.sendPoint pq.1, cf.sendChord pq.2⟩) (cf.euNext pq) =
+    next cf.toConfig ⟨cf.sendPoint pq.1, cf.sendChord pq.2⟩ := by
+  unfold euNext
+  simp only
+  rw [cf.sendPoint_recvPoint (by exact cf.isAffine_rPoint_of_validPair h),
+    cf.sendChord_recvChord (by exact cf.isAffineLine_rChord_of_validPair h)]
+
 theorem validPair_euNext {pq : P × AffineSubspace ℝ P} (h : cf.ValidPair pq) :
     cf.ValidPair (cf.euNext pq) := by
   simp only [euNext]
@@ -1139,6 +1157,17 @@ theorem validPair_iterate_euNext {pq : P × AffineSubspace ℝ P} (h : cf.ValidP
     rw [Function.iterate_succ_apply']
     exact cf.validPair_euNext ih
 
+noncomputable
+def send_iterate_euNext {pq : P × AffineSubspace ℝ P} (h : cf.ValidPair pq) (n : ℕ) :
+    (fun pq ↦ ⟨cf.sendPoint pq.1, cf.sendChord pq.2⟩) (cf.euNext^[n] pq) =
+    (next cf.toConfig)^[n] ⟨cf.sendPoint pq.1, cf.sendChord pq.2⟩ := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+    rw [Function.iterate_succ_apply', Function.iterate_succ_apply']
+    rw [cf.send_euNext (cf.validPair_iterate_euNext h n)]
+    rw [← ih]
+
 theorem iterate_euNext_mem_prev {pq : P × AffineSubspace ℝ P} (h : cf.ValidPair pq) (i : ℕ) :
     (cf.euNext^[i + 1] pq).1 ∈ (cf.euNext^[i] pq).2 := by
   rw [Function.iterate_succ_apply']
@@ -1166,7 +1195,7 @@ theorem inscribe_polygon {pq : P × AffineSubspace ℝ P}
 
 theorem circumscribe_polygon {pq : P × AffineSubspace ℝ P}
     (h : cf.ValidPair pq)
-    (n : ℕ) [NeZero n] (hclose : cf.euNext^[n] pq = pq) :
+    {n : ℕ} [NeZero n] (hclose : cf.euNext^[n] pq = pq) :
     Circumscribe (cf.polygon pq n) cf.i := by
   rintro ⟨i, hin⟩
   have hclose' : cf.polygon pq n (⟨i, hin⟩ + 1) = (cf.euNext^[i + 1] pq).1 := by
@@ -1191,7 +1220,7 @@ theorem circumscribe_polygon {pq : P × AffineSubspace ℝ P}
 
 theorem isProperPolygon_polygon {pq : P × AffineSubspace ℝ P}
     (h : cf.ValidPair pq)
-    (n : ℕ) [NeZero n] (hclose : cf.euNext^[n] pq = pq) :
+    {n : ℕ} [NeZero n] (hclose : cf.euNext^[n] pq = pq) :
     IsProperPolygon (cf.polygon pq n) := by
   have hclose' (i : ℕ) (hin : i < n) :
       (cf.euNext^[(⟨i, hin⟩ + 1 : Fin n)] pq) = (cf.euNext^[i + 1] pq) := by
@@ -1235,6 +1264,85 @@ theorem isProperPolygon_polygon {pq : P × AffineSubspace ℝ P}
     exact (cf.iterate_euNext_snd_ne h i).symm
 
 end EuConfig
+
+theorem poncelet_of_center_ne {o i : Sphere P}
+    (ho : 0 < o.radius) (hi : 0 < i.radius) (hinside : ∀ p ∈ i, dist p o.center < o.radius)
+    (hcenter : o.center ≠ i.center)
+    {n : ℕ} [NeZero n] {a : Fin n → P}
+    (hao : Inscribe a o) (hai : Circumscribe a i) (ha : IsProperPolygon a)
+    {p : P} (hp : p ∈ o) :
+    ∃ b : Fin n → P, b 0 = p ∧ Inscribe b o ∧ Circumscribe b i ∧ IsProperPolygon b := by
+  have : Nontrivial V := by
+    have : FiniteDimensional ℝ V := FiniteDimensional.of_finrank_pos (by simp [hrank.out])
+    apply (Module.finrank_pos_iff_of_free ℝ _).mp
+    simp [hrank.out]
+  let cf : EuConfig P := {
+    o := o
+    i := i
+    o_pos := ho
+    i_pos := hi
+    inside := hinside
+    center := hcenter
+  }
+  have hpi : i.radius < dist p i.center := radius_lt_of_inside' _ _ hi hinside hp
+  obtain ⟨l, hldim, hpmem, hl⟩ := exists_IsTangent hi hpi.le
+  have hvalid : cf.ValidPair ⟨p, l⟩ := {
+    hq := hldim
+    ho := hp
+    hi := hl
+    hpq := hpmem
+  }
+  have hk : cf.toConfig.k ≠ 0 := by
+    rw [← sq_eq_zero_iff.ne]
+    rw [cf.toConfig.k_sq, sub_eq_zero.ne]
+    exact cf.u_add_r_sq
+  have hdom : dom₀ cf.toConfig = dom cf.toConfig := by
+    suffices (1 - cf.toConfig.u) ^ 2 ≠ cf.toConfig.r ^ 2 ∧
+        (-1 - cf.toConfig.u) ^ 2 ≠ cf.toConfig.r ^ 2 by
+      simpa [dom₀]
+    obtain h1 := cf.u_add_r_sq
+    obtain h2 := cf.u_sub_r_sq
+    grind
+  have ha0 : Module.finrank ℝ ↥(affineSpan ℝ {a 0, a 1}).direction = 1 := by
+    convert finrank_direction_affineSpan_eq_two (ha 0).1 <;> simp
+  have ha0 : (cf.sendPoint (a 0), cf.sendChord (affineSpan ℝ {a 0, a 1})) ∈ dom₀ cf.toConfig := by
+    rw [hdom]
+    refine ⟨?_, ?_, ?_⟩
+    · rw [← cf.mem_o_iff]
+      exact hao 0
+    · simp only
+      rw [← cf.isTangent_i_iff ha0]
+      convert hai 0; simp
+    · rw [← cf.mem_iff_incidence_sendChord ha0]
+      apply mem_affineSpan
+      simp
+  have hclose' :
+      (fun pq ↦ (cf.sendPoint pq.1, cf.sendChord pq.2)) (cf.euNext^[n] ⟨p, l⟩)
+      = (fun pq ↦ (cf.sendPoint pq.1, cf.sendChord pq.2)) (p, l) := by
+    rw [cf.send_iterate_euNext hvalid]
+    apply iterate_next_eq_self cf.toConfig hk ha0 ?_ ?_
+    · rw [hdom]
+      refine ⟨?_, ?_, ?_⟩
+      · rw [← cf.mem_o_iff]
+        exact hp
+      · rw [← cf.isTangent_i_iff hldim]
+        exact hl
+      · rw [← cf.mem_iff_incidence_sendChord hldim]
+        exact hpmem
+    · obtain h := cf.iterate_next_sendPoint_sendChord hao hai ha n 0
+      convert h <;> simp
+  have hclose : cf.euNext^[n] ⟨p, l⟩ = ⟨p, l⟩ := by
+    ext1
+    · exact cf.sendPoint_inj congr(($hclose').1)
+    · refine cf.sendChord_inj ?_ hldim congr(($hclose').2)
+      apply (cf.validPair_iterate_euNext hvalid n).hq
+  refine ⟨fun i ↦ ((cf.euNext^[i]) ⟨p, l⟩).1, by simp, ?_, ?_, ?_⟩
+  · exact cf.inscribe_polygon hvalid n
+  · exact cf.circumscribe_polygon hvalid hclose
+  · exact cf.isProperPolygon_polygon hvalid hclose
+
+
+
 /-
 
 
