@@ -727,6 +727,17 @@ def rPoint [DecidableEq K] (pq : P2 K × P2 K) : P2 K × P2 K :=
 theorem snd_rPoint [DecidableEq K] (pq : P2 K × P2 K) :
     (rPoint cf pq).2 = pq.2 := rfl
 
+theorem IsAffine_rPoint [DecidableEq K] {pq : P2 K × P2 K}
+    (hp : pq.1.IsAffine)
+    (hq : pq.2.IsAffine) :
+    (rPoint cf pq).1.IsAffine := by
+  obtain ⟨p, q⟩ := pq
+  induction p with | mk p hp'
+  induction q with | mk q hq'
+  have hp2 : p 2 ≠ 0 := by simpa [P2.IsAffine] using hp
+  have hq2 : q 2 ≠ 0 := by simpa [P2.IsAffine] using hq
+  simp [rPoint, rPoint', P2.IsAffine, hq2, P2.mk', hp2]
+
 theorem rPoint_mk [DecidableEq K] [hchar : NeZero (2 : K)]
     {p q : Fin 3 → K} (hp : p ≠ 0) (hq : q ≠ 0)
     (hpq : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) :
@@ -1045,6 +1056,56 @@ def rChord [DecidableEq K] (pq : P2 K × P2 K) : P2 K × P2 K :=
 
 theorem fst_rChord [DecidableEq K] (pq : P2 K × P2 K) :
     (rChord cf pq).1 = pq.1 := rfl
+
+theorem isAffineLine_rChord [DecidableEq K] {pq : P2 K × P2 K}
+    (hpq : pq ∈ dom cf)
+    (hq : pq.2.IsAffineLine)
+    (hqPoint : pq.2.IsAffine):
+    (rChord cf pq).2.IsAffineLine := by
+  obtain ⟨p, q⟩ := pq
+  induction p with | mk p hp'
+  induction q with | mk q hq'
+  obtain ⟨ho, hi, hpq⟩ := mem_dom cf hp' hq' |>.mp hpq
+  have hq2 : q 2 ≠ 0 := by simpa [P2.IsAffine] using hqPoint
+  by_cases h0 : rChord' cf p q = 0
+  · suffices P2.mk ![(1 : K), 0, 0] _ ≠ P2.mk ![0, 0, 1] _ by
+      simpa [rChord, P2.IsAffineLine, P2.mk', h0]
+    by_contra! h
+    rw [P2.mk_eq_mk] at h
+    obtain ⟨l, hl0, hl⟩ := h
+    simpa [hl0] using congr($hl 2).symm
+  suffices P2.mk (rChord' cf p q) _ ≠ P2.mk ![0, 0, 1] _ by
+    simpa [rChord, P2.IsAffineLine, P2.mk', h0]
+  unfold rChord'
+  by_cases hs : 2 * cf.u * p 0 + cf.r ^ 2 * p 2 - cf.u ^ 2 * p 2 = 0
+  · simp only [hs, ↓reduceIte]
+    by_cases hp0 : p 0 = 0
+    · simp only [hp0, ↓reduceIte]
+      contrapose! hq
+      simp only [P2.IsAffineLine, Decidable.not_not]
+      rw [P2.mk_eq_mk'] at hq ⊢
+      obtain ⟨l, hl⟩ := hq
+      use l
+      ext i
+      fin_cases i
+      · simpa using congr($hl 0)
+      · simpa using congr($hl 1)
+      · simpa using congr($hl 2)
+    suffices P2.mk ![p 1, -p 0, 0] _ ≠ P2.mk ![0, 0, 1] _ by
+      simpa [hp0, hq2]
+    by_contra! h
+    rw [P2.mk_eq_mk] at h
+    obtain ⟨l, hl0, hl⟩ := h
+    simpa [hl0] using congr($hl 2).symm
+  · simp only [hs, ↓reduceIte]
+    by_contra! h
+    rw [P2.mk_eq_mk'] at h
+    obtain ⟨l, h⟩ := h
+    have hx : 2 * p 0 * q 2 - (2 * cf.u * p 0 + cf.r ^ 2 * p 2 - cf.u ^ 2 * p 2) * q 0 = 0 := by
+      simpa using congr($h 0)
+    have hx : 2 * p 1 * q 2 - (2 * cf.u * p 0 + cf.r ^ 2 * p 2 - cf.u ^ 2 * p 2) * q 1 = 0 := by
+      simpa using congr($h 1)
+    grind
 
 theorem rChord_mk [DecidableEq K] [hchar : NeZero (2 : K)] {p q : Fin 3 → K}
     (hp : p ≠ 0) (hq : q ≠ 0)

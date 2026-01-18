@@ -60,18 +60,25 @@ variable {V P : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V]
 omit [Fact (Module.finrank ℝ V = 2)] in
 theorem finrank_direction_affineSpan_eq_two {p q : P} (h : p ≠ q) :
     Module.finrank ℝ (affineSpan ℝ {p, q}).direction = 1 := by
-  classical
-  have : ({p, q} : Set P) = Set.range ((↑) : ({p, q} : Finset P) → P) := by
-    ext i
-    simp
-  rw [direction_affineSpan, this]
-  apply AffineIndependent.finrank_vectorSpan ?_ ?_
-  · rw [affineIndependent_iff_linearIndependent_vsub ℝ _ ⟨p, by simp⟩]
-    have : Subsingleton {x : ({p, q} : Finset P) // x ≠ ⟨p, by simp⟩} :=
-      ⟨by grind⟩
-    apply LinearIndependent.of_subsingleton ⟨⟨q, by simp⟩, by simpa using h.symm⟩
-    simpa using h.symm
-  · simpa using Finset.card_eq_two.mpr ⟨_, _, h, rfl⟩
+  rw [direction_affineSpan, vectorSpan_pair, finrank_span_singleton]
+  simpa using h
+
+omit [Fact (Module.finrank ℝ V = 2)] in
+theorem eq_affineSpan_of_finrank_eq_one {p q : P} (h : p ≠ q)
+    {l : AffineSubspace ℝ P} (hl : Module.finrank ℝ l.direction = 1)
+    (hp : p ∈ l) (hq : q ∈ l) :
+    affineSpan ℝ {p, q} = l := by
+  have := Module.finite_of_finrank_eq_succ hl
+  have hle : affineSpan ℝ {p, q} ≤ l :=
+    affineSpan_le.mpr (Set.insert_subset_iff.mpr ⟨hp, Set.singleton_subset_iff.mpr hq⟩)
+  have hdir : (affineSpan ℝ {p, q}).direction ≤ l.direction :=
+    AffineSubspace.direction_le hle
+  have hrank : Module.finrank ℝ (affineSpan ℝ {p, q}).direction =
+      Module.finrank ℝ l.direction := by
+    rw [finrank_direction_affineSpan_eq_two h, hl]
+  have hdir : (affineSpan ℝ {p, q}).direction = l.direction := by
+    apply_rules [Submodule.eq_of_le_of_finrank_eq]
+  exact AffineSubspace.ext_of_direction_eq hdir ⟨p, mem_affineSpan ℝ (Set.mem_insert _ _), hp⟩
 
 theorem basis_two {x y : V} (hx : x ≠ 0) (hy : y ≠ 0) (h : ⟪x, y⟫ = 0)
     (v : V) :  ∃ a b : ℝ, v = a • x + b • y := by
@@ -83,8 +90,8 @@ theorem basis_two {x y : V} (hx : x ≠ 0) (hy : y ≠ 0) (h : ⟪x, y⟫ = 0)
   have hr : Module.finrank ℝ (Submodule.span ℝ {x, y}) = 2 := by
     convert finrank_span_eq_card hli
   have hspan : Submodule.span ℝ {x, y} = ⊤ := by
-    have h_finite_dim : FiniteDimensional ℝ V := by
-      exact FiniteDimensional.of_finrank_pos (by simp [hrank.1])
+    have h_finite_dim : FiniteDimensional ℝ V :=
+      FiniteDimensional.of_finrank_pos (by simp [hrank.1])
     apply Submodule.eq_top_of_finrank_eq
     rw [hr, hrank.1]
   have := hspan.ge (Submodule.mem_top : v ∈ ⊤)
@@ -222,6 +229,9 @@ def sendPoint (p : P) : P2 ℝ := P2.mk ![
   ⟪p -ᵥ cf.i.center, cf.o.center -ᵥ cf.i.center⟫ / (dist cf.o.center cf.i.center * cf.i.radius),
   ⟪p -ᵥ cf.i.center, cf.yDir -ᵥ cf.i.center⟫ / (dist cf.yDir cf.i.center * cf.i.radius),
   1] (by simp)
+
+theorem isAffine_sendPoint (p : P) : (cf.sendPoint p).IsAffine := by
+  simp [sendPoint, P2.IsAffine]
 
 theorem sendPoint_inj {p q : P} (h : cf.sendPoint p = cf.sendPoint q) :
     p = q := by
@@ -400,6 +410,58 @@ theorem sendChord_eq {g : P} {d : V} {p : AffineSubspace ℝ P}
     cf.sendChord p = cf.sendChord' g d hd := by
   simpa [sendChord, hp] using cf.sendChord'_eq hp (linePoint_mem _)
     hg (by simpa using dirVec_ne_zero hp) hd (by simp) hdp
+
+theorem isAffineLine_sendChord {p : AffineSubspace ℝ P}
+    (hp : Module.finrank ℝ p.direction = 1) :
+    (cf.sendChord p).IsAffineLine := by
+  simp only [P2.IsAffineLine, sendChord, hp, ↓reduceDIte, sendChord']
+  have hxd : dist cf.o.center cf.i.center ≠ 0 := by simp [cf.center]
+  have hyd : dist cf.yDir cf.i.center ≠ 0 := by simp [cf.yDir_ne_center_i]
+  obtain h := dirVec_ne_zero' hp
+  contrapose! h
+  rw [P2.mk_eq_mk] at h
+  obtain ⟨l, hl0, hl⟩ := h
+  obtain hy : ⟪(dirVec hp).val, cf.yDir -ᵥ cf.i.center⟫ = 0 := by simpa [hyd] using congr($hl 0)
+  obtain hx : ⟪(dirVec hp).val, cf.o.center -ᵥ cf.i.center⟫ = 0 := by simpa [hxd] using congr($hl 1)
+  obtain hxy := cf.inner_yDir_center_o
+  obtain hxy' := real_inner_comm (cf.o.center -ᵥ cf.i.center) _ ▸ hxy
+  obtain ⟨a, b, hv⟩ := basis_two (by simpa using cf.center)
+    (by simpa using cf.yDir_ne_center_i) hxy (dirVec hp).val
+  rw [hv] at ⊢ hx hy
+  have hb : b = 0 := by
+    simpa [inner_add_left, real_inner_smul_left, hxy, cf.yDir_ne_center_i] using hy
+  have ha : a = 0 := by
+    simpa [inner_add_left, real_inner_smul_left, hxy', cf.center] using hx
+  simp [ha, hb]
+
+theorem isAffine_sendChord {p : AffineSubspace ℝ P}
+    (hp : Module.finrank ℝ p.direction = 1) (hi : cf.i.IsTangent p) :
+    (cf.sendChord p).IsAffine := by
+  suffices ⟪linePoint hp -ᵥ cf.i.center, cf.o.center -ᵥ cf.i.center⟫ *
+      ⟪(dirVec hp).val, cf.yDir -ᵥ cf.i.center⟫ -
+      ⟪linePoint hp -ᵥ cf.i.center, cf.yDir -ᵥ cf.i.center⟫ *
+      ⟪(dirVec hp).val, cf.o.center -ᵥ cf.i.center⟫ ≠ 0 by
+    simpa [sendChord, P2.IsAffine, hp, sendChord', cf.yDir_ne_center_i, cf.center, cf.i_pos.ne.symm]
+  by_contra! h
+  rw [sub_eq_zero, ← inner_swap (by simp [cf.center]) (by simp [cf.yDir_ne_center_i])
+    cf.inner_yDir_center_o (dirVec_ne_zero' hp)] at h
+  obtain ⟨l, hl⟩ := h
+  rw [← neg_vsub_eq_vsub_rev, Eq.comm, neg_eq_iff_eq_neg, ← eq_vadd_iff_vsub_eq] at hl
+  have hmem : cf.i.center ∈ p := by
+    rw [hl]
+    refine AffineSubspace.vadd_mem_of_mem_direction ?_ (linePoint_mem hp)
+    rw [neg_mem_iff]
+    exact Submodule.smul_mem _ _ (dirVec hp).prop
+  obtain hnonempty := ((AffineSubspace.nonempty_iff_ne_bot p).mpr fun h ↦ by
+    rw [h, AffineSubspace.direction_bot] at hp
+    simp at hp
+  )
+  have : Nonempty p := by simpa using hnonempty
+  have h_finite_dim : FiniteDimensional ℝ V := by
+    exact FiniteDimensional.of_finrank_pos (by simp [hrank.1])
+  rw [← EuclideanGeometry.Sphere.infDist_eq_radius_iff_isTangent] at hi
+  obtain h := hi ▸ Metric.infDist_le_dist_of_mem hmem
+  simp [cf.i_pos.not_ge] at h
 
 theorem sendChord_inj {p q : AffineSubspace ℝ P}
     (hp : Module.finrank ℝ p.direction = 1) (hq : Module.finrank ℝ q.direction = 1)
@@ -769,6 +831,245 @@ theorem iterate_next_sendPoint_sendChord_eq_self {n : ℕ} [NeZero n] {a : Fin n
     (next cf.toConfig)^[n] ⟨sendPoint cf (a i), sendChord cf (affineSpan ℝ {a i, a (i + 1)})⟩ =
       ⟨sendPoint cf (a i), sendChord cf (affineSpan ℝ {a i, a (i + 1)})⟩ := by
   simp [cf.iterate_next_sendPoint_sendChord ho hi ha n i]
+
+@[irreducible]
+noncomputable
+def recvPoint (p : P2 ℝ) : P :=
+  P2.lift (fun p hp ↦
+    ((p 0 / p 2 * cf.i.radius / dist cf.o.center cf.i.center) • (cf.o.center -ᵥ cf.i.center) +
+    (p 1 / p 2 * cf.i.radius / dist cf.yDir cf.i.center) • (cf.yDir -ᵥ cf.i.center))
+    +ᵥ cf.i.center) (by sorry) p
+
+theorem sendPoint_recvPoint {p : P2 ℝ} (hp : p.IsAffine) :
+    cf.sendPoint (cf.recvPoint p) = p := by
+  induction p with | mk p hp0
+  simp [sendPoint, recvPoint]
+  sorry
+
+@[irreducible]
+noncomputable
+def recvChord (cf : EuConfig P) (p : P2 ℝ) : AffineSubspace ℝ P := sorry
+
+theorem finrank_recvChord (p : P2 ℝ) : Module.finrank ℝ (cf.recvChord p).direction = 1 := by
+  sorry
+
+theorem sendChord_recvChord {p : P2 ℝ} (hp : p.IsAffineLine) :
+    cf.sendChord (cf.recvChord p) = p := by sorry
+
+noncomputable
+def euNext (pq : P × AffineSubspace ℝ P) : P × AffineSubspace ℝ P :=
+  (fun pq' ↦ ⟨cf.recvPoint pq'.1, cf.recvChord pq'.2⟩)
+  (next cf.toConfig ⟨cf.sendPoint pq.1, cf.sendChord pq.2⟩)
+
+structure ValidPair (pq : P × AffineSubspace ℝ P) : Prop where
+  hq : Module.finrank ℝ pq.2.direction = 1
+  ho : pq.1 ∈ cf.o
+  hi : cf.i.IsTangent pq.2
+  hpq : pq.1 ∈ pq.2
+
+theorem mem_dom_of_validPair {pq : P × AffineSubspace ℝ P} (h : cf.ValidPair pq) :
+    ⟨cf.sendPoint pq.1, cf.sendChord pq.2⟩ ∈ dom cf.toConfig := by
+  simp only [dom, Set.mem_setOf_eq]
+  rw [← mem_o_iff, ← cf.isTangent_i_iff h.hq, ← cf.mem_iff_incidence_sendChord h.hq]
+  simp [h.ho, h.hi, h.hpq]
+
+theorem isAffine_rPoint_of_validPair {pq : P × AffineSubspace ℝ P} (h : cf.ValidPair pq) :
+    (rPoint cf.toConfig (cf.sendPoint pq.1, cf.sendChord pq.2)).1.IsAffine := by
+  apply IsAffine_rPoint _ ?_ ?_
+  · exact cf.isAffine_sendPoint _
+  · exact cf.isAffine_sendChord h.hq h.hi
+
+theorem isAffineLine_rChord_of_validPair {pq : P × AffineSubspace ℝ P} (h : cf.ValidPair pq) :
+    (rChord cf.toConfig
+    (rPoint cf.toConfig (cf.sendPoint pq.1, cf.sendChord pq.2))).2.IsAffineLine := by
+  obtain hmemdom := cf.mem_dom_of_validPair h
+  apply isAffineLine_rChord _ (mapsTo_rPoint cf.toConfig hmemdom) ?_ ?_
+  · simpa [snd_rPoint] using cf.isAffineLine_sendChord h.hq
+  · simpa [snd_rPoint] using cf.isAffine_sendChord h.hq h.hi
+
+theorem validPair_euNext {pq : P × AffineSubspace ℝ P} (h : cf.ValidPair pq) :
+    cf.ValidPair (cf.euNext pq) := by
+  simp only [euNext]
+  obtain hmemdom := cf.mem_dom_of_validPair h
+  obtain ⟨hi, ho, hpq⟩ := mapsTo_next cf.toConfig hmemdom
+  have haffine : (next cf.toConfig (cf.sendPoint pq.1, cf.sendChord pq.2)).1.IsAffine := by
+    unfold next
+    rw [fst_rChord]
+    exact cf.isAffine_rPoint_of_validPair h
+  have hafflineline : (next cf.toConfig (cf.sendPoint pq.1, cf.sendChord pq.2)).2.IsAffineLine := by
+    unfold next
+    exact cf.isAffineLine_rChord_of_validPair h
+  exact {
+    hq := cf.finrank_recvChord _
+    ho := by
+      rw [mem_o_iff]
+      rw [cf.sendPoint_recvPoint haffine]
+      exact hi
+    hi := by
+      rw [cf.isTangent_i_iff (cf.finrank_recvChord _)]
+      rw [cf.sendChord_recvChord hafflineline]
+      exact ho
+    hpq := by
+      simp only
+      rw [cf.mem_iff_incidence_sendChord (cf.finrank_recvChord _)]
+      rw [cf.sendPoint_recvPoint haffine]
+      rw [cf.sendChord_recvChord hafflineline]
+      exact hpq
+  }
+
+theorem euNext_mem_prev {pq : P × AffineSubspace ℝ P} (h : cf.ValidPair pq) :
+    (cf.euNext pq).1 ∈ pq.2 := by
+  obtain hmemdom := cf.mem_dom_of_validPair h
+  obtain ⟨hi, ho, hpq⟩ := mapsTo_rPoint cf.toConfig hmemdom
+  rw [snd_rPoint] at hpq
+  unfold euNext next
+  simp only
+  rw [fst_rChord]
+  rw [cf.mem_iff_incidence_sendChord h.hq]
+  rw [cf.sendPoint_recvPoint (cf.isAffine_rPoint_of_validPair h)]
+  exact hpq
+
+theorem euNext_fst_ne {pq : P × AffineSubspace ℝ P} (h : cf.ValidPair pq) :
+    (cf.euNext pq).1 ≠ pq.1 := by
+  obtain hmemdom := cf.mem_dom_of_validPair h
+  unfold euNext next
+  simp only
+  rw [fst_rChord]
+  intro heq
+  obtain heq := congr(cf.sendPoint $heq)
+  rw [cf.sendPoint_recvPoint (cf.isAffine_rPoint_of_validPair h)] at heq
+  have heq : rPoint cf.toConfig ⟨cf.sendPoint pq.1, cf.sendChord pq.2⟩ =
+      ⟨cf.sendPoint pq.1, cf.sendChord pq.2⟩ := by
+    ext
+    · exact heq
+    · rw [snd_rPoint]
+  rw [rPoint_eq_self cf.toConfig hmemdom] at heq
+  apply cf.not_tangentOuterCircle_of_isTangent h.hq h.hi heq
+
+theorem euNext_snd_ne {pq : P × AffineSubspace ℝ P} (h : cf.ValidPair pq) :
+    (cf.euNext pq).2 ≠ pq.2 := by
+  obtain hmemdom := cf.mem_dom_of_validPair h
+  unfold euNext next
+  simp only
+  intro heq
+  obtain heq := congr(cf.sendChord $heq)
+  rw [cf.sendChord_recvChord (cf.isAffineLine_rChord_of_validPair h)] at heq
+  have heq : rChord cf.toConfig (rPoint cf.toConfig ⟨cf.sendPoint pq.1, cf.sendChord pq.2⟩)
+      = rPoint cf.toConfig ⟨cf.sendPoint pq.1, cf.sendChord pq.2⟩ := by
+    ext
+    · rw [fst_rChord]
+    · exact heq
+  rw [rChord_eq_self cf.toConfig (mapsTo_rPoint cf.toConfig hmemdom)] at heq
+  have heq : InnerCircle cf.toConfig (cf.sendPoint <| cf.recvPoint <|
+      (rPoint cf.toConfig ⟨cf.sendPoint pq.1, cf.sendChord pq.2⟩).1) := by
+    rw [cf.sendPoint_recvPoint (cf.isAffine_rPoint_of_validPair h)]
+    exact heq
+  refine cf.not_innerCircle_of_mem_o ?_ heq
+  exact (cf.validPair_euNext h).ho
+
+
+theorem validPair_iterate_euNext {pq : P × AffineSubspace ℝ P} (h : cf.ValidPair pq) (i : ℕ) :
+    cf.ValidPair (cf.euNext^[i] pq) := by
+  induction i with
+  | zero => simpa using h
+  | succ i ih =>
+    rw [Function.iterate_succ_apply']
+    exact cf.validPair_euNext ih
+
+theorem iterate_euNext_mem_prev {pq : P × AffineSubspace ℝ P} (h : cf.ValidPair pq) (i : ℕ) :
+    (cf.euNext^[i + 1] pq).1 ∈ (cf.euNext^[i] pq).2 := by
+  rw [Function.iterate_succ_apply']
+  exact cf.euNext_mem_prev (cf.validPair_iterate_euNext h _)
+
+theorem iterate_euNext_fst_ne {pq : P × AffineSubspace ℝ P} (h : cf.ValidPair pq) (i : ℕ) :
+    (cf.euNext^[i + 1] pq).1 ≠ (cf.euNext^[i] pq).1 := by
+  rw [Function.iterate_succ_apply']
+  exact cf.euNext_fst_ne (cf.validPair_iterate_euNext h _)
+
+theorem iterate_euNext_snd_ne {pq : P × AffineSubspace ℝ P} (h : cf.ValidPair pq) (i : ℕ) :
+    (cf.euNext^[i + 1] pq).2 ≠ (cf.euNext^[i] pq).2 := by
+  rw [Function.iterate_succ_apply']
+  exact cf.euNext_snd_ne (cf.validPair_iterate_euNext h _)
+
+noncomputable
+def polygon (pq : P × AffineSubspace ℝ P) (n : ℕ) (i : Fin n) : P := (cf.euNext^[i] pq).1
+
+theorem inscribe_polygon {pq : P × AffineSubspace ℝ P}
+    (h : cf.ValidPair pq)
+    (n : ℕ) [NeZero n] :
+    Inscribe (cf.polygon pq n) cf.o := by
+  intro i
+  exact (cf.validPair_iterate_euNext h i).ho
+
+theorem circumscribe_polygon {pq : P × AffineSubspace ℝ P}
+    (h : cf.ValidPair pq)
+    (n : ℕ) [NeZero n] (hclose : cf.euNext^[n] pq = pq) :
+    Circumscribe (cf.polygon pq n) cf.i := by
+  rintro ⟨i, hin⟩
+  have hclose' : cf.polygon pq n (⟨i, hin⟩ + 1) = (cf.euNext^[i + 1] pq).1 := by
+    unfold polygon
+    by_cases hin' : i + 1 < n
+    · congrm (cf.euNext^[?_] pq).1
+      rw [Fin.val_add_one_of_lt' hin']
+    · have hieq : i + 1 = n := le_antisymm (Nat.add_one_le_iff.mpr hin) (not_lt.mp hin')
+      rw [hieq, hclose]
+      trans (cf.euNext^[0] pq).1
+      · congrm (cf.euNext^[?_] pq).1
+        rw [Fin.val_eq_zero_iff,← Fin.val_eq_val, Fin.val_add]
+        simp [hieq]
+      · simp
+  convert (cf.validPair_iterate_euNext h i).hi
+  refine eq_affineSpan_of_finrank_eq_one ?_ (cf.validPair_iterate_euNext h i).hq
+    (cf.validPair_iterate_euNext h i).hpq ?_
+  · rw [hclose']
+    exact (cf.iterate_euNext_fst_ne h i).symm
+  · rw [hclose']
+    exact cf.iterate_euNext_mem_prev h i
+
+theorem isProperPolygon_polygon {pq : P × AffineSubspace ℝ P}
+    (h : cf.ValidPair pq)
+    (n : ℕ) [NeZero n] (hclose : cf.euNext^[n] pq = pq) :
+    IsProperPolygon (cf.polygon pq n) := by
+  have hclose' (i : ℕ) (hin : i < n) :
+      (cf.euNext^[(⟨i, hin⟩ + 1 : Fin n)] pq) = (cf.euNext^[i + 1] pq) := by
+    by_cases hin' : i + 1 < n
+    · congrm (cf.euNext^[?_] pq)
+      rw [Fin.val_add_one_of_lt' hin']
+    · have hieq : i + 1 = n := le_antisymm (Nat.add_one_le_iff.mpr hin) (not_lt.mp hin')
+      rw [hieq, hclose]
+      trans (cf.euNext^[0] pq)
+      · congrm (cf.euNext^[?_] pq)
+        rw [Fin.val_eq_zero_iff, ← Fin.val_eq_val, Fin.val_add]
+        simp [hieq]
+      · simp
+  have hclose1 (i : ℕ) (hin : i < n) :
+      cf.polygon pq n (⟨i, hin⟩ + 1) = (cf.euNext^[i + 1] pq).1 :=
+    congr($(hclose' i hin).1)
+  have hclose2 (i : ℕ) (hin : i < n) :
+      cf.polygon pq n (⟨i, hin⟩ + 2) = (cf.euNext^[i + 2] pq).1 := by
+    trans cf.polygon pq n (⟨i, hin⟩ + 1 + 1)
+    · rw [add_assoc]
+      congr 2
+      grind -- why do we need grind for 2 = 1 + 1
+    rw [polygon, hclose']
+    rw [Function.iterate_succ_apply']
+    rw [hclose']
+    rw [← Function.iterate_succ_apply' cf.euNext]
+  rintro ⟨i, hin⟩
+  constructor
+  · rw [hclose1]
+    exact (cf.iterate_euNext_fst_ne h i).symm
+  · rw [hclose1, hclose2]
+    unfold polygon
+    simp only
+    rw [eq_affineSpan_of_finrank_eq_one (cf.iterate_euNext_fst_ne h i).symm
+      (cf.validPair_iterate_euNext h i).hq (cf.validPair_iterate_euNext h i).hpq
+      (cf.iterate_euNext_mem_prev h i)]
+    rw [eq_affineSpan_of_finrank_eq_one (cf.iterate_euNext_fst_ne h (i + 1)).symm
+      (cf.validPair_iterate_euNext h (i + 1)).hq
+      (cf.validPair_iterate_euNext h (i + 1)).hpq
+      (cf.iterate_euNext_mem_prev h (i + 1))]
+    exact (cf.iterate_euNext_snd_ne h i).symm
 
 end EuConfig
 /-

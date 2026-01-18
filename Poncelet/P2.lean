@@ -216,4 +216,11 @@ instance [DecidableEq K] [Repr K] : Repr (P2 K) where
     let p := p.normalize
     Repr.reprPrec (p 0, p 1, p 2)
 
+def IsAffine (p : P2 K) : Prop := P2.lift (fun p hp ↦ p 2 ≠ 0) (fun p q hp hq h ↦ by
+  obtain ⟨l, hl0, hl⟩ := h
+  simp [hl, hl0]
+  ) p
+
+def IsAffineLine (p : P2 K) : Prop := p ≠ P2.mk ![0, 0, 1] (by simp)
+
 end P2
