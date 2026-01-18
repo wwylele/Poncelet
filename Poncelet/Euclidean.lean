@@ -832,29 +832,190 @@ theorem iterate_next_sendPoint_sendChord_eq_self {n : ℕ} [NeZero n] {a : Fin n
       ⟨sendPoint cf (a i), sendChord cf (affineSpan ℝ {a i, a (i + 1)})⟩ := by
   simp [cf.iterate_next_sendPoint_sendChord ho hi ha n i]
 
-@[irreducible]
 noncomputable
 def recvPoint (p : P2 ℝ) : P :=
   P2.lift (fun p hp ↦
     ((p 0 / p 2 * cf.i.radius / dist cf.o.center cf.i.center) • (cf.o.center -ᵥ cf.i.center) +
     (p 1 / p 2 * cf.i.radius / dist cf.yDir cf.i.center) • (cf.yDir -ᵥ cf.i.center))
-    +ᵥ cf.i.center) (by sorry) p
+    +ᵥ cf.i.center) (fun p q hp hq h ↦ by
+      obtain ⟨l, hl0, hl⟩ := h
+      simp only [hl, Pi.smul_apply, smul_eq_mul, vadd_right_cancel_iff]
+      congr 4
+      · field
+      · field
+      ) p
 
 theorem sendPoint_recvPoint {p : P2 ℝ} (hp : p.IsAffine) :
     cf.sendPoint (cf.recvPoint p) = p := by
+  obtain hxy := cf.inner_yDir_center_o
+  obtain hyx := real_inner_comm (cf.o.center -ᵥ cf.i.center) _ ▸ hxy
+  have : dist cf.o.center cf.i.center ≠ 0 := by simp [cf.center]
+  have : dist cf.yDir cf.i.center ≠ 0 := by simp [cf.yDir_ne_center_i]
+  have : cf.i.radius ≠ 0 := cf.i_pos.ne.symm
   induction p with | mk p hp0
-  simp [sendPoint, recvPoint]
-  sorry
+  have : p 2 ≠ 0 := by simpa [P2.IsAffine] using hp
+  simp only [sendPoint, recvPoint, P2.lift_mk, vadd_vsub]
+  symm
+  rw [P2.mk_eq_mk']
+  use p 2
+  ext i
+  fin_cases i
+  · simp [inner_add_left, real_inner_smul_left, hyx, ← dist_eq_norm_vsub, field]
+  · simp [inner_add_left, real_inner_smul_left, hxy, ← dist_eq_norm_vsub, field]
+  · simp
 
-@[irreducible]
 noncomputable
-def recvChord (cf : EuConfig P) (p : P2 ℝ) : AffineSubspace ℝ P := sorry
+def recvChordPoint (p : P2 ℝ) : ℝ × ℝ := P2.lift
+  (fun p hp ↦ if p 0 = 0 then ⟨0, p 2 / p 1⟩ else ⟨(p 2 - p 1) / p 0, 1⟩)
+  (fun p q hp hq h ↦ by
+    obtain ⟨l, hl0, hl⟩ := h
+    simp only
+    rw [hl]
+    simp only [Fin.isValue, Pi.smul_apply, smul_eq_mul, mul_eq_zero, hl0, false_or]
+    congr 2 <;> field
+  ) p
+
+noncomputable
+def recvChordDir (p : P2 ℝ) : ℝ × ℝ := P2.lift
+  (fun p hp ↦ if p 0 = 0 then ⟨1, 0⟩ else ⟨p 1 / p 0, -1⟩) (fun p q hp hq h ↦ by
+    obtain ⟨l, hl0, hl⟩ := h
+    simp only
+    rw [hl]
+    simp only [Fin.isValue, Pi.smul_apply, smul_eq_mul, mul_eq_zero, hl0, false_or]
+    congr 2
+    field
+  ) p
+
+theorem recvChordDir_ne_zero (p : P2 ℝ) : recvChordDir p ≠ 0 := by
+  induction p with | mk p hp
+  by_cases hp0 : p 0 = 0 <;> simp [recvChordDir, hp0]
+
+
+theorem recvChordDir_ne_zero' (p : P2 ℝ) :
+    ((recvChordDir p).1 / dist cf.o.center cf.i.center) • (cf.o.center -ᵥ cf.i.center) +
+      ((recvChordDir p).2 / dist cf.yDir cf.i.center) • (cf.yDir -ᵥ cf.i.center) ≠ 0 := by
+  obtain h := recvChordDir_ne_zero p
+  contrapose! h
+  obtain hxy := cf.inner_yDir_center_o
+  obtain hyx := real_inner_comm (cf.o.center -ᵥ cf.i.center) _ ▸ hxy
+  obtain hx := congr(⟪$h, cf.o.center -ᵥ cf.i.center⟫)
+  obtain hy := congr(⟪$h, cf.yDir -ᵥ cf.i.center⟫)
+  have h1 : (recvChordDir p).1 = 0 := by
+    simpa [inner_add_left, real_inner_smul_left, hyx, cf.center] using hx
+  have h2 : (recvChordDir p).2 = 0 := by
+    simpa [inner_add_left, real_inner_smul_left, hxy, cf.yDir_ne_center_i] using hy
+  ext
+  · exact h1
+  · exact h2
+
+noncomputable
+def recvChord (p : P2 ℝ) : AffineSubspace ℝ P :=
+    AffineSubspace.mk' ((fun xy ↦
+      cf.i.radius • ((xy.1 / dist cf.o.center cf.i.center) • (cf.o.center -ᵥ cf.i.center) +
+      (xy.2 / dist cf.yDir cf.i.center) • (cf.yDir -ᵥ cf.i.center))
+      +ᵥ cf.i.center) (recvChordPoint p)) (Submodule.span ℝ {
+        (fun xy ↦ ((xy.1 / dist cf.o.center cf.i.center) • (cf.o.center -ᵥ cf.i.center) +
+          (xy.2 / dist cf.yDir cf.i.center) • (cf.yDir -ᵥ cf.i.center))) (recvChordDir p)
+      })
 
 theorem finrank_recvChord (p : P2 ℝ) : Module.finrank ℝ (cf.recvChord p).direction = 1 := by
-  sorry
+  rw [recvChord, AffineSubspace.direction_mk']
+  apply finrank_span_set_eq_card
+  simpa using cf.recvChordDir_ne_zero' p
 
 theorem sendChord_recvChord {p : P2 ℝ} (hp : p.IsAffineLine) :
-    cf.sendChord (cf.recvChord p) = p := by sorry
+    cf.sendChord (cf.recvChord p) = p := by
+  have hmem : ((fun xy ↦
+      cf.i.radius • ((xy.1 / dist cf.o.center cf.i.center) • (cf.o.center -ᵥ cf.i.center) +
+      (xy.2 / dist cf.yDir cf.i.center) • (cf.yDir -ᵥ cf.i.center))
+      +ᵥ cf.i.center) (recvChordPoint p)) ∈ cf.recvChord p := by
+    simp [recvChord]
+  have hdir0 : (fun xy ↦ ((xy.1 / dist cf.o.center cf.i.center) • (cf.o.center -ᵥ cf.i.center) +
+      (xy.2 / dist cf.yDir cf.i.center) • (cf.yDir -ᵥ cf.i.center))) (recvChordDir p) ≠ 0 := by
+    simpa using cf.recvChordDir_ne_zero' p
+  have hmemdir : (fun xy ↦ ((xy.1 / dist cf.o.center cf.i.center) • (cf.o.center -ᵥ cf.i.center) +
+      (xy.2 / dist cf.yDir cf.i.center) • (cf.yDir -ᵥ cf.i.center))) (recvChordDir p) ∈
+      (cf.recvChord p).direction := by
+    simp [recvChord]
+  induction p with | mk p hp0
+  rw [cf.sendChord_eq (cf.finrank_recvChord _) hmem hdir0 hmemdir]
+  simp only [sendChord', vadd_vsub]
+  obtain hxy := cf.inner_yDir_center_o
+  obtain hyx := real_inner_comm (cf.o.center -ᵥ cf.i.center) _ ▸ hxy
+  simp_rw [dist_eq_norm_vsub]
+  suffices P2.mk
+    ![(recvChordDir (P2.mk p hp0)).2 / ‖cf.yDir -ᵥ cf.i.center‖ *
+        ‖cf.yDir -ᵥ cf.i.center‖ ^ 2 / ‖cf.yDir -ᵥ cf.i.center‖,
+    -((recvChordDir (P2.mk p hp0)).1 / ‖cf.o.center -ᵥ cf.i.center‖ *
+      ‖cf.o.center -ᵥ cf.i.center‖ ^ 2) / ‖cf.o.center -ᵥ cf.i.center‖,
+    (cf.i.radius *
+      ((recvChordPoint (P2.mk p hp0)).1 / ‖cf.o.center -ᵥ cf.i.center‖ *
+      ‖cf.o.center -ᵥ cf.i.center‖ ^ 2) *
+      ((recvChordDir (P2.mk p hp0)).2 / ‖cf.yDir -ᵥ cf.i.center‖ *
+      ‖cf.yDir -ᵥ cf.i.center‖ ^ 2) -
+      cf.i.radius * ((recvChordPoint (P2.mk p hp0)).2 / ‖cf.yDir -ᵥ cf.i.center‖ *
+      ‖cf.yDir -ᵥ cf.i.center‖ ^ 2) *
+      ((recvChordDir (P2.mk p hp0)).1 / ‖cf.o.center -ᵥ cf.i.center‖ *
+      ‖cf.o.center -ᵥ cf.i.center‖ ^ 2)) /
+      (‖cf.yDir -ᵥ cf.i.center‖ * ‖cf.o.center -ᵥ cf.i.center‖ * cf.i.radius)]
+      _ = P2.mk p hp0 by
+    simpa [inner_add_left, real_inner_smul_left, hxy, hyx]
+  have hx0 : cf.o.center -ᵥ cf.i.center ≠ 0 := by simp [cf.center]
+  have hy0 : cf.yDir -ᵥ cf.i.center ≠ 0 := by simp [cf.yDir_ne_center_i]
+  have hi0 : cf.i.radius ≠ 0 := cf.i_pos.ne.symm
+  have h1 : (recvChordDir (P2.mk p hp0)).2 / ‖cf.yDir -ᵥ cf.i.center‖ *
+        ‖cf.yDir -ᵥ cf.i.center‖ ^ 2 / ‖cf.yDir -ᵥ cf.i.center‖ =
+        (recvChordDir (P2.mk p hp0)).2 := by
+    field
+  have h2 : -((recvChordDir (P2.mk p hp0)).1 / ‖cf.o.center -ᵥ cf.i.center‖ *
+      ‖cf.o.center -ᵥ cf.i.center‖ ^ 2) / ‖cf.o.center -ᵥ cf.i.center‖ =
+      - (recvChordDir (P2.mk p hp0)).1 := by
+    field
+  have h3 : (cf.i.radius *
+      ((recvChordPoint (P2.mk p hp0)).1 / ‖cf.o.center -ᵥ cf.i.center‖ *
+      ‖cf.o.center -ᵥ cf.i.center‖ ^ 2) *
+      ((recvChordDir (P2.mk p hp0)).2 / ‖cf.yDir -ᵥ cf.i.center‖ *
+      ‖cf.yDir -ᵥ cf.i.center‖ ^ 2) -
+      cf.i.radius * ((recvChordPoint (P2.mk p hp0)).2 / ‖cf.yDir -ᵥ cf.i.center‖ *
+      ‖cf.yDir -ᵥ cf.i.center‖ ^ 2) *
+      ((recvChordDir (P2.mk p hp0)).1 / ‖cf.o.center -ᵥ cf.i.center‖ *
+      ‖cf.o.center -ᵥ cf.i.center‖ ^ 2)) /
+      (‖cf.yDir -ᵥ cf.i.center‖ * ‖cf.o.center -ᵥ cf.i.center‖ * cf.i.radius)
+      = ((recvChordPoint (P2.mk p hp0)).1 * (recvChordDir (P2.mk p hp0)).2 -
+        (recvChordPoint (P2.mk p hp0)).2 * (recvChordDir (P2.mk p hp0)).1) := by
+    field
+  simp_rw [h1, h2, h3]
+  by_cases hp0 : p 0 = 0
+  · have hp1 : p 1 ≠ 0 := by
+      contrapose! hp with hp1
+      suffices ∃ l, p = ![0, 0, l] by
+        simpa [P2.IsAffineLine, P2.mk_eq_mk']
+      use p 2
+      ext i
+      fin_cases i
+      · simpa using hp0
+      · simpa using hp1
+      · simp
+    symm
+    rw [P2.mk_eq_mk']
+    use -p 1
+    suffices p = ![0, p 1, p 1 * (p 2 / p 1)] by
+      simpa [recvChordDir, recvChordPoint, hp0]
+    ext i
+    fin_cases i
+    · simpa using hp0
+    · simp
+    · simp [field]
+  · symm
+    rw [P2.mk_eq_mk']
+    use -p 0
+    suffices p = ![p 0, p 0 * (p 1 / p 0), -(p 0 * (-((p 2 - p 1) / p 0) - p 1 / p 0))] by
+      simpa [recvChordDir, recvChordPoint, hp0]
+    ext i
+    fin_cases i
+    · simp
+    · simp [field]
+    · simp [field]
 
 noncomputable
 def euNext (pq : P × AffineSubspace ℝ P) : P × AffineSubspace ℝ P :=
@@ -900,7 +1061,9 @@ theorem validPair_euNext {pq : P × AffineSubspace ℝ P} (h : cf.ValidPair pq) 
     unfold next
     exact cf.isAffineLine_rChord_of_validPair h
   exact {
-    hq := cf.finrank_recvChord _
+    hq := by
+      simp only
+      exact cf.finrank_recvChord _
     ho := by
       rw [mem_o_iff]
       rw [cf.sendPoint_recvPoint haffine]

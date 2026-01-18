@@ -965,7 +965,7 @@ theorem f_w_sub [DecidableEq K] [CharZero K] (p : (elliptic cf).Point) :
           suffices 4 * cf.r ^ 2 * (cf.r ^ 2 * (x - 1) ^ 2 + x) = 0 by
             simpa [cf.hr]
           linear_combination hx
-        simp only [ne_eq, fPointRaw, hu, hy, mul_zero, add_zero, neg_mul, add_sub_cancel_right,
+        simp only [fPointRaw, hu, hy, mul_zero, add_zero, neg_mul, add_sub_cancel_right,
           sub_add_cancel]
         rw [← P2.mk'_eq]
         have hx1 : x ≠ 1 := by

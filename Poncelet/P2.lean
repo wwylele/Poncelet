@@ -23,11 +23,11 @@ def P2 := Quotient (P2.equiv K)
 
 namespace P2
 /-- Point constructor on the projective plane. -/
-def mk (p : Fin 3 → K) (hp : p ≠ 0) := Quotient.mk (equiv K) ⟨p, hp⟩
+def mk (p : Fin 3 → K) (hp : p ≠ 0) : P2 K := Quotient.mk (equiv K) ⟨p, hp⟩
 
 /-- Alternative constructor that doesn't require the proof of non-zero
 but assign a junk value. -/
-def mk' [DecidableEq K] (p : Fin 3 → K) :=
+def mk' [DecidableEq K] (p : Fin 3 → K) : P2 K :=
   if hp : p ≠ 0 then mk p hp else mk ![1, 0, 0] (by simp)
 
 @[simp]
