@@ -1394,7 +1394,7 @@ theorem isProperPolygon_polygon {pq : P × AffineSubspace ℝ P}
 
 end EuConfig
 
-theorem poncelet_of_center_ne {o i : Sphere P}
+theorem EuclideanGeometry.poncelet_of_center_ne {o i : Sphere P}
     (ho : 0 < o.radius) (hi : 0 < i.radius) (hinside : ∀ p ∈ i, dist p o.center < o.radius)
     (hcenter : o.center ≠ i.center)
     {n : ℕ} [NeZero n] {a : Fin n → P}
@@ -1466,8 +1466,10 @@ theorem poncelet_of_center_ne {o i : Sphere P}
   · exact cf.circumscribe_polygon hvalid hclose
   · exact cf.isProperPolygon_polygon hvalid hclose
 
-theorem poncelet_of_center_eq {o i : Sphere P}
-    (ho : 0 < o.radius) (hi : 0 < i.radius) (hinside : ∀ p ∈ i, dist p o.center < o.radius)
+set_option maxHeartbeats 4000000 in
+-- TODO : Clean this
+theorem EuclideanGeometry.poncelet_of_center_eq {o i : Sphere P}
+    (ho : 0 < o.radius)
     (hcenter : o.center = i.center)
     {n : ℕ} [NeZero n] {a : Fin n → P}
     (hao : Inscribe a o) (hai : Circumscribe a i) (ha : IsProperPolygon a)
@@ -1544,6 +1546,26 @@ theorem poncelet_of_center_eq {o i : Sphere P}
       · simp [inner_add_left, real_inner_smul_left, hyx, hx, ho20]
       · simp [inner_add_left, real_inner_smul_left, hxy, hy, ho20]
   }
+  have hsendorth (u v : V) : ⟪u, v⟫ = 0 ↔
+      (send u).1 * (send v).1 + (send u).2 * (send v).2 = 0 := by
+    obtain ⟨a, b, hu⟩ := basis_two hx0 hy0 hxy u
+    obtain ⟨c, d, hv⟩ := basis_two hx0 hy0 hxy v
+    unfold send
+    suffices c * (a * o.radius ^ 2) + d * (b * o.radius ^ 2) = 0 ↔
+      a * o.radius ^ 2 * (c * o.radius ^ 2) + b * o.radius ^ 2 * (d * o.radius ^ 2) = 0 by
+      simpa [hu, hv, inner_add_left, inner_add_right, real_inner_smul_left,
+        real_inner_smul_right, hxy, hyx, hx, hy]
+    conv_lhs => rw [← mul_left_inj' ho20]
+    constructor <;> intro h <;> linear_combination h
+  have hsendorth' (u v : ℝ × ℝ) : ⟪send.symm u, send.symm v⟫ = 0 ↔
+      u.1 * v.1 + u.2 * v.2 = 0 := by
+    simp [hsendorth]
+  have sendnorm (v : ℝ × ℝ) : ‖send.symm v‖ ^ 2 = (v.1 ^ 2 + v.2 ^ 2) / o.radius ^ 2 := by
+    simp only [LinearEquiv.coe_symm_mk', send]
+    rw [← real_inner_self_eq_norm_sq]
+    simp_rw [inner_add_left, inner_add_right, real_inner_smul_left, real_inner_smul_right,
+      hxy, hyx]
+    simp [hx, hy, field]
   let rotate : (ℝ × ℝ) ≃ₗ[ℝ] (ℝ × ℝ) := {
     toFun xy := ((cos * xy.1 - sin * xy.2) / o.radius ^ 2,
         (sin * xy.1 + cos * xy.2) / o.radius ^ 2)
@@ -1578,6 +1600,31 @@ theorem poncelet_of_center_eq {o i : Sphere P}
         rw [hsincos]
         field
   }
+  have hrotateorth (u v : ℝ × ℝ) : u.1 * v.1 + u.2 * v.2 = 0 ↔
+      (rotate u).1 * (rotate v).1 + (rotate u).2 * (rotate v).2 = 0 := by
+    suffices u.1 * v.1 + u.2 * v.2 = 0 ↔
+      (cos * u.1 - sin * u.2) * (cos * v.1 - sin * v.2) +
+      (sin * u.1 + cos * u.2) * (sin * v.1 + cos * v.2) = 0 by
+      simpa [rotate, div_mul_div_comm, ← add_div, ho.ne.symm]
+    trans (sin ^ 2 + cos ^ 2) * (u.1 * v.1 + u.2 * v.2) = 0
+    · rw [hsincos]
+      simp [ho.ne.symm]
+    · congrm ?_ = 0
+      ring
+  have hrotatenorm (u : ℝ × ℝ) : (rotate u).1 ^ 2 + (rotate u).2 ^ 2 =
+      u.1 ^ 2 + u.2 ^ 2 := by
+    simp only [neg_mul, LinearEquiv.coe_mk, LinearMap.coe_mk, AddHom.coe_mk, rotate]
+    suffices (sin ^ 2 + cos ^ 2) * (u.1 ^ 2 + u.2 ^ 2) / o.radius ^ 4 = u.1 ^ 2 + u.2 ^ 2 by
+      linear_combination this
+    rw [hsincos]
+    field
+  let full : P →ᵃ[ℝ] P := {
+    toFun p := send.symm (rotate (send (p -ᵥ o.center))) +ᵥ o.center
+    linear := send ≪≫ₗ rotate ≪≫ₗ send.symm
+    map_vadd' p v := by simp [vadd_vadd, ← map_add, vadd_vsub_assoc]
+  }
+  have hfull (i : Fin n) : send.symm (rotate (send (av i))) +ᵥ o.center = full (a i) := rfl
+  have hfl (v : V) : send.symm (rotate (send (v))) = full.linear v := rfl
   use fun i ↦ send.symm (rotate (send (av i))) +ᵥ o.center
   refine ⟨?_, ?_, ?_, ?_⟩
   · simp only
@@ -1642,23 +1689,50 @@ theorem poncelet_of_center_eq {o i : Sphere P}
         affineSpan ℝ {a n, a (n + 1)}) o.center).val -ᵥ o.center))) +ᵥ o.center := by
       rw [EuclideanGeometry.coe_orthogonalProjection_eq_iff_mem]
       constructor
-      · --rw [mem_affineSpan_pair_iff_exists_lineMap_eq]
-        sorry
-      · sorry
-
-
-    sorry
+      · simp_rw [hfull]
+        rw [← Set.image_pair, ← AffineSubspace.map_span]
+        rw [AffineSubspace.mem_map]
+        use ((orthogonalProjection (affineSpan ℝ {a n, a (n + 1)})) o.center)
+        constructor
+        · simp
+        · rfl
+      · simp_rw [hfull]
+        rw [← Set.image_pair, ← AffineSubspace.map_span]
+        rw [AffineSubspace.map_direction]
+        rw [← neg_vsub_eq_vsub_rev, vadd_vsub, Submodule.neg_mem_iff]
+        rw [Submodule.mem_orthogonal]
+        intro u hu
+        rw [Submodule.mem_map] at hu
+        obtain ⟨v, hv, rfl⟩ := hu
+        rw [← hfl]
+        rw [hsendorth']
+        rw [← hrotateorth]
+        rw [← hsendorth]
+        revert v
+        rw [← Submodule.mem_orthogonal]
+        apply orthogonalProjection_vsub_mem_direction_orthogonal
+    rw [horth]
+    simp_rw [dist_eq_norm_vsub']
+    rw [vadd_vsub]
+    set v := (orthogonalProjection (affineSpan ℝ {a n, a (n + 1)}) o.center).val -ᵥ o.center
+    set u := send v
+    have hv : v = send.symm u := by simp [u]
+    rw [hv]
+    rw [← sq_eq_sq₀ (by simp) (by simp)]
+    simp_rw [sendnorm]
+    rw [hrotatenorm]
   · intro i
     constructor
     · simpa [av] using (ha i).1
-    · intro h
+    · simp only
+      intro h
       obtain h := congr(($h).direction)
       simp_rw [direction_affineSpan, vectorSpan_pair, vadd_vsub_vadd_cancel_right] at h
       simp_rw [← map_sub] at h
       simp_rw [← Set.image_singleton (f := send.symm)] at h
       simp_rw [← Set.image_singleton (f := rotate)] at h
       simp_rw [← Set.image_singleton (f := send)] at h
-      simp_rw [Submodule.span_image] at h
+      simp_rw [Submodule.span_image_linearEquiv] at h
       rw [(Submodule.map_injective_of_injective (LinearEquiv.injective _)).eq_iff] at h
       rw [(Submodule.map_injective_of_injective (LinearEquiv.injective _)).eq_iff] at h
       rw [(Submodule.map_injective_of_injective (LinearEquiv.injective _)).eq_iff] at h
@@ -1673,13 +1747,24 @@ theorem poncelet_of_center_eq {o i : Sphere P}
       rw [AffineSubspace.eq_iff_direction_eq_of_mem h1 h2]
       simpa [direction_affineSpan, vectorSpan_pair, av] using h
 
+/--
+**Poncelet's closure theorem** in Euclidean plane for two circles, one inside another.
 
-theorem poncelet {o i : Sphere P}
+Given a circle $I$ inside another circle $O$, if there exists a $n$-sided polygon
+simutaneously inscribed in $O$ and circumscribed around $I$,
+then from any point $P$ on $O$, one can draw another $n$-sided polygon
+with the same properties.
+
+We require involved polygons to be "proper" with two non-degeneracy properties
+ - Two adjacent vertices must not coincide.
+ - Two adjacent edges must not lie on the same line.
+-/
+theorem EuclideanGeometry.poncelet {o i : Sphere P}
     (ho : 0 < o.radius) (hi : 0 < i.radius) (hinside : ∀ p ∈ i, dist p o.center < o.radius)
     {n : ℕ} [NeZero n] {a : Fin n → P}
     (hao : Inscribe a o) (hai : Circumscribe a i) (ha : IsProperPolygon a)
     {p : P} (hp : p ∈ o) :
     ∃ b : Fin n → P, b 0 = p ∧ Inscribe b o ∧ Circumscribe b i ∧ IsProperPolygon b := by
   by_cases hcenter : o.center = i.center
-  · exact poncelet_of_center_eq ho hi hinside hcenter hao hai ha hp
+  · exact poncelet_of_center_eq ho hcenter hao hai ha hp
   · exact poncelet_of_center_ne ho hi hinside hcenter hao hai ha hp

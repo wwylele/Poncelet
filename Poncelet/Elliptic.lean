@@ -301,9 +301,12 @@ theorem Polynomial.roots_eq_of_natDegree_eq_two {K : Type*} [CommRing K] [IsDoma
   have hm2' : x2 ∈ t := by
     rw [ht] at hm2
     simpa [h.symm] using hm2
-  obtain ⟨cf.u, hu⟩ := Multiset.exists_cons_of_mem hm2'
+  obtain ⟨u, hu⟩ := Multiset.exists_cons_of_mem hm2'
   symm
-  simpa [hdeg, ht, hu] using Polynomial.card_roots' p
+  obtain hcard := Polynomial.card_roots' p
+  have hcard : u.card + 1 < 2 := by simpa [hdeg, ht, hu] using hcard
+  have hcard : u.card = 0 := by grind
+  simpa [hdeg, ht, hu] using hcard
 
 theorem Polynomial.add_eq_of_natDegree_eq_two {K : Type*} [Field K]
     {p : Polynomial K} {a b c : K} (ha : a ≠ 0)

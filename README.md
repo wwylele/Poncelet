@@ -9,4 +9,8 @@ in principle can be replaced by `decide +kernel` but I don't think any PC can fi
 with kernel only.
 
 ## Status
-WIP, still contain sorries and no main statement yet.
+
+Main statements
+ - `EuclideanGeometry.poncelet`: one circle in another on Euclidean plane.
+ - TODO: intersecting circles, cotangent circles, and separate circles
+ - TODO: conics in projective plane
