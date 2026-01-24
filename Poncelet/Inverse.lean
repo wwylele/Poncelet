@@ -1617,3 +1617,8 @@ theorem f_e [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
     · grind
     · grind
   simpa [e, hes, hk, hpq] using f_eNormal cf hk hpq' hleft hright hes
+
+theorem rightInvOn_e_f [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) :
+    Set.RightInvOn (e cf) (f cf) (dom₀ cf) := by
+  intro p hp
+  apply f_e cf hk hp

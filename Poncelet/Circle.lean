@@ -36,6 +36,12 @@ instance [DecidableEq K] : DecidablePred (OuterCircle cf) := by
   unfold OuterCircle P2.lift
   infer_instance
 
+theorem outerCircle_iff_of_r_eq_neg (cf' : Config K)
+    (hu : cf'.u = cf.u) (hr : cf'.r = -cf.r) (p : P2 K) :
+    OuterCircle cf p ↔ OuterCircle cf' p := by
+  unfold OuterCircle
+  simp_rw [hu, hr, neg_sq]
+
 /-- The predicate that a line (where $[a : b : c]$ means $ax + by = cz$)
 is tangent to the outer circle. -/
 def TangentOuterCircle (p : P2 K) : Prop :=
@@ -52,6 +58,12 @@ instance [DecidableEq K] : DecidablePred (TangentOuterCircle cf) := by
   unfold TangentOuterCircle P2.lift
   infer_instance
 
+theorem tangentOuterCircle_iff_of_r_eq_neg (cf' : Config K)
+    (hu : cf'.u = cf.u) (hr : cf'.r = -cf.r) (p : P2 K) :
+    TangentOuterCircle cf p ↔ TangentOuterCircle cf' p := by
+  unfold TangentOuterCircle
+  simp_rw [hu, hr, neg_sq]
+
 /-- This is a dual-purpose predicate:
  - a point is on the inner circle.
  - a line (where $[a : b : c]$ means $ax + by = cz$) is tangent to the inner circle. -/
@@ -66,6 +78,10 @@ def InnerCircle (_ : Config K) (p : P2 K) : Prop :=
 instance [DecidableEq K] : DecidablePred (InnerCircle cf) := by
   unfold InnerCircle P2.lift
   infer_instance
+
+theorem innerCircle_iff (cf' : Config K) (p : P2 K) :
+    InnerCircle cf p ↔ InnerCircle cf' p := by
+  rfl
 
 theorem tangentOuterCircle_iff (p : P2 K) (hi : InnerCircle cf p) :
     TangentOuterCircle cf p ↔
@@ -87,7 +103,6 @@ theorem tangentOuterCircle_iff (p : P2 K) (hi : InnerCircle cf p) :
   rw [this]
   ring
 
-
 /-- The predicate that a point is on the line. -/
 def Incidence (_ : Config K) (p q : P2 K) : Prop :=
   P2.lift₂ (fun p q hp hq ↦ p 0 * q 0 + p 1 * q 1 = p 2 * q 2) (fun p q r s hp hq hr hs hpr hqs ↦ by
@@ -103,6 +118,10 @@ instance [DecidableEq K] (p : P2 K) : DecidablePred (Incidence cf p) := by
   unfold Incidence P2.lift₂
   infer_instance
 
+theorem incidence_iff (cf' : Config K) (p q : P2 K) :
+    Incidence cf p q ↔ Incidence cf' p q := by
+  rfl
+
 /-- The set of pairs of vertex and edge, where the vertex is on the outer circle,
 the edge is tanget to the inner circle, and the vertex is on the line of the edge. -/
 def dom : Set (P2 K × P2 K) :=
@@ -111,6 +130,12 @@ def dom : Set (P2 K × P2 K) :=
 instance [DecidableEq K] : DecidablePred (· ∈ dom cf) := by
   unfold dom
   infer_instance
+
+theorem dom_eq_of_r_eq_neg (cf' : Config K)
+    (hu : cf'.u = cf.u) (hr : cf'.r = -cf.r) :
+    dom cf = dom cf' := by
+  simp_rw [dom, outerCircle_iff_of_r_eq_neg cf cf' hu hr, innerCircle_iff cf cf',
+    incidence_iff cf cf']
 
 @[simp]
 theorem mem_dom {p q : Fin 3 → K} (hp : p ≠ 0) (hq : q ≠ 0) :
@@ -724,6 +749,12 @@ def rPoint [DecidableEq K] (pq : P2 K × P2 K) : P2 K × P2 K :=
   ring
   ) pq.1 pq.2, pq.2⟩
 
+theorem rPoint_eq_of_r_eq_neg [DecidableEq K] (cf' : Config K)
+    (hu : cf'.u = cf.u) (hr : cf'.r = -cf.r) :
+    rPoint cf = rPoint cf' := by
+  ext1
+  simp_rw [rPoint, rPoint', hu, hr, neg_sq]
+
 theorem snd_rPoint [DecidableEq K] (pq : P2 K × P2 K) :
     (rPoint cf pq).2 = pq.2 := rfl
 
@@ -1054,6 +1085,12 @@ def rChord [DecidableEq K] (pq : P2 K × P2 K) : P2 K × P2 K :=
       ring
   ) pq.1 pq.2⟩
 
+theorem rChord_eq_of_r_eq_neg [DecidableEq K] (cf' : Config K)
+    (hu : cf'.u = cf.u) (hr : cf'.r = -cf.r) :
+    rChord cf = rChord cf':= by
+  ext1
+  simp_rw [rChord, rChord', hu, hr, neg_sq]
+
 theorem fst_rChord [DecidableEq K] (pq : P2 K × P2 K) :
     (rChord cf pq).1 = pq.1 := rfl
 
@@ -1166,6 +1203,13 @@ theorem rChord_eq_self [DecidableEq K] [hchar : NeZero (2 : K)]
 /-- Send a pair of vertex and edge to the next one on the polygon. -/
 def next [DecidableEq K] (pq : P2 K × P2 K) : P2 K × P2 K :=
   rChord cf (rPoint cf pq)
+
+theorem next_eq_of_r_eq_neg [DecidableEq K] (cf' : Config K)
+    (hu : cf'.u = cf.u) (hr : cf'.r = -cf.r) :
+    next cf = next cf' := by
+  ext1
+  simp_rw [next, rPoint_eq_of_r_eq_neg cf cf' hu hr,
+    rChord_eq_of_r_eq_neg cf cf' hu hr]
 
 theorem mapsTo_next [DecidableEq K] [hchar : NeZero (2 : K)] :
     Set.MapsTo (next cf) (dom cf) (dom cf) :=
@@ -1340,6 +1384,11 @@ def dom₀ : Set (P2 K × P2 K) :=
 instance [DecidableEq K] : DecidablePred (· ∈ dom₀ cf) := by
   unfold dom₀
   infer_instance
+
+theorem dom₀_eq_of_r_eq_neg (cf' : Config K)
+    (hu : cf'.u = cf.u) (hr : cf'.r = -cf.r) :
+    dom₀ cf = dom₀ cf' := by
+  simp_rw [dom₀, dom_eq_of_r_eq_neg cf cf' hu hr]
 
 theorem mem_dom₀ {pq : P2 K × P2 K} :
     pq ∈ dom₀ cf ↔ pq ∈ dom cf ∧

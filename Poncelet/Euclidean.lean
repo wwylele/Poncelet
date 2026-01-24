@@ -2,16 +2,17 @@ import Poncelet.CircleConclude
 
 open EuclideanGeometry Real RealInnerProductSpace
 
+attribute [local instance] FiniteDimensional.of_fact_finrank_eq_two
+
 private instance {V : Type*} [AddCommGroup V] [Module ℝ V]
   [hrank : Fact (Module.finrank ℝ V = 2)] : Nontrivial V := by
-  have : FiniteDimensional ℝ V := FiniteDimensional.of_finrank_pos (by simp [hrank.out])
   apply (Module.finrank_pos_iff_of_free ℝ _).mp
   simp [hrank.out]
 
 -- by Aristotle
-lemma exists_norm_eq_and_inner_eq_of_le_norm {V : Type*}
+lemma exists_norm_eq_and_inner_eq_of_le_norm (V : Type*)
     [NormedAddCommGroup V] [InnerProductSpace ℝ V]
-    [Fact (Module.finrank ℝ V = 2)] {u : V} {r : ℝ} (hr : 0 < r) (hu : r ≤ ‖u‖) :
+    (hV : Module.finrank ℝ V ≠ 1) {u : V} {r : ℝ} (hr : 0 < r) (hu : r ≤ ‖u‖) :
     ∃ v : V, ‖v‖ = r ∧ ⟪v, u⟫ = r ^ 2 := by
   have h : u ≠ 0 := fun h ↦ by simpa [h] using hr.trans_le hu
   have h' : ‖u‖ ≠ 0 := by simpa using h
@@ -19,12 +20,12 @@ lemma exists_norm_eq_and_inner_eq_of_le_norm {V : Type*}
     w ∈ (Submodule.span ℝ {u})ᗮ ∧ ‖w‖ = √(r ^ 2 - r ^ 4 / ‖u‖ ^ 2) := by
     simp_rw [Submodule.mem_orthogonal_singleton_iff_inner_right]
     obtain ⟨w, hw⟩ : ∃ w : V, w ∈ (Submodule.span ℝ {u})ᗮ ∧ w ≠ 0 := by
-      have h_orthogonal_complement : Module.finrank ℝ (Submodule.span ℝ {u})ᗮ = 1 :=
-        Submodule.finrank_orthogonal_span_singleton h
-      contrapose! h_orthogonal_complement;
-      rw [show (Submodule.span ℝ {u}) ᗮ = ⊥ by exact eq_bot_iff.mpr h_orthogonal_complement]
-      simp
-    refine ⟨(√(r ^ 2 - r ^ 4 / ‖u‖ ^ 2 ) / ‖w‖) • w, ?_, ?_ ⟩
+      by_contra! hl
+      rw [← Submodule.eq_bot_iff, Submodule.orthogonal_eq_bot_iff] at hl
+      obtain hl := congr(Module.finrank ℝ $hl)
+      rw [finrank_span_singleton h, finrank_top] at hl
+      simp [← hl] at hV
+    refine ⟨(√(r ^ 2 - r ^ 4 / ‖u‖ ^ 2) / ‖w‖) • w, ?_, ?_⟩
     · suffices ⟪u, w⟫ = 0 by simp [real_inner_smul_right, this]
       simpa using hw.1 u (Submodule.mem_span_singleton_self u)
     · simp_all [norm_smul]
@@ -49,13 +50,14 @@ lemma exists_norm_eq_and_inner_eq_of_le_norm {V : Type*}
 
 -- by Aristotle
 theorem exists_IsTangent {V P : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V]
-    [MetricSpace P] [NormedAddTorsor V P] [Fact (Module.finrank ℝ V = 2)]
+    [MetricSpace P] [NormedAddTorsor V P] [hrank : Fact (Module.finrank ℝ V = 2)]
     {i : Sphere P} (hi : 0 < i.radius)
     {p : P} (hp : i.radius ≤ dist p i.center) :
     ∃ l : AffineSubspace ℝ P, Module.finrank ℝ l.direction = 1 ∧ p ∈ l ∧ i.IsTangent l := by
   obtain ⟨v, hv1, hv2⟩ : ∃ v : P, dist v i.center = i.radius ∧
       inner ℝ (v -ᵥ i.center) (p -ᵥ i.center) = i.radius ^ 2 := by
-    have := exists_norm_eq_and_inner_eq_of_le_norm hi (by simpa [ dist_eq_norm_vsub ] using hp)
+    have := exists_norm_eq_and_inner_eq_of_le_norm V (by simp [hrank.out])
+      hi (by simpa [ dist_eq_norm_vsub ] using hp)
     obtain ⟨ v, hv₁, hv₂ ⟩ := this
     use v +ᵥ i.center
     simp_all [dist_eq_norm_vsub]
@@ -175,7 +177,7 @@ variable {V P : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V]
 
 omit [Fact (Module.finrank ℝ V = 2)] in
 theorem finrank_direction_affineSpan_eq_two {p q : P} (h : p ≠ q) :
-    Module.finrank ℝ (affineSpan ℝ {p, q}).direction = 1 := by
+    Module.finrank ℝ (line[ℝ, p, q]).direction = 1 := by
   rw [direction_affineSpan, vectorSpan_pair, finrank_span_singleton]
   simpa using h
 
@@ -183,16 +185,16 @@ omit [Fact (Module.finrank ℝ V = 2)] in
 theorem eq_affineSpan_of_finrank_eq_one {p q : P} (h : p ≠ q)
     {l : AffineSubspace ℝ P} (hl : Module.finrank ℝ l.direction = 1)
     (hp : p ∈ l) (hq : q ∈ l) :
-    affineSpan ℝ {p, q} = l := by
+    line[ℝ, p, q] = l := by
   have := Module.finite_of_finrank_eq_succ hl
-  have hle : affineSpan ℝ {p, q} ≤ l :=
+  have hle : line[ℝ, p, q] ≤ l :=
     affineSpan_le.mpr (Set.insert_subset_iff.mpr ⟨hp, Set.singleton_subset_iff.mpr hq⟩)
-  have hdir : (affineSpan ℝ {p, q}).direction ≤ l.direction :=
+  have hdir : (line[ℝ, p, q]).direction ≤ l.direction :=
     AffineSubspace.direction_le hle
-  have hrank : Module.finrank ℝ (affineSpan ℝ {p, q}).direction =
+  have hrank : Module.finrank ℝ (line[ℝ, p, q]).direction =
       Module.finrank ℝ l.direction := by
     rw [finrank_direction_affineSpan_eq_two h, hl]
-  have hdir : (affineSpan ℝ {p, q}).direction = l.direction := by
+  have hdir : (line[ℝ, p, q]).direction = l.direction := by
     apply_rules [Submodule.eq_of_le_of_finrank_eq]
   exact AffineSubspace.ext_of_direction_eq hdir ⟨p, mem_affineSpan ℝ (Set.mem_insert _ _), hp⟩
 
@@ -206,8 +208,6 @@ theorem basis_two {x y : V} (hx : x ≠ 0) (hy : y ≠ 0) (h : ⟪x, y⟫ = 0)
   have hr : Module.finrank ℝ (Submodule.span ℝ {x, y}) = 2 := by
     convert finrank_span_eq_card hli
   have hspan : Submodule.span ℝ {x, y} = ⊤ := by
-    have h_finite_dim : FiniteDimensional ℝ V :=
-      FiniteDimensional.of_finrank_pos (by simp [hrank.1])
     apply Submodule.eq_top_of_finrank_eq
     rw [hr, hrank.1]
   have := hspan.ge (Submodule.mem_top : v ∈ ⊤)
@@ -267,13 +267,13 @@ theorem inner_swap {x y : V} (hx : x ≠ 0) (hy : y ≠ 0) (h : ⟪x, y⟫ = 0) 
 
 def IsProperPolygon
     {n : ℕ} [NeZero n] (a : Fin n → P) :=
-  ∀ i, a i ≠ a (i + 1) ∧ affineSpan ℝ {a i, a (i + 1)} ≠ affineSpan ℝ {a (i + 1), a (i + 2)}
+  ∀ i, a i ≠ a (i + 1) ∧ line[ℝ, a i, a (i + 1)] ≠ line[ℝ, a (i + 1), a (i + 2)]
 
 def Inscribe {n : ℕ} [NeZero n] (a : Fin n → P) (s : Sphere P) :=
   ∀ i, a i ∈ s
 
 def Circumscribe {n : ℕ} [NeZero n] (a : Fin n → P) (s : Sphere P) :=
-  ∀ i, s.IsTangent (affineSpan ℝ {a i, a (i + 1)})
+  ∀ i, s.IsTangent (line[ℝ, a i, a (i + 1)])
 
 variable (P) in
 structure EuConfig where
@@ -287,7 +287,7 @@ structure EuConfig where
 namespace EuConfig
 variable (cf : EuConfig P)
 
-def xAxis := affineSpan ℝ {cf.o.center, cf.i.center}
+def xAxis := line[ℝ, cf.o.center, cf.i.center]
 
 omit [Fact (Module.finrank ℝ V = 2)] in
 theorem finrank_direction_xAxis : Module.finrank ℝ cf.xAxis.direction = 1 := by
@@ -296,7 +296,6 @@ theorem finrank_direction_xAxis : Module.finrank ℝ cf.xAxis.direction = 1 := b
 def yAxis := AffineSubspace.mk' cf.i.center cf.xAxis.directionᗮ
 
 theorem finrank_direction_yAxis : Module.finrank ℝ cf.yAxis.direction = 1 := by
-  have : FiniteDimensional ℝ V := FiniteDimensional.of_finrank_pos (by simp [hrank.out])
   rw [← add_right_inj (Module.finrank ℝ cf.xAxis.direction)]
   rw [yAxis, AffineSubspace.direction_mk', Submodule.finrank_add_finrank_orthogonal]
   simp [finrank_direction_xAxis, hrank.out]
@@ -438,13 +437,11 @@ theorem not_innerCircle_of_mem_o {p : P} (hp : p ∈ cf.o) :
 
 noncomputable def dirVec {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.direction = 1) :
     p.direction :=
-  have : FiniteDimensional ℝ V := FiniteDimensional.of_finrank_pos (by simp [hrank.out])
   (Module.finrank_pos_iff_exists_ne_zero.mp
     (show 0 < Module.finrank ℝ p.direction by simp [hp])).choose
 
 theorem dirVec_ne_zero {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.direction = 1) :
     dirVec hp ≠ 0 :=
-  have : FiniteDimensional ℝ V := FiniteDimensional.of_finrank_pos (by simp [hrank.out])
   (Module.finrank_pos_iff_exists_ne_zero.mp
     (show 0 < Module.finrank ℝ p.direction by simp [hp])).choose_spec
 
@@ -595,8 +592,6 @@ theorem isAffine_sendChord {p : AffineSubspace ℝ P}
     simp at hp
   )
   have : Nonempty p := by simpa using hnonempty
-  have h_finite_dim : FiniteDimensional ℝ V := by
-    exact FiniteDimensional.of_finrank_pos (by simp [hrank.1])
   rw [← EuclideanGeometry.Sphere.infDist_eq_radius_iff_isTangent] at hi
   obtain h := hi ▸ Metric.infDist_le_dist_of_mem hmem
   simp [cf.i_pos.not_ge] at h
@@ -605,7 +600,6 @@ theorem sendChord_inj {p q : AffineSubspace ℝ P}
     (hp : Module.finrank ℝ p.direction = 1) (hq : Module.finrank ℝ q.direction = 1)
     (h : cf.sendChord p = cf.sendChord q) : p = q := by
   have : Nontrivial p.direction := by
-    have : FiniteDimensional ℝ p.direction := FiniteDimensional.of_finrank_pos (by simp [hp])
     apply (Module.finrank_pos_iff_of_free ℝ _).mp
     simp [hp]
   have hpb : p ≠ ⊥ := fun h ↦ by
@@ -723,8 +717,6 @@ theorem isTangent_i_iff {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.di
     simp at hp
   )
   have : Nonempty p := by simpa using hnonempty
-  have h_finite_dim : FiniteDimensional ℝ V := by
-    exact FiniteDimensional.of_finrank_pos (by simp [hrank.1])
   obtain hmem : (orthogonalProjection p cf.i.center).val ∈ p :=
     EuclideanGeometry.orthogonalProjection_mem cf.i.center
   rw [cf.sendChord_eq hp hmem (dirVec_ne_zero' hp) (dirVec hp).prop]
@@ -781,8 +773,6 @@ theorem isTangent_o_iff {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.di
     simp at hp
   )
   have : Nonempty p := by simpa using hnonempty
-  have h_finite_dim : FiniteDimensional ℝ V := by
-    exact FiniteDimensional.of_finrank_pos (by simp [hrank.1])
   obtain hmem : (orthogonalProjection p cf.o.center).val ∈ p :=
     EuclideanGeometry.orthogonalProjection_mem cf.o.center
   rw [cf.sendChord_eq hp hmem (dirVec_ne_zero' hp) (dirVec hp).prop]
@@ -850,8 +840,6 @@ theorem not_tangentOuterCircle_of_isTangent {p : AffineSubspace ℝ P}
     simp at hp
   )
   have : Nonempty p := by simpa using hnonempty
-  have h_finite_dim : FiniteDimensional ℝ V := by
-    exact FiniteDimensional.of_finrank_pos (by simp [hrank.1])
   rw [← cf.isTangent_o_iff hp, ← EuclideanGeometry.Sphere.infDist_eq_radius_iff_isTangent]
   obtain hmem : (orthogonalProjection p cf.i.center).val ∈ p :=
     EuclideanGeometry.orthogonalProjection_mem cf.i.center
@@ -931,8 +919,8 @@ theorem rPoint_sendPoint_sendChord {p1 p2 : P} {q : AffineSubspace ℝ P}
 theorem next_sendPoint_sendChord {n : ℕ} [NeZero n] {a : Fin n → P}
     (ho : Inscribe a cf.o) (hi : Circumscribe a cf.i)
     (ha : IsProperPolygon a) (i : Fin n) :
-    next cf.toConfig ⟨sendPoint cf (a i), sendChord cf (affineSpan ℝ {a i, a (i + 1)})⟩ =
-      ⟨sendPoint cf (a (i + 1)), sendChord cf (affineSpan ℝ {a (i + 1), a (i + 2)})⟩ := by
+    next cf.toConfig ⟨sendPoint cf (a i), sendChord cf (line[ℝ, a i, a (i + 1)])⟩ =
+      ⟨sendPoint cf (a (i + 1)), sendChord cf (line[ℝ, a (i + 1), a (i + 2)])⟩ := by
   rw [next]
   rw [cf.rPoint_sendPoint_sendChord (ha i).1 (finrank_direction_affineSpan_eq_two (ha i).1)
     (ho i) (ho (i + 1)) (hi i)
@@ -945,15 +933,15 @@ theorem next_sendPoint_sendChord {n : ℕ} [NeZero n] {a : Fin n → P}
 theorem iterate_next_sendPoint_sendChord {n : ℕ} [NeZero n] {a : Fin n → P}
     (ho : Inscribe a cf.o) (hi : Circumscribe a cf.i)
     (ha : IsProperPolygon a) (k : ℕ) (i : Fin n) :
-    (next cf.toConfig)^[k] ⟨sendPoint cf (a i), sendChord cf (affineSpan ℝ {a i, a (i + 1)})⟩ =
+    (next cf.toConfig)^[k] ⟨sendPoint cf (a i), sendChord cf (line[ℝ, a i, a (i + 1)])⟩ =
       ⟨sendPoint cf (a (i + Fin.ofNat n k)),
-      sendChord cf (affineSpan ℝ {a (i + Fin.ofNat n k), a (i + Fin.ofNat n k + 1)})⟩ := by
+      sendChord cf (line[ℝ, a (i + Fin.ofNat n k), a (i + Fin.ofNat n k + 1)])⟩ := by
   induction k with
   | zero => simp [-Fin.ofNat_eq_cast]
   | succ k ih =>
   rw [Function.iterate_succ_apply', ih]
   rw [cf.next_sendPoint_sendChord ho hi ha]
-  congrm (cf.sendPoint (a ?h1), cf.sendChord (affineSpan ℝ {a ?h1, a ?h2}))
+  congrm (cf.sendPoint (a ?h1), cf.sendChord (line[ℝ, a ?h1, a ?h2]))
   · rw [← Fin.val_eq_val]
     simp_rw [Fin.val_add, Fin.val_ofNat]
     simp only [Nat.add_mod_mod, Fin.coe_ofNat_eq_mod, Nat.mod_add_mod]
@@ -966,8 +954,8 @@ theorem iterate_next_sendPoint_sendChord {n : ℕ} [NeZero n] {a : Fin n → P}
 theorem iterate_next_sendPoint_sendChord_eq_self {n : ℕ} [NeZero n] {a : Fin n → P}
     (ho : Inscribe a cf.o) (hi : Circumscribe a cf.i)
     (ha : IsProperPolygon a) (i : Fin n) :
-    (next cf.toConfig)^[n] ⟨sendPoint cf (a i), sendChord cf (affineSpan ℝ {a i, a (i + 1)})⟩ =
-      ⟨sendPoint cf (a i), sendChord cf (affineSpan ℝ {a i, a (i + 1)})⟩ := by
+    (next cf.toConfig)^[n] ⟨sendPoint cf (a i), sendChord cf (line[ℝ, a i, a (i + 1)])⟩ =
+      ⟨sendPoint cf (a i), sendChord cf (line[ℝ, a i, a (i + 1)])⟩ := by
   simp [cf.iterate_next_sendPoint_sendChord ho hi ha n i]
 
 noncomputable
@@ -1428,9 +1416,9 @@ theorem EuclideanGeometry.poncelet_of_center_ne {o i : Sphere P}
     obtain h1 := cf.u_add_r_sq
     obtain h2 := cf.u_sub_r_sq
     grind
-  have ha0 : Module.finrank ℝ ↥(affineSpan ℝ {a 0, a 1}).direction = 1 := by
+  have ha0 : Module.finrank ℝ ↥(line[ℝ, a 0, a 1]).direction = 1 := by
     convert finrank_direction_affineSpan_eq_two (ha 0).1 <;> simp
-  have ha0 : (cf.sendPoint (a 0), cf.sendChord (affineSpan ℝ {a 0, a 1})) ∈ dom₀ cf.toConfig := by
+  have ha0 : (cf.sendPoint (a 0), cf.sendChord (line[ℝ, a 0, a 1])) ∈ dom₀ cf.toConfig := by
     rw [hdom]
     refine ⟨?_, ?_, ?_⟩
     · rw [← cf.mem_o_iff]
@@ -1466,8 +1454,154 @@ theorem EuclideanGeometry.poncelet_of_center_ne {o i : Sphere P}
   · exact cf.circumscribe_polygon hvalid hclose
   · exact cf.isProperPolygon_polygon hvalid hclose
 
-set_option maxHeartbeats 4000000 in
--- TODO : Clean this
+namespace Concentric
+
+/-variable (P) in
+structure Config where
+  i : Sphere P
+  o : Sphere P
+  ho : 0 < o.radius
+  hcenter : o.center = i.center
+  n : ℕ
+  a : Fin n → P
+  [hn : NeZero n]
+  hao : Inscribe a o
+  hai : Circumscribe a i
+  ha : IsProperPolygon a
+
+variable (cf : Config P)
+instance : NeZero cf.n := cf.hn
+
+omit hrank in
+theorem ha0 : dist (cf.a 0) cf.o.center = cf.o.radius := by
+  simpa using cf.hao 0
+
+omit hrank in
+theorem hx : ‖(cf.a 0) -ᵥ cf.o.center‖ = cf.o.radius := by
+  simpa [dist_eq_norm_vsub] using ha0 cf
+
+-/
+
+noncomputable
+def send {x y : V} (hx0 : x ≠ 0) (hy0 : y ≠ 0) {r : ℝ} (hr : 0 < r)
+    (hx : ‖x‖ = r) (hy : ‖y‖ = r)
+    (hxy : ⟪x, y⟫ = 0) : V ≃ₗ[ℝ] (ℝ × ℝ) where
+  toFun v := (⟪v, x⟫, ⟪v, y⟫)
+  map_add' a b := by ext <;> simp [inner_add_left]
+  map_smul' m a := by ext <;> simp [real_inner_smul_left]
+  invFun xy := (xy.1 / r ^ 2) • x + (xy.2 / r ^ 2) • y
+  left_inv := by
+    intro v
+    simp only
+    suffices (⟪v, x⟫ / ‖x‖ ^ 2) • x +
+        (⟪v, y⟫ / ‖y‖ ^ 2) • y = v by
+      simpa [hx, hy]
+    rw [← basis_two' hx0 hy0 hxy]
+  right_inv := by
+    have ho20 : r ^ 2 ≠ 0 := by simpa using hr.ne.symm
+    have hyx : ⟪y, x⟫ = 0 := real_inner_comm x _ ▸ hxy
+    intro x
+    ext
+    · simp [inner_add_left, real_inner_smul_left, hyx, hx, ho20]
+    · simp [inner_add_left, real_inner_smul_left, hxy, hy, ho20]
+
+theorem send_orth {x y : V} (hx0 : x ≠ 0) (hy0 : y ≠ 0) {r : ℝ} (hr : 0 < r)
+    (hx : ‖x‖ = r) (hy : ‖y‖ = r)
+    (hxy : ⟪x, y⟫ = 0)
+    (u v : V) : ⟪u, v⟫ = 0 ↔
+    (send hx0 hy0 hr hx hy hxy u).1 * (send hx0 hy0 hr hx hy hxy v).1 +
+    (send hx0 hy0 hr hx hy hxy u).2 * (send hx0 hy0 hr hx hy hxy v).2 = 0 := by
+  have ho20 : r ^ 2 ≠ 0 := by simpa using hr.ne.symm
+  have hyx : ⟪y, x⟫ = 0 := real_inner_comm x _ ▸ hxy
+  obtain ⟨a, b, hu⟩ := basis_two hx0 hy0 hxy u
+  obtain ⟨c, d, hv⟩ := basis_two hx0 hy0 hxy v
+  unfold send
+  suffices c * (a * r ^ 2) + d * (b * r ^ 2) = 0 ↔
+    a * r ^ 2 * (c * r ^ 2) + b * r ^ 2 * (d * r ^ 2) = 0 by
+    simpa [hu, hv, inner_add_left, inner_add_right, real_inner_smul_left,
+      real_inner_smul_right, hxy, hyx, hx, hy]
+  conv_lhs => rw [← mul_left_inj' ho20]
+  constructor <;> intro h <;> linear_combination h
+
+theorem send_orth' {x y : V} (hx0 : x ≠ 0) (hy0 : y ≠ 0) {r : ℝ} (hr : 0 < r)
+    (hx : ‖x‖ = r) (hy : ‖y‖ = r)
+    (hxy : ⟪x, y⟫ = 0)
+    (u v : ℝ × ℝ) : ⟪(send hx0 hy0 hr hx hy hxy).symm u, (send hx0 hy0 hr hx hy hxy).symm v⟫ = 0 ↔
+      u.1 * v.1 + u.2 * v.2 = 0 := by
+  simp [Concentric.send_orth hx0 hy0 hr hx hy hxy]
+
+theorem send_norm {x y : V} (hx0 : x ≠ 0) (hy0 : y ≠ 0) {r : ℝ} (hr : 0 < r)
+    (hx : ‖x‖ = r) (hy : ‖y‖ = r)
+    (hxy : ⟪x, y⟫ = 0)
+    (v : ℝ × ℝ) : ‖(send hx0 hy0 hr hx hy hxy).symm v‖ ^ 2 = (v.1 ^ 2 + v.2 ^ 2) / r ^ 2 := by
+    have hyx : ⟪y, x⟫ = 0 := real_inner_comm x _ ▸ hxy
+    simp only [LinearEquiv.coe_symm_mk', send]
+    rw [← real_inner_self_eq_norm_sq]
+    simp_rw [inner_add_left, inner_add_right, real_inner_smul_left, real_inner_smul_right,
+      hxy, hyx]
+    simp [hx, hy, field]
+
+noncomputable
+def rotate {sin cos : ℝ} {r : ℝ} (hr : 0 < r) (hsincos : sin ^ 2 + cos ^ 2 = r ^ 4) :
+    (ℝ × ℝ) ≃ₗ[ℝ] (ℝ × ℝ) where
+  toFun xy := ((cos * xy.1 - sin * xy.2) / r ^ 2,
+      (sin * xy.1 + cos * xy.2) / r ^ 2)
+  map_add' a b := by ext <;> simp <;> ring
+  map_smul' m a := by ext <;> simp <;> ring
+  invFun xy := ((cos * xy.1 + sin * xy.2) / r ^ 2,
+      (-sin * xy.1 + cos * xy.2) / r ^ 2)
+  left_inv := by
+    intro x
+    ext
+    · simp only
+      suffices (sin ^ 2 + cos ^ 2) / r ^ 4 * x.1 = x.1 by
+        linear_combination this
+      rw [hsincos]
+      field
+    · simp only
+      suffices (sin ^ 2 + cos ^ 2) / r ^ 4 * x.2 = x.2 by
+        linear_combination this
+      rw [hsincos]
+      field
+  right_inv := by
+    intro x
+    ext
+    · simp only
+      suffices (sin ^ 2 + cos ^ 2) / r ^ 4 * x.1 = x.1 by
+        linear_combination this
+      rw [hsincos]
+      field
+    · simp only
+      suffices (sin ^ 2 + cos ^ 2) / r ^ 4 * x.2 = x.2 by
+        linear_combination this
+      rw [hsincos]
+      field
+
+theorem rotate_orth {sin cos : ℝ} {r : ℝ} (hr : 0 < r) (hsincos : sin ^ 2 + cos ^ 2 = r ^ 4)
+    (u v : ℝ × ℝ) : u.1 * v.1 + u.2 * v.2 = 0 ↔
+    (rotate hr hsincos u).1 * (rotate hr hsincos v).1 +
+    (rotate hr hsincos u).2 * (rotate hr hsincos v).2 = 0 := by
+  suffices u.1 * v.1 + u.2 * v.2 = 0 ↔
+    (cos * u.1 - sin * u.2) * (cos * v.1 - sin * v.2) +
+    (sin * u.1 + cos * u.2) * (sin * v.1 + cos * v.2) = 0 by
+    simpa [rotate, div_mul_div_comm, ← add_div, hr.ne.symm]
+  trans (sin ^ 2 + cos ^ 2) * (u.1 * v.1 + u.2 * v.2) = 0
+  · rw [hsincos]
+    simp [hr.ne.symm]
+  · congrm ?_ = 0
+    ring
+
+theorem rotate_norm {sin cos : ℝ} {r : ℝ} (hr : 0 < r) (hsincos : sin ^ 2 + cos ^ 2 = r ^ 4)
+    (u : ℝ × ℝ) : (rotate hr hsincos u).1 ^ 2 + (rotate hr hsincos u).2 ^ 2 =
+    u.1 ^ 2 + u.2 ^ 2 := by
+  simp only [neg_mul, LinearEquiv.coe_mk, LinearMap.coe_mk, AddHom.coe_mk, rotate]
+  suffices (sin ^ 2 + cos ^ 2) * (u.1 ^ 2 + u.2 ^ 2) / r ^ 4 = u.1 ^ 2 + u.2 ^ 2 by
+    linear_combination this
+  rw [hsincos]
+  field
+
+end Concentric
+
 theorem EuclideanGeometry.poncelet_of_center_eq {o i : Sphere P}
     (ho : 0 < o.radius)
     (hcenter : o.center = i.center)
@@ -1482,7 +1616,7 @@ theorem EuclideanGeometry.poncelet_of_center_eq {o i : Sphere P}
     contrapose! hx
     rw [hx]
     simpa using ho.ne
-  let xAxis := affineSpan ℝ {o.center, a 0}
+  let xAxis := line[ℝ, o.center, a 0]
   have hxrank : Module.finrank ℝ xAxis.direction = 1 := by
     apply finrank_direction_affineSpan_eq_two
     obtain ha := hao 0
@@ -1491,12 +1625,10 @@ theorem EuclideanGeometry.poncelet_of_center_eq {o i : Sphere P}
     simpa [ha] using ho.ne
   let yAxis := AffineSubspace.mk' o.center xAxis.directionᗮ
   have hyrank : Module.finrank ℝ yAxis.direction = 1 := by
-    have : FiniteDimensional ℝ V := FiniteDimensional.of_finrank_pos (by simp [hrank.out])
     rw [← add_right_inj (Module.finrank ℝ xAxis.direction)]
     unfold yAxis
     rw [AffineSubspace.direction_mk', Submodule.finrank_add_finrank_orthogonal]
     simp [hxrank, hrank.out]
-  have : FiniteDimensional ℝ yAxis.direction := FiniteDimensional.of_finrank_pos (by simp [hyrank])
   have : Nontrivial yAxis.direction := by
     apply (Module.finrank_pos_iff_of_free ℝ _).mp
     simp [hyrank]
@@ -1527,114 +1659,26 @@ theorem EuclideanGeometry.poncelet_of_center_eq {o i : Sphere P}
     congrm ?_ ^ 2
     simpa using hp
   let av (i : Fin n) := a i -ᵥ o.center
-  let send : V ≃ₗ[ℝ] (ℝ × ℝ) := {
-    toFun v := (⟪v, a 0 -ᵥ o.center⟫, ⟪v, y⟫)
-    map_add' a b := by ext <;> simp [inner_add_left]
-    map_smul' m a := by ext <;> simp [real_inner_smul_left]
-    invFun xy := (xy.1 / o.radius ^ 2) • (a 0 -ᵥ o.center) +
-      (xy.2 / o.radius ^ 2) • y
-    left_inv := by
-      intro x
-      simp only
-      suffices (⟪x, a 0 -ᵥ o.center⟫ / ‖a 0 -ᵥ o.center‖ ^ 2) • (a 0 -ᵥ o.center) +
-          (⟪x, y⟫ / ‖y‖ ^ 2) • y = x by
-        simpa [hx, hy]
-      rw [← basis_two' hx0 hy0 hxy]
-    right_inv := by
-      intro x
-      ext
-      · simp [inner_add_left, real_inner_smul_left, hyx, hx, ho20]
-      · simp [inner_add_left, real_inner_smul_left, hxy, hy, ho20]
-  }
-  have hsendorth (u v : V) : ⟪u, v⟫ = 0 ↔
-      (send u).1 * (send v).1 + (send u).2 * (send v).2 = 0 := by
-    obtain ⟨a, b, hu⟩ := basis_two hx0 hy0 hxy u
-    obtain ⟨c, d, hv⟩ := basis_two hx0 hy0 hxy v
-    unfold send
-    suffices c * (a * o.radius ^ 2) + d * (b * o.radius ^ 2) = 0 ↔
-      a * o.radius ^ 2 * (c * o.radius ^ 2) + b * o.radius ^ 2 * (d * o.radius ^ 2) = 0 by
-      simpa [hu, hv, inner_add_left, inner_add_right, real_inner_smul_left,
-        real_inner_smul_right, hxy, hyx, hx, hy]
-    conv_lhs => rw [← mul_left_inj' ho20]
-    constructor <;> intro h <;> linear_combination h
-  have hsendorth' (u v : ℝ × ℝ) : ⟪send.symm u, send.symm v⟫ = 0 ↔
-      u.1 * v.1 + u.2 * v.2 = 0 := by
-    simp [hsendorth]
-  have sendnorm (v : ℝ × ℝ) : ‖send.symm v‖ ^ 2 = (v.1 ^ 2 + v.2 ^ 2) / o.radius ^ 2 := by
-    simp only [LinearEquiv.coe_symm_mk', send]
-    rw [← real_inner_self_eq_norm_sq]
-    simp_rw [inner_add_left, inner_add_right, real_inner_smul_left, real_inner_smul_right,
-      hxy, hyx]
-    simp [hx, hy, field]
-  let rotate : (ℝ × ℝ) ≃ₗ[ℝ] (ℝ × ℝ) := {
-    toFun xy := ((cos * xy.1 - sin * xy.2) / o.radius ^ 2,
-        (sin * xy.1 + cos * xy.2) / o.radius ^ 2)
-    map_add' a b := by ext <;> simp <;> ring
-    map_smul' m a := by ext <;> simp <;> ring
-    invFun xy := ((cos * xy.1 + sin * xy.2) / o.radius ^ 2,
-        (-sin * xy.1 + cos * xy.2) / o.radius ^ 2)
-    left_inv := by
-      intro x
-      ext
-      · simp only
-        suffices (sin ^ 2 + cos ^ 2) / o.radius ^ 4 * x.1 = x.1 by
-          linear_combination this
-        rw [hsincos]
-        field
-      · simp only
-        suffices (sin ^ 2 + cos ^ 2) / o.radius ^ 4 * x.2 = x.2 by
-          linear_combination this
-        rw [hsincos]
-        field
-    right_inv := by
-      intro x
-      ext
-      · simp only
-        suffices (sin ^ 2 + cos ^ 2) / o.radius ^ 4 * x.1 = x.1 by
-          linear_combination this
-        rw [hsincos]
-        field
-      · simp only
-        suffices (sin ^ 2 + cos ^ 2) / o.radius ^ 4 * x.2 = x.2 by
-          linear_combination this
-        rw [hsincos]
-        field
-  }
-  have hrotateorth (u v : ℝ × ℝ) : u.1 * v.1 + u.2 * v.2 = 0 ↔
-      (rotate u).1 * (rotate v).1 + (rotate u).2 * (rotate v).2 = 0 := by
-    suffices u.1 * v.1 + u.2 * v.2 = 0 ↔
-      (cos * u.1 - sin * u.2) * (cos * v.1 - sin * v.2) +
-      (sin * u.1 + cos * u.2) * (sin * v.1 + cos * v.2) = 0 by
-      simpa [rotate, div_mul_div_comm, ← add_div, ho.ne.symm]
-    trans (sin ^ 2 + cos ^ 2) * (u.1 * v.1 + u.2 * v.2) = 0
-    · rw [hsincos]
-      simp [ho.ne.symm]
-    · congrm ?_ = 0
-      ring
-  have hrotatenorm (u : ℝ × ℝ) : (rotate u).1 ^ 2 + (rotate u).2 ^ 2 =
-      u.1 ^ 2 + u.2 ^ 2 := by
-    simp only [neg_mul, LinearEquiv.coe_mk, LinearMap.coe_mk, AddHom.coe_mk, rotate]
-    suffices (sin ^ 2 + cos ^ 2) * (u.1 ^ 2 + u.2 ^ 2) / o.radius ^ 4 = u.1 ^ 2 + u.2 ^ 2 by
-      linear_combination this
-    rw [hsincos]
-    field
+  let send : V ≃ₗ[ℝ] (ℝ × ℝ) := Concentric.send hx0 hy0 ho hx hy hxy
+  let rotate : (ℝ × ℝ) ≃ₗ[ℝ] (ℝ × ℝ) := Concentric.rotate ho hsincos
   let full : P →ᵃ[ℝ] P := {
     toFun p := send.symm (rotate (send (p -ᵥ o.center))) +ᵥ o.center
     linear := send ≪≫ₗ rotate ≪≫ₗ send.symm
     map_vadd' p v := by simp [vadd_vadd, ← map_add, vadd_vsub_assoc]
   }
-  have hfull (i : Fin n) : send.symm (rotate (send (av i))) +ᵥ o.center = full (a i) := rfl
+  have hfull (i : Fin n) : full (a i) = send.symm (rotate (send (av i))) +ᵥ o.center := rfl
   have hfl (v : V) : send.symm (rotate (send (v))) = full.linear v := rfl
-  use fun i ↦ send.symm (rotate (send (av i))) +ᵥ o.center
+  use fun i ↦ full (a i)
   refine ⟨?_, ?_, ?_, ?_⟩
   · simp only
     symm
-    rw [eq_vadd_iff_vsub_eq]
+    rw [hfull, eq_vadd_iff_vsub_eq]
     suffices p -ᵥ o.center =
         (⟪p -ᵥ o.center, a 0 -ᵥ o.center⟫ * o.radius ^ 2 / o.radius ^ 2 / o.radius ^ 2)
           • (a 0 -ᵥ o.center) +
         (⟪p -ᵥ o.center, y⟫ * o.radius ^ 2 / o.radius ^ 2 / o.radius ^ 2) • y by
-      simpa [rotate, send, av, cos, sin, ← dist_eq_norm_vsub, ha0, hxy]
+      simpa [rotate, Concentric.rotate, send, Concentric.send, av, cos, sin,
+        ← dist_eq_norm_vsub, ha0, hxy]
     suffices p -ᵥ o.center =
         (⟪p -ᵥ o.center, a 0 -ᵥ o.center⟫ / ‖a 0 -ᵥ o.center‖ ^ 2) • (a 0 -ᵥ o.center) +
         (⟪p -ᵥ o.center, y⟫ / ‖y‖ ^ 2) • y by
@@ -1645,7 +1689,7 @@ theorem EuclideanGeometry.poncelet_of_center_eq {o i : Sphere P}
   · intro i
     suffices ‖((rotate (send (av i))).1 / o.radius ^ 2) • (a 0 -ᵥ o.center) +
         ((rotate (send (av i))).2 / o.radius ^ 2) • y‖ = o.radius by
-      simpa [← Sphere.mem_coe']
+      simpa [hfull, ← Sphere.mem_coe']
     rw [← sq_eq_sq₀ (by simp) ho.le]
     rw [← real_inner_self_eq_norm_sq]
     simp_rw [inner_add_left, inner_add_right,
@@ -1661,7 +1705,7 @@ theorem EuclideanGeometry.poncelet_of_center_eq {o i : Sphere P}
       linear_combination this
     unfold rotate
     suffices (sin ^ 2 + cos ^ 2) * ((send (av i)).1 ^ 2 + (send (av i)).2 ^ 2) = o.radius ^ 8 by
-      simp
+      simp [Concentric.rotate]
       field_simp
       linear_combination this
     suffices (send (av i)).1 ^ 2 + (send (av i)).2 ^ 2 = o.radius ^ 4 by
@@ -1671,6 +1715,7 @@ theorem EuclideanGeometry.poncelet_of_center_eq {o i : Sphere P}
     suffices ⟪a i -ᵥ o.center, a 0 -ᵥ o.center⟫ ^ 2 / ‖a 0 -ᵥ o.center‖ ^ 2
       + ⟪a i -ᵥ o.center, y⟫ ^ 2 / ‖y‖ ^ 2 = o.radius ^ 2 by
       rw [hy, hx] at this
+      unfold Concentric.send
       field_simp at this
       linear_combination this
     rw [proj_two hx0 hy0 hxy]
@@ -1683,21 +1728,18 @@ theorem EuclideanGeometry.poncelet_of_center_eq {o i : Sphere P}
     apply Eq.trans ?_ h
     simp only
     have horth : (orthogonalProjection
-        (affineSpan ℝ {send.symm (rotate (send (av n))) +ᵥ
-        o.center, send.symm (rotate (send (av (n + 1)))) +ᵥ o.center}) o.center).val =
+        (line[ℝ, full (a n), full (a (n + 1))]) o.center).val =
         send.symm (rotate (send ((orthogonalProjection (
-        affineSpan ℝ {a n, a (n + 1)}) o.center).val -ᵥ o.center))) +ᵥ o.center := by
+        line[ℝ, a n, a (n + 1)]) o.center).val -ᵥ o.center))) +ᵥ o.center := by
       rw [EuclideanGeometry.coe_orthogonalProjection_eq_iff_mem]
       constructor
-      · simp_rw [hfull]
-        rw [← Set.image_pair, ← AffineSubspace.map_span]
+      · rw [← Set.image_pair, ← AffineSubspace.map_span]
         rw [AffineSubspace.mem_map]
-        use ((orthogonalProjection (affineSpan ℝ {a n, a (n + 1)})) o.center)
+        use ((orthogonalProjection (line[ℝ, a n, a (n + 1)])) o.center)
         constructor
         · simp
         · rfl
-      · simp_rw [hfull]
-        rw [← Set.image_pair, ← AffineSubspace.map_span]
+      · rw [← Set.image_pair, ← AffineSubspace.map_span]
         rw [AffineSubspace.map_direction]
         rw [← neg_vsub_eq_vsub_rev, vadd_vsub, Submodule.neg_mem_iff]
         rw [Submodule.mem_orthogonal]
@@ -1705,29 +1747,30 @@ theorem EuclideanGeometry.poncelet_of_center_eq {o i : Sphere P}
         rw [Submodule.mem_map] at hu
         obtain ⟨v, hv, rfl⟩ := hu
         rw [← hfl]
-        rw [hsendorth']
-        rw [← hrotateorth]
-        rw [← hsendorth]
+        rw [Concentric.send_orth']
+        rw [← Concentric.rotate_orth]
+        rw [← Concentric.send_orth]
         revert v
         rw [← Submodule.mem_orthogonal]
         apply orthogonalProjection_vsub_mem_direction_orthogonal
     rw [horth]
     simp_rw [dist_eq_norm_vsub']
     rw [vadd_vsub]
-    set v := (orthogonalProjection (affineSpan ℝ {a n, a (n + 1)}) o.center).val -ᵥ o.center
+    set v := (orthogonalProjection (line[ℝ, a n, a (n + 1)]) o.center).val -ᵥ o.center
     set u := send v
     have hv : v = send.symm u := by simp [u]
     rw [hv]
     rw [← sq_eq_sq₀ (by simp) (by simp)]
-    simp_rw [sendnorm]
-    rw [hrotatenorm]
+    rw [Concentric.send_norm hx0 hy0 ho hx hy hxy]
+    rw [Concentric.send_norm hx0 hy0 ho hx hy hxy]
+    rw [Concentric.rotate_norm]
   · intro i
     constructor
-    · simpa [av] using (ha i).1
+    · simpa [hfull, av] using (ha i).1
     · simp only
       intro h
       obtain h := congr(($h).direction)
-      simp_rw [direction_affineSpan, vectorSpan_pair, vadd_vsub_vadd_cancel_right] at h
+      simp_rw [direction_affineSpan, vectorSpan_pair, hfull, vadd_vsub_vadd_cancel_right] at h
       simp_rw [← map_sub] at h
       simp_rw [← Set.image_singleton (f := send.symm)] at h
       simp_rw [← Set.image_singleton (f := rotate)] at h
@@ -1738,10 +1781,10 @@ theorem EuclideanGeometry.poncelet_of_center_eq {o i : Sphere P}
       rw [(Submodule.map_injective_of_injective (LinearEquiv.injective _)).eq_iff] at h
       obtain h' := (ha i).2
       contrapose h'
-      have h1 : a (i + 1) ∈ affineSpan ℝ {a i, a (i + 1)} := by
+      have h1 : a (i + 1) ∈ line[ℝ, a i, a (i + 1)] := by
         apply mem_affineSpan
         simp
-      have h2 : a (i + 1) ∈ affineSpan ℝ {a (i + 1), a (i + 2)} := by
+      have h2 : a (i + 1) ∈ line[ℝ, a (i + 1), a (i + 2)] := by
         apply mem_affineSpan
         simp
       rw [AffineSubspace.eq_iff_direction_eq_of_mem h1 h2]

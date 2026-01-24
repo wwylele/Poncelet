@@ -22,7 +22,7 @@ to most modern proof of the theorem, where explicit curves and maps are construc
 
 \section{The theorem statement}
 
-Given two plane conics {\it Outer} and {\it Inner}, if it is possible to find a $n$-sided polygon
+Given two nondegenerate plane conics {\it Outer} and {\it Inner}, if it is possible to find a $n$-sided polygon
 simultaneously inscribed in {\it Outer} and circumscribed around {\it Inner}, then it is possible
 to find another such polygon, one of whose vertices is an arbitrary point on {\it Outer}.
 
@@ -30,12 +30,14 @@ to find another such polygon, one of whose vertices is an arbitrary point on {\i
 
 The theorem is usually considered in the real or complex projective plane, but as the arguments are
 purely algebraic, we will be able to formalize this in any underlying field with characteristic 0.
+(In fact most of the arguments work for fields with any characteristic not equal to 2, but this is not 
+fully formalized yet)
 
-Since we are in projective plane, it is possible that the polygon will contain points at infinity
+As we are in projective plane, it is possible that the polygon will contain points at infinity
 or lines at infinity.
 
-Several degenerate cases need to be considered: degenerate conics, and degenerate intersection of 
-them (tangent). Some of these degenerate cases can be naturally included in the general case, while
+Several degenerate cases need to be considered, mainly concerning about degenerate intersection of 
+conics (tangent). Some of these degenerate cases can be naturally included in the general case, while
 others needs to be discussed separately.
 
 Even in the non-degenerate case, it is possible for a polygon to contain repeated vertices and
@@ -49,7 +51,7 @@ confusing when presented geometrically.
 \section{Configuration}
 
 We will first focus on a special case of the theorem: two circles. This later will turn out to be
-a good representation of most general cases. To make it even simpler, we will fix {\it Inner} to be
+a good model for the majority of general cases. To make it even simpler, we will fix {\it Inner} to be
 the unit circle, and restrict the center of {\it Outer} on the x-axis
 \[
 Inner: x^2 + y^2 = z^2
@@ -59,7 +61,7 @@ Outer: (x-uz)^2 + y^2 = r^2z^2
 \]
 where $u$ and $r$ are the only two free parameters we are allowed to change. As mentioned before,
 all variables are in a field $K$ with characteristic 0. We will also assume the existence of a
-degree-2 constant $k$ such that
+constant $k$ satisfying a degree-2 equation
 \[
 k^2 = (u + r)^2 - 1
 \]
@@ -85,7 +87,7 @@ We call a configuration \emph{singular} if the two circles are tangent to each o
 $u + r = \pm 1$ or $u - r = \pm 1$. We further categorize $u + r = \pm 1$ as 
 \emph{positive-singular}, and $u - r = \pm 1$ as \emph{negative-singular}. This distinction is 
 inconsequential geometrically, as we can change the sign of $r$ while preserving the geometry, but
-this will provide algebraic significance later.
+this will show algebraic significance later.
 
 Moving on to vertices and edges, we consider the pair 
 \[
@@ -110,6 +112,39 @@ This means that the vertex is on {\it Outer}, the edge is tangent to {\it Inner}
 on the line of the edge. We also effectively defined directed edges: while each edge has two 
 associated vertices, we specify one of them as the "starting" vertices. Dually, this also assign
 a direction to vertices: we specify the "forward" edge among the two edges associated to the vertex.
+
+As an immediate observation, we characterize the cardinality of $\mathrm{Dom}$ when fixing one of the two
+variables 
+
+\begin{lemma}
+    \lean{encard_dom_fix1_le}
+    \label{encard_dom_fix1_le}
+    \uses{dom}
+    \leanok
+    There are at most two possible values for $E$ for a fixed $V$ such that $(V, E)\in\mathrm{Dom}$ 
+\end{lemma}
+\begin{proof}
+    \leanok
+    Once $V$ is fixed, one can reduce the system of equations to a quadratic equation of one of the
+    affine coordinate of $E$, which has at most two distinct roots, and other coordinates of $E$
+    are linear to the root. Several edge cases for potentially including point at infinity needs 
+    to be considered, but it doesn't add addition possible values beyond two.
+\end{proof}
+
+\begin{lemma}
+    \lean{encard_dom_fix2_le}
+    \label{encard_dom_fix2_le}
+    \uses{dom}
+    \leanok
+    There are at most two possible values for $V$ for a fixed $E$ such that $(V, E)\in\mathrm{Dom}$ 
+\end{lemma}
+\begin{proof}
+    \leanok
+    Same proof as the previous one
+\end{proof}
+
+These are effectively stating that one can draw at most two tangents from a point to a circle, and
+there are at most two intersections between a line and a cicle. 
 
 \section{Operation}
 
@@ -332,7 +367,7 @@ The curve $E$ is not always an elliptic curve because it can be singular. This i
 \end{corollary}
 
 In general, the group law still holds for non-singular points on a singular cubic curve, so we don't
-need to consider the singular case separately for most parts.
+need to consider the singular case separately for now.
 
 We define three special points $o$, $w$, and $g$ on $E_0$, which will be useful soon.
 
@@ -417,6 +452,15 @@ In such case, $f$ is not useful, but we can flip the sign of $r$, which keeps bo
 and $E$ the same, and turn it into a negative singular case and get a useful $f$. This has no
 impact on the next few lemma, but this will appear again when we need the surjectivity of $f$. 
 
+On the other hand, when $k \ne 0$, we can further restrict the range of $f$
+\begin{lemma}
+    \lean{mapsTo_f₀}
+    \label{mapsTo_f₀}
+    \uses{f}
+    \leanok
+    If $k \ne 0$, $f(X, Y) \in \mathrm{dom_0}$ 
+\end{lemma}
+
 With the map $f$, we can make connection between the elliptic curve $E$ and the two-circle
 configuration with the following theorems
 \begin{theorem}
@@ -474,6 +518,33 @@ configuration with the following theorems
     f(p + n g) = \mathrm{next}^{n}(f (p))
     \]
 \end{corollary}
+\begin{proof}
+    \leanok
+    By induction on the previous theorem
+\end{proof}
+
+As another corollary, we show that $f$ is injective except for positive-singular case
+\begin{corollary}
+    \lean{f_injective}
+    \label{f_injective}
+    \uses{f}
+    \leanok
+    $f$ is injective when $k \ne 0$.
+\end{corollary}
+\begin{proof}
+    \leanok
+    We first observe that the $x/z$-coordinate of $\mathrm{fPoint}$ is quadratic and only 
+    depending on $X$. Suppose $\mathrm{fPoint}(X_1, Y_1) = \mathrm{fPoint}(X_2, Y_2)$ but $X_1 \ne X_2$, then $X_1$
+    and $X_2$ must be two distinct roots of a certain quadratic equation. We then show from Vieta's formulas that
+    such pair of roots satisfies $(X_1, Y_1) + (X_2, Y_2) = o$, deducing the fact that
+    $\mathrm{rPoint}(\mathrm{fPoint}(X_1, Y_1)) = \mathrm{fPoint}(X_2, Y_2)$, making $\mathrm{fPoint}(X_1, Y_1)$
+    a fixed point of $\mathrm{rPoint}$. Such fixed point is only possible at the intersection
+    of the two circles, but that gives us an overdetermined system of equations that leeds to 
+    contradiction.
+
+    Special cases needs to be discussed when $(X, Y) = o$ or $(X, Y) = \infty$, but it is 
+    easy to show the injectivity on these specific points with explicit calculation.
+\end{proof}
 
 \section{Inverse}
 
@@ -528,6 +599,103 @@ We then verify that $e$ is the right inverse of $f$ on $\mathrm{Dom_0}$:
     \leanok
     Just expand by definition and verify with a powerful computer.
 \end{proof}
+And because $f$ is injective, $e$ is also the left inverse, making this a bijection
+\begin{corollary}
+    \label{e_f}
+    \lean{e_f}
+    \uses{f, e}
+    \leanok
+    When $k \ne 0$, for all $(X, Y) \in E_0$,
+    \[
+    e(f(X, Y)) = (X, Y)
+    \]
+\end{corollary}
 
+\begin{corollary}
+    \uses{f, e}
+    When $k \ne 0$, $f$ is a bijection between $E_0$ and $\mathrm{Dom_0}$
+\end{corollary}
+
+\section{Conclusion}
+
+Given the bijection, we give the complete correspondence of $\mathrm{next}$ and $g$
+\begin{theorem}
+    \label{iterate_next_eq_self_iff_of_k_ne_zero}
+    \lean{iterate_next_eq_self_iff_of_k_ne_zero}
+    \uses{next, g}
+    \leanok
+    When $k = 0$, $(\mathrm{next})^n(V, E) = (V, E)$ for $(V, E) \in \mathrm{Dom_0}$ if and only if
+    $n \cdot g = 0$.
+\end{theorem}
+Note that the LHS of iff depends on an arbitrarily chosen $(V, E) \in \mathrm{Dom_0}$, but the
+RHS doesn't, so any two points in $\mathrm{Dom_0}$ are also in iff transitively.
+From this, we conclude with the Poncelet's closure theorem for the two-circle configuration
+\begin{theorem}
+    \label{iterate_next_eq_self}
+    \lean{iterate_next_eq_self}
+    \uses{next, g}
+    \leanok
+    Given a two-circle configuration in field $K$ with $k = 0$, if for a natural number $n$, and some
+    $(V, E) \in \mathrm{Dom_0}$ it holds that $(\mathrm{next})^n(V, E) = (V, E)$, then the same holds for 
+    the same $n$ and all $(V, E) \in \mathrm{Dom_0}$.
+\end{theorem}
+As mentioned before, the $k = 0$ condition an be trivially eliminated by flipping the sign of $r$.
+
+\chapter{Euclidean plane}
+
+In this chapter, we prove a version of Poncelet's closure theorem in real Euclidean plane. We still restrict
+ourselves to only two circles, but now they no longer have fixed coordinates and radius in the
+affine plane. We will only discuss the case where the circle {\it Inner} is completely incide {\it Outer},
+as in other cases, the it is possible to get polygon with degenerate vertices or edges, creating 
+difficulty in Euclidean geometry. After ruling out degenerate cases, we represents polygons as a 
+finite circular sequence of points, and require them to be \emph{proper}
+\begin{definition}
+    \label{IsProperPolygon}
+    \lean{IsProperPolygon}
+    \leanok
+    A finite circular sequence of points, or vertices is called a proper polygon if the following conditions hold
+    \begin{itemize}
+        \item Two adjacent vertices do not coincide.
+        \item Two adjacent edges (the affine span of two adjacent vertices) do not lie on the same line
+    \end{itemize}
+\end{definition}
+
+The whole proof amounts to translating points and edges between Euclidean plane and the affine portion
+of the two-circle configuration. Before doing so, we first recognize that we includes a special case
+in the Euclidean version that two-circle configuration doesn't handle, which is when two circles are 
+concentric:
+
+\begin{lemma}
+    \label{poncelet_of_center_ne}
+    \lean{EuclideanGeometry.poncelet_of_center_ne}
+    \leanok
+    Given two concentric circles $I$ and $O$ in Euclidean plane where $I$ is inside $O$, if there 
+    exists a proper $n$-sided polygon simultaneously inscribed in $O$ and circumscribed around $I$,
+    then from any poing $P$ on $O$, one can draw another proper $n$-sided polygon with the same 
+    property.
+\end{lemma}
+\begin{proof}
+    \leanok
+    This case is not handled by two-circle configuration, but because the two circles are 
+    concentric, one can freely rotate all vertices around the center, creating the desired polygon
+    once a vertex lands on $P$
+\end{proof}
+
+For all other cases, we create the corresponding two-circle configuration
+\begin{definition}
+    \label{toConfig}
+    \lean{EuConfig.toConfig}
+    \leanok
+    The two-circle configuration over $\mathbb{R}$ corresponding to a Euclidean configuration 
+    has the following parameters
+    \begin{itemize}
+        \item $u = \lVert O_{center} I_{center}\rVert / I_{radius}$
+        \item $r = O_{radius}/ I_{radius}$
+        \item $k = \sqrt{(u + r)^2 - 1}$
+    \end{itemize}
+\end{definition}
+which effectively declare $I_{center}$ as the origin, $I_{radius}$ as length 1, and $O_{center} I_{center}$
+as x-axis. We then setup correspondence between the affine part of $\mathbf{P}(2, \mathbb{R})$ 
+and the Euclidean plane.
 
 \chapter{Two conics}
