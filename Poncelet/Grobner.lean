@@ -210,7 +210,7 @@ def CPoly.of (terms : List (CMono char n))
     · have : IsTrans (CMono char n) (fun a b ↦ b.exp ≤ a.exp) := {
         trans a b c hab hbc := by simpa using le_trans hbc hab
       }
-      have : IsTotal (CMono char n) (fun a b ↦ b.exp ≤ a.exp) := {
+      have : Std.Total (fun (a : CMono char n) b ↦ b.exp ≤ a.exp) := {
         total a b := by apply le_total
       }
       apply List.pairwise_mergeSort'

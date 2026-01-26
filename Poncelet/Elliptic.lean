@@ -126,7 +126,6 @@ theorem ellipticNegRAddEquiv_some [DecidableEq K] (cf' : Config K)
     (hxy : (elliptic cf).Nonsingular x y) :
     ellipticNegRAddEquiv cf cf' hu hr (.some hxy) =
     .some ((nonsigular_of_r_eq_neg cf cf' hu hr x y).mp hxy) := by
-
   simp [ellipticNegRAddEquiv]
 
 
