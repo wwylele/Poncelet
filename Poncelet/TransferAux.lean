@@ -2,6 +2,7 @@ import Mathlib
 import Poncelet.Elliptic
 
 set_option linter.style.longLine false
+set_option linter.style.whitespace false
 
 open WeierstrassCurve.Affine
 
