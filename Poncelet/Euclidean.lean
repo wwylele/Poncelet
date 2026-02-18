@@ -10,6 +10,8 @@ private instance {V : Type*} [AddCommGroup V] [Module ℝ V]
   simp [hrank.out]
 
 -- by Aristotle
+
+set_option backward.isDefEq.respectTransparency false in
 lemma exists_norm_eq_and_inner_eq_of_le_norm (V : Type*)
     [NormedAddCommGroup V] [InnerProductSpace ℝ V]
     (hV : Module.finrank ℝ V ≠ 1) {u : V} {r : ℝ} (hr : 0 < r) (hu : r ≤ ‖u‖) :
@@ -38,7 +40,7 @@ lemma exists_norm_eq_and_inner_eq_of_le_norm (V : Type*)
     · rw [norm_smul, norm_div]
       norm_num
       field
-    · rw [sub_nonneg]
+    · rw [sub_nonneg] -- This triggered the backward comp stuff??
       rw [div_le_iff₀ (by simpa [sq_pos_iff] using h)]
       nlinarith [pow_le_pow_left₀ hr.le hu 2]
   · rw [Submodule.mem_orthogonal'] at hw1
@@ -181,6 +183,7 @@ theorem finrank_direction_affineSpan_eq_two {p q : P} (h : p ≠ q) :
   rw [direction_affineSpan, vectorSpan_pair, finrank_span_singleton]
   simpa using h
 
+set_option backward.isDefEq.respectTransparency false in
 omit [Fact (Module.finrank ℝ V = 2)] in
 theorem eq_affineSpan_of_finrank_eq_one {p q : P} (h : p ≠ q)
     {l : AffineSubspace ℝ P} (hl : Module.finrank ℝ l.direction = 1)
@@ -293,6 +296,7 @@ omit [Fact (Module.finrank ℝ V = 2)] in
 theorem finrank_direction_xAxis : Module.finrank ℝ cf.xAxis.direction = 1 := by
   apply finrank_direction_affineSpan_eq_two cf.center
 
+noncomputable
 def yAxis := AffineSubspace.mk' cf.i.center cf.xAxis.directionᗮ
 
 theorem finrank_direction_yAxis : Module.finrank ℝ cf.yAxis.direction = 1 := by
@@ -324,6 +328,7 @@ theorem inner_yDir_center_o : ⟪cf.o.center -ᵥ cf.i.center, cf.yDir -ᵥ cf.i
   use 1
   simp
 
+set_option backward.isDefEq.respectTransparency false in
 noncomputable
 def toConfig : Config ℝ where
   u := dist cf.o.center cf.i.center / cf.i.radius
@@ -344,6 +349,7 @@ def toConfig : Config ℝ where
     apply le_of_lt
     exact radius_lt_of_inside cf.i cf.o cf.i_pos cf.inside
 
+set_option backward.isDefEq.respectTransparency false in
 theorem u_add_r_sq : (cf.toConfig.u + cf.toConfig.r) ^ 2 ≠ 1 := by
   apply ne_of_gt
   unfold toConfig
@@ -356,6 +362,7 @@ theorem u_add_r_sq : (cf.toConfig.u + cf.toConfig.r) ^ 2 ≠ 1 := by
   rw [abs_of_nonneg (by simpa using cf.o_pos.le)]
   exact radius_lt_of_inside cf.i cf.o cf.i_pos cf.inside
 
+set_option backward.isDefEq.respectTransparency false in
 theorem u_sub_r_sq : (cf.toConfig.u - cf.toConfig.r) ^ 2 ≠ 1 := by
   apply ne_of_gt
   unfold toConfig
@@ -449,6 +456,7 @@ theorem dirVec_ne_zero' {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.di
     (dirVec hp : V) ≠ 0 := by
   simpa using dirVec_ne_zero hp
 
+set_option backward.isDefEq.respectTransparency false in
 theorem eq_span_dirVec {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.direction = 1) :
     p.direction = Submodule.span ℝ {(dirVec hp).val} := by
   rw [finrank_eq_one_iff_of_nonzero _ (dirVec_ne_zero hp)] at hp
@@ -596,6 +604,7 @@ theorem isAffine_sendChord {p : AffineSubspace ℝ P}
   obtain h := hi ▸ Metric.infDist_le_dist_of_mem hmem
   simp [cf.i_pos.not_ge] at h
 
+set_option backward.isDefEq.respectTransparency false in
 theorem sendChord_inj {p q : AffineSubspace ℝ P}
     (hp : Module.finrank ℝ p.direction = 1) (hq : Module.finrank ℝ q.direction = 1)
     (h : cf.sendChord p = cf.sendChord q) : p = q := by
@@ -1382,6 +1391,7 @@ theorem isProperPolygon_polygon {pq : P × AffineSubspace ℝ P}
 
 end EuConfig
 
+set_option backward.isDefEq.respectTransparency false in
 theorem EuclideanGeometry.poncelet_of_center_ne {o i : Sphere P}
     (ho : 0 < o.radius) (hi : 0 < i.radius) (hinside : ∀ p ∈ i, dist p o.center < o.radius)
     (hcenter : o.center ≠ i.center)
@@ -1602,6 +1612,7 @@ theorem rotate_norm {sin cos : ℝ} {r : ℝ} (hr : 0 < r) (hsincos : sin ^ 2 + 
 
 end Concentric
 
+set_option backward.isDefEq.respectTransparency false in
 theorem EuclideanGeometry.poncelet_of_center_eq {o i : Sphere P}
     (ho : 0 < o.radius)
     (hcenter : o.center = i.center)

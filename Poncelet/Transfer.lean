@@ -1007,7 +1007,7 @@ theorem f_add_smul_g [DecidableEq K] [CharZero K] (p : (elliptic cf).Point) (n :
   | zero => simp
   | succ n ih =>
     rw [Function.iterate_succ']
-    simp [add_smul, ← add_assoc, f_add_g, ih]
+    rw [add_smul, ← add_assoc, one_nsmul, f_add_g, ih, Function.comp_apply]
 
 theorem f_injective_inf [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0)
     {p : (elliptic cf).Point} (h : f cf p = f cf (.zero)) :

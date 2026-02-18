@@ -1370,7 +1370,7 @@ theorem fChord_eNormal_singularAbc [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0
   have hpoint := hs.fPoint_eq cf (nonsingular_exNormal_eyNormal cf hk hmem hleft hright hes)
   have hpe := fPoint_eNormal cf hk hmem hleft hright hes
   unfold eNormal at hpe
-  rw [hpe] at hpoint
+  obtain hpoint := hpe.symm.trans hpoint --rw [hpe] at hpoint?
   simp only at hpoint
   obtain ⟨l, hl0, hl⟩ := (P2.mk_eq_mk _ _).mp hpoint
   have hp0 : p 0 = l * (2 * cf.u * cf.k * (cf.u ^ 2 - cf.r ^ 2)) := by

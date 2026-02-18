@@ -1165,7 +1165,9 @@ theorem w_sub [DecidableEq K] [hchar : NeZero (2 : K)]
     w cf - .some hxy = .some (nonsingular_w_sub cf hxy hx) := by
   have hxy' : (elliptic cf).Nonsingular x (-y) := by
     simpa [elliptic] using (WeierstrassCurve.Affine.nonsingular_neg _ _).mpr hxy
-  have hneg : - Point.some hxy = .some hxy' := by simp [elliptic]
+  have hneg : - Point.some hxy = .some hxy' := by
+    rw [WeierstrassCurve.Affine.Point.neg_some]
+    simp [elliptic]
   rw [sub_eq_add_neg, hneg]
   unfold w
   rw [Point.add_of_X_ne hx.symm]
@@ -1180,7 +1182,8 @@ theorem nonsingular_neg_w [hchar : NeZero (2 : K)] :
   simp [elliptic, neg_div]
 
 theorem neg_w [hchar : NeZero (2 : K)] : -w cf = .some (nonsingular_neg_w cf) := by
-  simp [w, elliptic, neg_div]
+  rw [w, WeierstrassCurve.Affine.Point.neg_some]
+  simp [elliptic, neg_div]
 
 theorem x_not_at_w [hchar : NeZero (2 : K)] {x y : K} (hxy : (elliptic cf).Nonsingular x y)
     (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf) :
@@ -1191,7 +1194,9 @@ theorem x_not_at_w [hchar : NeZero (2 : K)] {x y : K} (hxy : (elliptic cf).Nonsi
   unfold w at hpw hpnw
   by_contra! h
   have h1 : y ≠ cf.u ^ 2 / cf.r ^ 3 := by simpa [h] using hpw
-  have h2 : y ≠ -(cf.u ^ 2 / cf.r ^ 3) := by simpa [elliptic, h] using hpnw
+  have h2 : y ≠ -(cf.u ^ 2 / cf.r ^ 3) := by
+    rw [WeierstrassCurve.Affine.Point.neg_some] at hpnw
+    simpa [elliptic, h] using hpnw
   simp_rw [h] at heq
   field_simp at heq
   have hy : (cf.r ^ 3 * y) ^ 2 = (cf.u ^ 2) ^ 2 := by linear_combination heq
@@ -1215,7 +1220,11 @@ def g [hchar : NeZero (2 : K)] : (elliptic cf).Point := .some (nonsingular_g cf)
 theorem g_eq_neg_of_r_eq_neg [hchar : NeZero (2 : K)] [DecidableEq K] (cf' : Config K)
     (hu : cf'.u = cf.u) (hr : cf'.r = -cf.r) :
     ellipticNegRAddEquiv cf cf' hu hr (g cf) = - g cf' := by
-  simp [ellipticNegRAddEquiv, g, elliptic, hr]
+  unfold g
+  rw [WeierstrassCurve.Affine.Point.neg_some]
+  rw [ellipticNegRAddEquiv]
+  simp -- ?
+  simp [elliptic, hr]
 
 theorem o_sub_w [DecidableEq K] [hchar : NeZero (2 : K)] : o cf - w cf = g cf := by
   obtain h2 := hchar.out
@@ -1252,6 +1261,7 @@ theorem o_sub_w [DecidableEq K] [hchar : NeZero (2 : K)] : o cf - w cf = g cf :=
       contrapose! hx
       field_simp
       rw [hx]
+    rw [WeierstrassCurve.Affine.Point.add_of_X_ne hx]
     simp [hx, elliptic]
     field_simp
     grind
