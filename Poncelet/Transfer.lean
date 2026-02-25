@@ -365,7 +365,7 @@ theorem fChord_w [DecidableEq K] [CharZero K] :
   grind
 
 @[simp]
-theorem fPoint_w [DecidableEq K] [CharZero K] : fPoint cf (w cf) =
+theorem fPoint_w [CharZero K] : fPoint cf (w cf) =
     P2.mk ![(cf.u - cf.r) * (cf.u + cf.r) ^ 2 + 2 * cf.r, -2 * cf.k * cf.r, (cf.u + cf.r) ^ 2]
     (by
       by_cases h : cf.u + cf.r = 0
@@ -435,7 +435,7 @@ theorem fChord_neg_w [DecidableEq K] [CharZero K] :
   · ring
 
 @[simp]
-theorem fPoint_neg_w [DecidableEq K] [CharZero K] : fPoint cf (-w cf) =
+theorem fPoint_neg_w [CharZero K] : fPoint cf (-w cf) =
     P2.mk ![(cf.u - cf.r) * (cf.u + cf.r) ^ 2 + 2 * cf.r, 2 * cf.k * cf.r, (cf.u + cf.r) ^ 2]
     (by
       by_cases h : cf.u + cf.r = 0

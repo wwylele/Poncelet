@@ -328,7 +328,6 @@ theorem inner_yDir_center_o : ⟪cf.o.center -ᵥ cf.i.center, cf.yDir -ᵥ cf.i
   use 1
   simp
 
-set_option backward.isDefEq.respectTransparency false in
 noncomputable
 def toConfig : Config ℝ where
   u := dist cf.o.center cf.i.center / cf.i.radius
@@ -349,7 +348,6 @@ def toConfig : Config ℝ where
     apply le_of_lt
     exact radius_lt_of_inside cf.i cf.o cf.i_pos cf.inside
 
-set_option backward.isDefEq.respectTransparency false in
 theorem u_add_r_sq : (cf.toConfig.u + cf.toConfig.r) ^ 2 ≠ 1 := by
   apply ne_of_gt
   unfold toConfig
@@ -362,7 +360,6 @@ theorem u_add_r_sq : (cf.toConfig.u + cf.toConfig.r) ^ 2 ≠ 1 := by
   rw [abs_of_nonneg (by simpa using cf.o_pos.le)]
   exact radius_lt_of_inside cf.i cf.o cf.i_pos cf.inside
 
-set_option backward.isDefEq.respectTransparency false in
 theorem u_sub_r_sq : (cf.toConfig.u - cf.toConfig.r) ^ 2 ≠ 1 := by
   apply ne_of_gt
   unfold toConfig
@@ -459,7 +456,7 @@ theorem dirVec_ne_zero' {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.di
 set_option backward.isDefEq.respectTransparency false in
 theorem eq_span_dirVec {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.direction = 1) :
     p.direction = Submodule.span ℝ {(dirVec hp).val} := by
-  rw [finrank_eq_one_iff_of_nonzero _ (dirVec_ne_zero hp)] at hp
+  rw [finrank_eq_one_iff_of_nonzero (dirVec hp) (dirVec_ne_zero hp) (K := ℝ)] at hp
   rw [← Submodule.map_subtype_span_singleton, hp]
   simp
 
