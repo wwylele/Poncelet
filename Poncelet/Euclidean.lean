@@ -11,7 +11,6 @@ private instance {V : Type*} [AddCommGroup V] [Module ℝ V]
 
 -- by Aristotle
 
-set_option backward.isDefEq.respectTransparency false in
 lemma exists_norm_eq_and_inner_eq_of_le_norm (V : Type*)
     [NormedAddCommGroup V] [InnerProductSpace ℝ V]
     (hV : Module.finrank ℝ V ≠ 1) {u : V} {r : ℝ} (hr : 0 < r) (hu : r ≤ ‖u‖) :
@@ -40,7 +39,7 @@ lemma exists_norm_eq_and_inner_eq_of_le_norm (V : Type*)
     · rw [norm_smul, norm_div]
       norm_num
       field
-    · rw [sub_nonneg] -- This triggered the backward comp stuff??
+    · rw [sub_nonneg]
       rw [div_le_iff₀ (by simpa [sq_pos_iff] using h)]
       nlinarith [pow_le_pow_left₀ hr.le hu 2]
   · rw [Submodule.mem_orthogonal'] at hw1
@@ -183,7 +182,6 @@ theorem finrank_direction_affineSpan_eq_two {p q : P} (h : p ≠ q) :
   rw [direction_affineSpan, vectorSpan_pair, finrank_span_singleton]
   simpa using h
 
-set_option backward.isDefEq.respectTransparency false in
 omit [Fact (Module.finrank ℝ V = 2)] in
 theorem eq_affineSpan_of_finrank_eq_one {p q : P} (h : p ≠ q)
     {l : AffineSubspace ℝ P} (hl : Module.finrank ℝ l.direction = 1)
@@ -453,7 +451,6 @@ theorem dirVec_ne_zero' {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.di
     (dirVec hp : V) ≠ 0 := by
   simpa using dirVec_ne_zero hp
 
-set_option backward.isDefEq.respectTransparency false in
 theorem eq_span_dirVec {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.direction = 1) :
     p.direction = Submodule.span ℝ {(dirVec hp).val} := by
   rw [finrank_eq_one_iff_of_nonzero (dirVec hp) (dirVec_ne_zero hp) (K := ℝ)] at hp
@@ -601,7 +598,6 @@ theorem isAffine_sendChord {p : AffineSubspace ℝ P}
   obtain h := hi ▸ Metric.infDist_le_dist_of_mem hmem
   simp [cf.i_pos.not_ge] at h
 
-set_option backward.isDefEq.respectTransparency false in
 theorem sendChord_inj {p q : AffineSubspace ℝ P}
     (hp : Module.finrank ℝ p.direction = 1) (hq : Module.finrank ℝ q.direction = 1)
     (h : cf.sendChord p = cf.sendChord q) : p = q := by
@@ -883,7 +879,7 @@ theorem rChord_sendPoint_sendChord {p : P} {q1 q2 : AffineSubspace ℝ P}
   obtain hcard := (Set.encard_le_encard this).trans (encard_dom_fix1_le _ _)
   contrapose! hcard with h
   rw [Set.encard_eq_three.mpr ?_]
-  · norm_num
+  · decide
   use ⟨cf.sendPoint p, cf.sendChord q1⟩, ⟨cf.sendPoint p, cf.sendChord q2⟩,
       rChord cf.toConfig ⟨sendPoint cf p, sendChord cf q1⟩
   refine ⟨fun h ↦ hqne ?_, Ne.symm hne, Ne.symm h, rfl⟩
@@ -916,7 +912,7 @@ theorem rPoint_sendPoint_sendChord {p1 p2 : P} {q : AffineSubspace ℝ P}
   obtain hcard := (Set.encard_le_encard this).trans (encard_dom_fix2_le _ _)
   contrapose! hcard with h
   rw [Set.encard_eq_three.mpr ?_]
-  · norm_num
+  · decide
   use ⟨cf.sendPoint p1, cf.sendChord q⟩, ⟨cf.sendPoint p2, cf.sendChord q⟩,
       rPoint cf.toConfig ⟨sendPoint cf p1, sendChord cf q⟩
   refine ⟨fun h ↦ hpne ?_, Ne.symm hne, Ne.symm h, rfl⟩
@@ -1388,7 +1384,6 @@ theorem isProperPolygon_polygon {pq : P × AffineSubspace ℝ P}
 
 end EuConfig
 
-set_option backward.isDefEq.respectTransparency false in
 theorem EuclideanGeometry.poncelet_of_center_ne {o i : Sphere P}
     (ho : 0 < o.radius) (hi : 0 < i.radius) (hinside : ∀ p ∈ i, dist p o.center < o.radius)
     (hcenter : o.center ≠ i.center)
@@ -1462,32 +1457,6 @@ theorem EuclideanGeometry.poncelet_of_center_ne {o i : Sphere P}
   · exact cf.isProperPolygon_polygon hvalid hclose
 
 namespace Concentric
-
-/-variable (P) in
-structure Config where
-  i : Sphere P
-  o : Sphere P
-  ho : 0 < o.radius
-  hcenter : o.center = i.center
-  n : ℕ
-  a : Fin n → P
-  [hn : NeZero n]
-  hao : Inscribe a o
-  hai : Circumscribe a i
-  ha : IsProperPolygon a
-
-variable (cf : Config P)
-instance : NeZero cf.n := cf.hn
-
-omit hrank in
-theorem ha0 : dist (cf.a 0) cf.o.center = cf.o.radius := by
-  simpa using cf.hao 0
-
-omit hrank in
-theorem hx : ‖(cf.a 0) -ᵥ cf.o.center‖ = cf.o.radius := by
-  simpa [dist_eq_norm_vsub] using ha0 cf
-
--/
 
 noncomputable
 def send {x y : V} (hx0 : x ≠ 0) (hy0 : y ≠ 0) {r : ℝ} (hr : 0 < r)

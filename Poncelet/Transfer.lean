@@ -39,13 +39,13 @@ theorem fPoint_o_sub [DecidableEq K] [CharZero K] (p : (elliptic cf).Point) :
   | zero =>
     change fPoint cf (o cf - 0) = fPoint cf 0
     simp
-  | @some x y hxy =>
+  | some x y hxy =>
     rw [nonsingular_elliptic cf] at hxy
     obtain ⟨heq, hs⟩ := hxy
     by_cases hx0 : x = 0
     · rw [(eq_o_iff cf hxy).mpr hx0]
       simp
-    have hxo : Point.some hxy ≠ o cf := (eq_o_iff cf hxy).ne.mpr hx0
+    have hxo : Point.some _ _ hxy ≠ o cf := (eq_o_iff cf hxy).ne.mpr hx0
     unfold fPoint
     rw [P2.mk_eq_mk]
     use cf.u ^ 2 / (cf.r ^ 2 * x ^ 2)
@@ -74,8 +74,8 @@ theorem f_o_sub_1 [DecidableEq K] [CharZero K] (i : K) :
 
 theorem SingularAbc.fChord_o_sub [DecidableEq K] [CharZero K] {x y : K}
     (h : SingularAbc cf x y) (hxy : (elliptic cf).Nonsingular x y)
-    (ho : Point.some hxy ≠ o cf) :
-    fChord cf (o cf - .some hxy) = P2.mk ![8 * cf.u ^ 3 * cf.k,
+    (ho : Point.some _ _ hxy ≠ o cf) :
+    fChord cf (o cf - .some _ _ hxy) = P2.mk ![8 * cf.u ^ 3 * cf.k,
       4 * (cf.r * (cf.u + cf.r) ^ 2 * x - cf.u * ((cf.u + cf.r) ^ 2 - 2)) * cf.u ^ 2, 0]
       (by simp [cf.hu, h.k_ne_zero cf hxy]) := by
   obtain _ := cf.hr
@@ -192,11 +192,11 @@ theorem SingularAbc.fChord_o_sub [DecidableEq K] [CharZero K] {x y : K}
 
 theorem SingularAbc.f_o_sub [DecidableEq K] [CharZero K] {x y : K}
     (hsxy : SingularAbc cf x y) (hxy : (elliptic cf).Nonsingular x y)
-    (ho : Point.some hxy ≠ o cf) :
-    f cf (o cf - .some hxy) = rChord cf (f cf (.some hxy)) := by
-  suffices fChord cf (o cf - Point.some hxy) =
+    (ho : Point.some _ _ hxy ≠ o cf) :
+    f cf (o cf - .some _ _ hxy) = rChord cf (f cf (.some _ _ hxy)) := by
+  suffices fChord cf (o cf - Point.some _ _ hxy) =
       P2.lift₂ (fun p q hp hq ↦ P2.mk' (rChord' cf p q)) _
-      (fPoint cf (.some hxy)) (fChord cf (.some hxy)) by
+      (fPoint cf (.some _ _ hxy)) (fChord cf (.some _ _ hxy)) by
     simpa [rChord, f, fPoint_o_sub cf]
   rw [hsxy.fChord_o_sub cf hxy ho, hsxy.fPoint_eq cf, hsxy.fChord_eq cf]
   obtain hk := hsxy.k_ne_zero cf hxy
@@ -246,9 +246,9 @@ theorem f_o_sub [DecidableEq K] [CharZero K] (p : (elliptic cf).Point) :
       simpa [rChord, f, fPoint_o_sub cf]
     rw [← P2.mk'_eq]
     simpa using f_o_sub_1 cf 1
-  | @some x y hxy =>
+  | some x y hxy =>
   -- check case when p = o
-  by_cases ho : .some hxy = o cf
+  by_cases ho : .some _ _ hxy = o cf
   · suffices P2.mk ![1, -cf.k, cf.u + cf.r] _ =
         P2.mk' (rChord' cf ![cf.u + cf.r, 0, 1] ![1, cf.k, cf.u + cf.r]) by
       simpa [rChord, f, fPoint_o_sub cf, ho]
@@ -260,21 +260,21 @@ theorem f_o_sub [DecidableEq K] [CharZero K] (p : (elliptic cf).Point) :
   · exact hsxy.f_o_sub cf hxy ho
   -- check case when o - p is SingularAbc
   have : ∃ (ox oy : K) (hoxy : (elliptic cf).Nonsingular ox oy),
-      o cf - .some hxy = .some hoxy := by
-    cases h : o cf - .some hxy with
+      o cf - .some _ _ hxy = .some _ _ hoxy := by
+    cases h : o cf - .some _ _ hxy with
     | zero =>
       rw [Eq.comm, ← sub_eq_zero.not, h] at ho
       absurd ho
       rfl
-    | @some ox oy hoxy =>
+    | some ox oy hoxy =>
       exact ⟨ox, oy, hoxy, rfl⟩
   obtain ⟨ox, oy, hoxy, hoxyeq⟩ := this
-  have hoo : .some hoxy ≠ o cf := by
+  have hoo : .some _ _ hoxy ≠ o cf := by
     by_contra!
     simp [this] at hoxyeq
   by_cases hosxy : SingularAbc cf ox oy
   · rw [hoxyeq]
-    have hoxyeq' : Point.some hxy = o cf - Point.some hoxy := by
+    have hoxyeq' : Point.some _ _ hxy = o cf - Point.some _ _ hoxy := by
       simp [← hoxyeq]
     rw [hoxyeq']
     rw [← (rChord_bijOn cf).injOn.eq_iff (mapsTo_f cf (by simp))
@@ -282,13 +282,13 @@ theorem f_o_sub [DecidableEq K] [CharZero K] (p : (elliptic cf).Point) :
     rw [rChord_rChord cf (mapsTo_f cf (by simp))]
     exact (hosxy.f_o_sub cf hoxy hoo).symm
   -- non-singular case
-  suffices fChord cf (o cf - Point.some hxy) =
+  suffices fChord cf (o cf - Point.some _ _ hxy) =
       P2.lift₂ (fun p q hp hq ↦ P2.mk' (rChord' cf p q)) _
-      (fPoint cf (Point.some hxy)) (fChord cf (Point.some hxy)) by
+      (fPoint cf (Point.some _ _ hxy)) (fChord cf (Point.some _ _ hxy)) by
     simpa [rChord, f, fPoint_o_sub cf]
   rw [hoxyeq]
   suffices P2.mk (fChordNormal cf ox oy) _ =
-      P2.mk' (rChord' cf (fPointRaw cf (Point.some hxy)) (fChordNormal cf x y)) by
+      P2.mk' (rChord' cf (fPointRaw cf (Point.some _ _ hxy)) (fChordNormal cf x y)) by
     simpa [fChord, fPoint, fChordRaw, hsxy, hosxy]
   rw [o_sub cf hxy ho, Point.some.injEq] at hoxyeq
   have hdeno : (cf.r * x - cf.u) ^ 2 * (cf.u + cf.r) ^ 2 + 4 * cf.u * cf.r * x ≠ 0 := by
@@ -304,9 +304,9 @@ theorem f_o_sub [DecidableEq K] [CharZero K] (p : (elliptic cf).Point) :
         linear_combination cf.u ^3 * ha
       · field_simp
         linear_combination cf.u ^ 3 * (cf.u + cf.r * x) * h
-  have hne : 2 * cf.u * fPointRaw cf (Point.some hxy) 0 +
-      cf.r ^ 2 * fPointRaw cf (Point.some hxy) 2 -
-      cf.u ^ 2 * fPointRaw cf (Point.some hxy) 2 ≠ 0 := by
+  have hne : 2 * cf.u * fPointRaw cf (Point.some _ _ hxy) 0 +
+      cf.r ^ 2 * fPointRaw cf (Point.some _ _ hxy) 2 -
+      cf.u ^ 2 * fPointRaw cf (Point.some _ _ hxy) 2 ≠ 0 := by
     suffices 2 * cf.u * (cf.r ^ 2 * (cf.u + cf.r) * x ^ 2 +
         2 * cf.r * (1 - cf.r ^ 2 - cf.r * cf.u) * x + cf.u ^ 2 * (cf.u + cf.r))
         + cf.r ^ 2 * (cf.r * x + cf.u) ^ 2 - cf.u ^ 2 * (cf.r * x + cf.u) ^ 2 ≠ 0 by
@@ -564,13 +564,13 @@ theorem fPoint_2w [DecidableEq K] [CharZero K] : fPoint cf (w cf + w cf) =
 
 theorem fChord_w_sub_singularAbc [DecidableEq K] [CharZero K] {x y wx wy : K}
     (hxy : (elliptic cf).Nonsingular x y) (hwxy : (elliptic cf).Nonsingular wx wy)
-    (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
-    (hwxyeq : w cf - .some hxy = .some hwxy)
+    (hpw : .some _ _ hxy ≠ w cf) (hpnw : .some _ _ hxy ≠ -w cf)
+    (hwxyeq : w cf - .some _ _ hxy = .some _ _ hwxy)
     (hsxy : SingularAbc cf x y) :
-    fChord cf (.some hwxy) = fChord cf (.some hxy) := by
+    fChord cf (.some _ _ hwxy) = fChord cf (.some _ _ hxy) := by
   obtain _ := cf.hr
   obtain _ := cf.hu
-  have hadd : .some hxy + .some hwxy = w cf := by
+  have hadd : .some _ _ hxy + .some _ _ hwxy = w cf := by
     grind
   obtain hx := x_not_at_w cf hxy hpw hpnw
   have : cf.r ^ 2 * x - cf.u ^ 2 ≠ 0 := by
@@ -668,31 +668,31 @@ theorem fChord_w_sub [DecidableEq K] [CharZero K] (p : (elliptic cf).Point) :
   | zero =>
     change fChord cf (w cf - 0) = fChord cf Point.zero
     simp
-  | @some x y hxy =>
-  by_cases hpw : .some hxy = w cf
+  | some x y hxy =>
+  by_cases hpw : .some _ _ hxy = w cf
   · simp [hpw]
-  by_cases hpnw : .some hxy = -w cf
+  by_cases hpnw : .some _ _ hxy = -w cf
   · simp_rw [hpnw, sub_neg_eq_add, fChord_2w, fChord_neg_w]
   have : ∃ (wx wy : K) (hwxy : (elliptic cf).Nonsingular wx wy),
-      w cf - .some hxy = .some hwxy := by
-    cases h : w cf - .some hxy with
+      w cf - .some _ _ hxy = .some _ _ hwxy := by
+    cases h : w cf - .some _ _ hxy with
     | zero =>
       rw [Eq.comm, ← sub_eq_zero.not, h] at hpw
       absurd hpw
       rfl
-    | @some wx wy hwxy =>
+    | some wx wy hwxy =>
       exact ⟨wx, wy, hwxy, rfl⟩
   obtain ⟨wx, wy, hwxy, hwxyeq⟩ := this
-  have hww : .some hwxy ≠ w cf := by
+  have hww : .some _ _ hwxy ≠ w cf := by
     by_contra!
     simp [this] at hwxyeq
   rw [hwxyeq]
   by_cases hsxy : SingularAbc cf x y
   · exact fChord_w_sub_singularAbc cf hxy hwxy hpw hpnw hwxyeq hsxy
   by_cases hwsxy : SingularAbc cf wx wy
-  · have hwxyeq' : w cf - Point.some hwxy = Point.some hxy := by
+  · have hwxyeq' : w cf - Point.some _ _ hwxy = Point.some _ _ hxy := by
       simp [← hwxyeq]
-    by_cases hww2 : Point.some hwxy = -w cf
+    by_cases hww2 : Point.some _ _ hwxy = -w cf
     · simp_rw [← hwxyeq', hww2, sub_neg_eq_add, fChord_2w, fChord_neg_w]
     exact (fChord_w_sub_singularAbc cf hwxy hxy (by simp [← hwxyeq]) hww2 hwxyeq' hwsxy).symm
   obtain hx := x_not_at_w cf hxy hpw hpnw
@@ -839,9 +839,9 @@ theorem f_two_w_eq_rPoint [DecidableEq K] [CharZero K] :
 
 theorem f_w_sub_not_singularAbc [DecidableEq K] [CharZero K] {x y : K}
     (hxy : (elliptic cf).Nonsingular x y)
-    (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
+    (hpw : .some _ _ hxy ≠ w cf) (hpnw : .some _ _ hxy ≠ -w cf)
     (hsxy : ¬ SingularAbc cf x y) :
-    f cf (w cf - (.some hxy)) = rPoint cf (f cf (.some hxy)) := by
+    f cf (w cf - (.some _ _ hxy)) = rPoint cf (f cf (.some _ _ hxy)) := by
   obtain _ := cf.hr
   obtain _ := cf.hu
   obtain hx := x_not_at_w cf hxy hpw hpnw
@@ -854,9 +854,9 @@ theorem f_w_sub_not_singularAbc [DecidableEq K] [CharZero K] {x y : K}
     linear_combination -this
   by_cases hp2 : fChordNormal cf x y 2 = 0
   · by_cases huxr : cf.r * x + cf.u = 0
-    · suffices fPoint cf (w cf - Point.some hxy) =
+    · suffices fPoint cf (w cf - Point.some _ _ hxy) =
           P2.lift₂ (fun p q hp hq ↦ P2.mk' (rPoint' cf p q)) _
-          (fPoint cf (Point.some hxy)) (fChord cf (Point.some hxy)) by
+          (fPoint cf (Point.some _ _ hxy)) (fChord cf (Point.some _ _ hxy)) by
         simpa [f, rPoint, fChord_w_sub]
       have hxeq : x = -cf.u / cf.r := by
         field_simp
@@ -915,13 +915,13 @@ theorem f_w_sub [DecidableEq K] [CharZero K] (p : (elliptic cf).Point) :
   | zero =>
     rw [show Point.zero = 0 from rfl]
     simpa using f_w_eq_rPoint cf
-  | @some x y hxy =>
-  by_cases hpw : .some hxy = w cf
+  | some x y hxy =>
+  by_cases hpw : .some _ _ hxy = w cf
   · rw [← (rPoint_bijOn cf).injOn.eq_iff (mapsTo_f cf (by simp))
       (mapsTo_rPoint cf (mapsTo_f cf (by simp))), rPoint_rPoint cf (mapsTo_f cf (by simp))]
     rw [hpw]
     simpa using (f_w_eq_rPoint cf).symm
-  by_cases hpnw : .some hxy = -w cf
+  by_cases hpnw : .some _ _ hxy = -w cf
   · simpa [hpnw] using f_two_w_eq_rPoint cf
   obtain hx := x_not_at_w cf hxy hpw hpnw
   have : cf.r ^ 2 * x - cf.u ^ 2 ≠ 0 := by
@@ -933,14 +933,14 @@ theorem f_w_sub [DecidableEq K] [CharZero K] (p : (elliptic cf).Point) :
     linear_combination -this
   by_cases hsxy : SingularAbc cf x y
   · by_cases hur : cf.u ^ 2 - cf.r ^ 2 = 0
-    · suffices fPoint cf (w cf - Point.some hxy) =
+    · suffices fPoint cf (w cf - Point.some _ _ hxy) =
         P2.lift₂ (fun p q hp hq ↦ P2.mk' (rPoint' cf p q)) _
-        (fPoint cf (Point.some hxy)) (fChord cf (Point.some hxy)) by
+        (fPoint cf (Point.some _ _ hxy)) (fChord cf (Point.some _ _ hxy)) by
         simpa [f, rPoint, fChord_w_sub]
       rw [w_sub cf hxy hx]
-      have hp2 : fPointRaw cf (Point.some hxy) 2 ≠ 0 := by
+      have hp2 : fPointRaw cf (Point.some _ _ hxy) 2 ≠ 0 := by
         simpa [fPointRaw] using hsxy.rx_add_u_ne_zero cf hxy
-      suffices P2.mk (fPointRaw cf (Point.some _)) _ =
+      suffices P2.mk (fPointRaw cf (Point.some _ _ _)) _ =
           P2.mk' ![-((cf.r * (cf.u + cf.r) ^ 2 * x - cf.u * ((cf.u + cf.r) ^ 2 - 2))
             * (4 * cf.u ^ 2)),
           -(2 * cf.u * cf.k * (4 * cf.u ^ 2)), 0] by
@@ -1019,7 +1019,7 @@ theorem f_injective_inf [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0)
   obtain ⟨m, hm0, hm⟩ := (P2.mk_eq_mk _ _).mp hq
   cases p with
   | zero => rfl
-  | @some x y hxy =>
+  | some x y hxy =>
   obtain ⟨heq, hnonsingular⟩ := (nonsingular_elliptic cf _ _).mp hxy
   unfold fPointRaw at hl
   have : cf.r ^ 2 * (cf.u + cf.r) * x ^ 2 + 2 * cf.r * (1 - cf.r ^ 2 - cf.r * cf.u) * x +
@@ -1052,12 +1052,12 @@ theorem f_injective [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) :
   | zero =>
     cases b with
     | zero => rfl
-    | @some xb yb hb => exact (f_injective_inf cf hk h.symm).symm
-  | @some xa ya ha =>
+    | some xb yb hb => exact (f_injective_inf cf hk h.symm).symm
+  | some xa ya ha =>
   cases b with
   | zero =>
     exact f_injective_inf cf hk h
-  | @some xb yb hb =>
+  | some xb yb hb =>
   have h' := h
   unfold f fPoint at h
   obtain ⟨hp, hq⟩ := Prod.ext_iff.mp h
@@ -1139,7 +1139,7 @@ theorem f_injective [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) :
   have hxb0 : xb ≠ 0 := fun h ↦ by
     symm at hxab
     simp [h, cf.hu, cf.hr] at hxab
-  have hxao : Point.some ha ≠ o cf := fun h ↦ by
+  have hxao : Point.some _ _ ha ≠ o cf := fun h ↦ by
     simp [o, hxa0] at h
   have hxb : xb = cf.u ^ 2 / (cf.r ^ 2 * xa) := by
     field_simp at ⊢ hxab
@@ -1152,14 +1152,14 @@ theorem f_injective [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) :
     linear_combination hlyz
   rw [mul_eq_mul_right_iff] at hlyz
   obtain hlyz := hlyz.resolve_right (by simpa using hrxu)
-  have hosub : Point.some hb = o cf - Point.some ha := by
+  have hosub : Point.some _ _ hb = o cf - Point.some _ _ ha := by
     rw [o_sub cf _ hxao]
     rw [Point.some.injEq]
     constructor
     · exact hxb
     · field_simp
       linear_combination hlyz
-  have hi : InnerCircle cf (f cf (Point.some ha)).1 := by
+  have hi : InnerCircle cf (f cf (Point.some _ _ ha)).1 := by
     simpa [hosub, f_o_sub, rChord_eq_self cf (mapsTo_f cf (by simp))] using h'.symm
   have : (cf.r ^ 2 * (cf.u + cf.r) * xa ^ 2 + 2 * cf.r * (1 - cf.r ^ 2 - cf.r * cf.u) * xa +
       cf.u ^ 2 * (cf.u + cf.r)) ^ 2 +

@@ -13,11 +13,11 @@ set_option maxHeartbeats 400000 in
 -- Long Expression
 theorem fChord_w_sub_c_eq_zero [DecidableEq K] [hchar : NeZero (2 : K)] {x y wx wy : K}
     (hxy : (elliptic cf).Nonsingular x y) (hwxy : (elliptic cf).Nonsingular wx wy)
-    (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
-    (hwxyeq : w cf - .some hxy = .some hwxy)
+    (hpw : .some _ _ hxy ≠ w cf) (hpnw : .some _ _ hxy ≠ -w cf)
+    (hwxyeq : w cf - .some _ _ hxy = .some _ _ hwxy)
     (hsxy : ¬ SingularAbc cf x y) (hwsxy : ¬ SingularAbc cf wx wy)
     (hc : (cf.r * x + cf.u) * ((cf.r * x - cf.u) ^ 2 * (cf.u + cf.r) ^ 2 + 4 * cf.u * cf.r * x) = 0) :
-    fChord cf (.some hwxy) = fChord cf (.some hxy) := by
+    fChord cf (.some _ _ hwxy) = fChord cf (.some _ _ hxy) := by
   obtain _ := cf.hr
   obtain _ := cf.hu
   obtain hx := x_not_at_w cf hxy hpw hpnw
@@ -121,11 +121,11 @@ theorem fChord_w_sub_c_eq_zero [DecidableEq K] [hchar : NeZero (2 : K)] {x y wx 
 
 theorem fChord_w_sub_c_ne_zero [DecidableEq K] [hchar : NeZero (2 : K)] {x y wx wy : K}
     (hxy : (elliptic cf).Nonsingular x y) (hwxy : (elliptic cf).Nonsingular wx wy)
-    (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
-    (hwxyeq : w cf - .some hxy = .some hwxy)
+    (hpw : .some _ _ hxy ≠ w cf) (hpnw : .some _ _ hxy ≠ -w cf)
+    (hwxyeq : w cf - .some _ _ hxy = .some _ _ hwxy)
     (hsxy : ¬ SingularAbc cf x y) (hwsxy : ¬ SingularAbc cf wx wy)
     (hc : (cf.r * x + cf.u) * ((cf.r * x - cf.u) ^ 2 * (cf.u + cf.r) ^ 2 + 4 * cf.u * cf.r * x) ≠ 0) :
-    fChord cf (.some hwxy) = fChord cf (.some hxy) := by
+    fChord cf (.some _ _ hwxy) = fChord cf (.some _ _ hxy) := by
   obtain _ := cf.hr
   obtain _ := cf.hu
   obtain hx := x_not_at_w cf hxy hpw hpnw
@@ -207,10 +207,10 @@ set_option maxHeartbeats 400000 in
 theorem fChord_w_sub_singularAbc_not_singularAbc [DecidableEq K] [hchar : NeZero (2 : K)]
     {x y wx wy : K}
     (hxy : (elliptic cf).Nonsingular x y) (hwxy : (elliptic cf).Nonsingular wx wy)
-    (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
-    (hwxyeq : w cf - .some hxy = .some hwxy)
+    (hpw : .some _ _ hxy ≠ w cf) (hpnw : .some _ _ hxy ≠ -w cf)
+    (hwxyeq : w cf - .some _ _ hxy = .some _ _ hwxy)
     (hsxy : SingularAbc cf x y) (hwsxy : ¬ SingularAbc cf wx wy) (hur : cf.u ^ 2 - cf.r ^ 2 ≠ 0) :
-    fChord cf (.some hwxy) = fChord cf (.some hxy) := by
+    fChord cf (.some _ _ hwxy) = fChord cf (.some _ _ hxy) := by
   obtain h2 := hchar.out
   have h4 : (4 : K) ≠ 0 := by
     contrapose! h2
@@ -346,10 +346,10 @@ theorem fChord_w_sub_singularAbc_not_singularAbc [DecidableEq K] [hchar : NeZero
 theorem fChord_w_sub_singularAbc_not_singularAbc_u_eq_r [DecidableEq K] [hchar : NeZero (2 : K)]
     {x y wx wy : K}
     (hxy : (elliptic cf).Nonsingular x y) (hwxy : (elliptic cf).Nonsingular wx wy)
-    (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
-    (hwxyeq : w cf - .some hxy = .some hwxy)
+    (hpw : .some _ _ hxy ≠ w cf) (hpnw : .some _ _ hxy ≠ -w cf)
+    (hwxyeq : w cf - .some _ _ hxy = .some _ _ hwxy)
     (hsxy : SingularAbc cf x y) (hwsxy : ¬ SingularAbc cf wx wy) (hur : cf.u = cf.r) :
-    fChord cf (.some hwxy) = fChord cf (.some hxy) := by
+    fChord cf (.some _ _ hwxy) = fChord cf (.some _ _ hxy) := by
   obtain h2 := hchar.out
   have h4 : (4 : K) ≠ 0 := by
     contrapose! h2
@@ -409,10 +409,10 @@ set_option maxHeartbeats 800000 in
 -- Long Expression
 theorem f_w_sub_singularAbc [DecidableEq K] [CharZero K] {x y : K}
     (hxy : (elliptic cf).Nonsingular x y)
-    (hsxy : SingularAbc cf x y) (hpw : Point.some hxy ≠ w cf)
-    (hpnw : Point.some hxy ≠ -w cf) (hur : cf.u ^ 2 - cf.r ^ 2 ≠ 0)
-    (habc : fChord cf (w cf - .some hxy) = fChord cf (.some hxy)) :
-    f cf (w cf - .some hxy) = rPoint cf (f cf (.some hxy)) := by
+    (hsxy : SingularAbc cf x y) (hpw : Point.some _ _ hxy ≠ w cf)
+    (hpnw : Point.some _ _ hxy ≠ -w cf) (hur : cf.u ^ 2 - cf.r ^ 2 ≠ 0)
+    (habc : fChord cf (w cf - .some _ _ hxy) = fChord cf (.some _ _ hxy)) :
+    f cf (w cf - .some _ _ hxy) = rPoint cf (f cf (.some _ _ hxy)) := by
   obtain _ := cf.hr
   obtain _ := cf.hu
   obtain hx := x_not_at_w cf hxy hpw hpnw
@@ -423,9 +423,9 @@ theorem f_w_sub_singularAbc [DecidableEq K] [CharZero K] {x y : K}
   have : cf.u ^ 2 - cf.r ^ 2 * x ≠ 0 := by
     contrapose! this
     linear_combination -this
-  suffices fPoint cf (w cf - Point.some hxy) =
+  suffices fPoint cf (w cf - Point.some _ _ hxy) =
       P2.lift₂ (fun p q hp hq ↦ P2.mk' (rPoint' cf p q)) _
-      (fPoint cf (Point.some hxy)) (fChord cf (Point.some hxy)) by
+      (fPoint cf (Point.some _ _ hxy)) (fChord cf (Point.some _ _ hxy)) by
     simpa [f, rPoint, habc]
   have hk : cf.k ≠ 0 := hsxy.k_ne_zero cf hxy
   rw [w_sub cf hxy hx]
@@ -670,10 +670,10 @@ theorem f_w_sub_singularAbc [DecidableEq K] [CharZero K] {x y : K}
 
 theorem f_w_sub_not_singularAbc_p2 [DecidableEq K] [hchar : NeZero (2 : K)]
     {x y : K} (hxy : (elliptic cf).Nonsingular x y)
-    (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
+    (hpw : .some _ _ hxy ≠ w cf) (hpnw : .some _ _ hxy ≠ -w cf)
     (hsxy : ¬ SingularAbc cf x y) (hp2 : fChordNormal cf x y 2 = 0)
-    (huxr : cf.r * x + cf.u ≠ 0) (habc : fChord cf (w cf - .some hxy) = fChord cf (.some hxy)) :
-    f cf (w cf - (.some hxy)) = rPoint cf (f cf (.some hxy)) := by
+    (huxr : cf.r * x + cf.u ≠ 0) (habc : fChord cf (w cf - .some _ _ hxy) = fChord cf (.some _ _ hxy)) :
+    f cf (w cf - (.some _ _ hxy)) = rPoint cf (f cf (.some _ _ hxy)) := by
   obtain h2 := hchar.out
   have h4 : (4 : K) ≠ 0 := by
     contrapose! h2
@@ -689,9 +689,9 @@ theorem f_w_sub_not_singularAbc_p2 [DecidableEq K] [hchar : NeZero (2 : K)]
   have : cf.u ^ 2 - cf.r ^ 2 * x ≠ 0 := by
     contrapose! this
     linear_combination -this
-  suffices fPoint cf (w cf - Point.some hxy) =
+  suffices fPoint cf (w cf - Point.some _ _ hxy) =
       P2.lift₂ (fun p q hp hq ↦ P2.mk' (rPoint' cf p q)) _
-      (fPoint cf (Point.some hxy)) (fChord cf (Point.some hxy)) by
+      (fPoint cf (Point.some _ _ hxy)) (fChord cf (Point.some _ _ hxy)) by
     simpa [f, rPoint, habc]
   have huxr2 : (cf.r * x - cf.u) ^ 2 * (cf.u + cf.r) ^ 2 + 4 * cf.u * cf.r * x = 0 := by
     simpa [fChordNormal, huxr] using hp2
@@ -807,10 +807,10 @@ theorem f_w_sub_not_singularAbc_p2 [DecidableEq K] [hchar : NeZero (2 : K)]
 
 theorem f_w_sub_normal [DecidableEq K] [hchar : NeZero (2 : K)]
     {x y : K} (hxy : (elliptic cf).Nonsingular x y)
-    (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf)
+    (hpw : .some _ _ hxy ≠ w cf) (hpnw : .some _ _ hxy ≠ -w cf)
     (hsxy : ¬ SingularAbc cf x y) (hp2 : fChordNormal cf x y 2 ≠ 0)
-    (habc : fChord cf (w cf - .some hxy) = fChord cf (.some hxy)) :
-    f cf (w cf - (.some hxy)) = rPoint cf (f cf (.some hxy)) := by
+    (habc : fChord cf (w cf - .some _ _ hxy) = fChord cf (.some _ _ hxy)) :
+    f cf (w cf - (.some _ _ hxy)) = rPoint cf (f cf (.some _ _ hxy)) := by
   obtain _ := cf.hr
   obtain _ := cf.hu
   obtain hx := x_not_at_w cf hxy hpw hpnw
@@ -821,9 +821,9 @@ theorem f_w_sub_normal [DecidableEq K] [hchar : NeZero (2 : K)]
   have : cf.u ^ 2 - cf.r ^ 2 * x ≠ 0 := by
     contrapose! this
     linear_combination -this
-  suffices fPoint cf (w cf - Point.some hxy) =
+  suffices fPoint cf (w cf - Point.some _ _ hxy) =
       P2.lift₂ (fun p q hp hq ↦ P2.mk' (rPoint' cf p q)) _
-      (fPoint cf (Point.some hxy)) (fChord cf (Point.some hxy)) by
+      (fPoint cf (Point.some _ _ hxy)) (fChord cf (Point.some _ _ hxy)) by
     simpa [f, rPoint, habc]
   simp only [fPoint, ne_eq, rPoint', Fin.isValue, neg_sub, fChord, fChordRaw, hsxy, ↓reduceIte,
     P2.lift₂_mk, hp2]

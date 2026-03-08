@@ -65,7 +65,7 @@ theorem nonsingular_eyZeroZ [DecidableEq K] [NeZero (2 : K)]
 
 def eZeroZ [DecidableEq K] [NeZero (2 : K)] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
     (hpq : pq ∈ dom cf) (hz : ZeroZ pq) :=
-  Point.some (nonsingular_eyZeroZ cf hk hpq hz)
+  Point.some _ _ (nonsingular_eyZeroZ cf hk hpq hz)
 
 theorem fPoint_eZeroZ [DecidableEq K] [NeZero (2 : K)] (hk : cf.k ≠ 0)
     {pq : P2 K × P2 K}
@@ -372,7 +372,7 @@ theorem nonsingular_exSingularA_eySingularA [DecidableEq K] [NeZero (2 : K)] (hk
 
 def eSingularA [DecidableEq K] [NeZero (2 : K)] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
     (hpq : pq ∈ dom cf) (h : SingularA cf pq) :=
-  Point.some (nonsingular_exSingularA_eySingularA cf hk hpq h)
+  Point.some _ _ (nonsingular_exSingularA_eySingularA cf hk hpq h)
 
 theorem fPoint_eSingularA [DecidableEq K] [NeZero (2 : K)] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
     (hpq : pq ∈ dom cf) (h : SingularA cf pq) :
@@ -589,7 +589,7 @@ theorem SingularAB.q_eq_of_casePos [DecidableEq K] [hchar : NeZero (2 : K)]
 def eSingularABcasePos [DecidableEq K] [NeZero (2 : K)]
     (pq : P2 K × P2 K) : (elliptic cf).Point :=
   if pq.2 = P2.mk ![1, cf.k, 0] (by simp) then
-    .some (show (elliptic cf).Nonsingular 0 0 by
+    .some 0 0 (by
       rw [nonsingular_elliptic]
       simp [cf.hu]
     )
@@ -720,7 +720,7 @@ def eSingularAB [DecidableEq K] [NeZero (2 : K)]
   if pq.1 = P2.mk ![cf.u + cf.r, 0, 1] (by simp) then
     .zero
   else
-    .some (nonsingular_w cf)
+    .some _ _ (nonsingular_w cf)
 
 theorem f_eSingularAB [DecidableEq K] [hchar : NeZero (2 : K)]
     {pq : P2 K × P2 K} (h : SingularAB cf pq) (hk : cf.k ≠ 0)
@@ -989,7 +989,7 @@ def eSingularB [DecidableEq K] [NeZero (2 : K)] (hk : cf.k ≠ 0) {pq : P2 K × 
     (hpq : pq ∈ dom cf) (h : SingularB cf pq) (hz : ¬ ZeroZ pq)
     (hleft : pq.1 ≠ P2.mk ![-1, 0, 1] (by simp))
     (hright : pq.1 ≠ P2.mk ![1, 0, 1] (by simp)) :=
-  Point.some (nonsingular_exSingularB_eySingularB cf hk hpq h hz hleft hright)
+  Point.some _ _ (nonsingular_exSingularB_eySingularB cf hk hpq h hz hleft hright)
 
 theorem fPoint_eSingularB [DecidableEq K] [hchar : NeZero (2 : K)]
     (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
@@ -1313,7 +1313,7 @@ def eNormal [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
     (hleft : pq.1 ≠ P2.mk ![-1, 0, 1] (by simp))
     (hright : pq.1 ≠ P2.mk ![1, 0, 1] (by simp))
     (hes : ¬SingularE cf pq) :=
-  Point.some (nonsingular_exNormal_eyNormal cf hk hpq hleft hright hes)
+  Point.some _ _ (nonsingular_exNormal_eyNormal cf hk hpq hleft hright hes)
 
 theorem fPoint_eNormal [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
     (hpq : pq ∈ dom cf)

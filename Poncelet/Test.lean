@@ -37,6 +37,6 @@ lemma x1y1 : (elliptic cfq).Nonsingular x1 y1 := by
   rw [nonsingular_elliptic]
   decide +kernel
 
-def p1 : (elliptic cfq).Point := .some x1y1
+def p1 : (elliptic cfq).Point := .some _ _ x1y1
 
 #eval f cfq p1

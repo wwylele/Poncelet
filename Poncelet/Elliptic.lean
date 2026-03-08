@@ -51,18 +51,18 @@ def ellipticNegRAddEquiv [hchar : NeZero (2 : K)] [DecidableEq K] (cf' : Config 
     (elliptic cf).Point ≃+ (elliptic cf').Point where
   toFun x := match x with
   | .zero => .zero
-  | .some hxy =>
-    .some ((nonsigular_of_r_eq_neg cf cf' hu hr _ _).mp hxy)
+  | .some x y hxy =>
+    .some _ _ ((nonsigular_of_r_eq_neg cf cf' hu hr _ _).mp hxy)
   invFun x := match x with
   | .zero => .zero
-  | .some hxy =>
-    .some ((nonsigular_of_r_eq_neg cf cf' hu hr _ _).mpr hxy)
+  | .some x y hxy =>
+    .some _ _ ((nonsigular_of_r_eq_neg cf cf' hu hr _ _).mpr hxy)
   left_inv x := match x with
   | .zero => by simp
-  | .some hxy => by simp
+  | .some x y hxy => by simp
   right_inv x := match x with
   | .zero => by simp
-  | .some hxy => by simp
+  | .some _ _ hxy => by simp
   map_add' x y := by
     cases h : x + y with
     | zero =>
@@ -95,19 +95,19 @@ def ellipticNegRAddEquiv [hchar : NeZero (2 : K)] [DecidableEq K] (cf' : Config 
           rw [show Point.zero = 0 from rfl] at h
           symm
           simpa using h
-      | @some a b hx =>
+      | some a b hx =>
         cases y with
         | zero =>
           rw [show Point.zero = 0 from rfl] at h
           symm
           rw [show Point.zero = 0 from rfl]
           simpa using h
-        | @some c d hy =>
+        | some c d hy =>
           simp only
           symm
           have hne : ¬(a = c ∧ b = (elliptic cf').negY c d) := by
             contrapose! h
-            suffices Point.some hx + Point.some hy = 0 by simp [this]
+            suffices Point.some _ _ hx + Point.some _ _ hy = 0 by simp [this]
             apply WeierstrassCurve.Affine.Point.add_of_Y_eq
             · exact h.1
             · rw [elliptic_eq_of_r_eq_neg cf cf' hu hr]
@@ -124,8 +124,8 @@ def ellipticNegRAddEquiv [hchar : NeZero (2 : K)] [DecidableEq K] (cf' : Config 
 theorem ellipticNegRAddEquiv_some [DecidableEq K] (cf' : Config K)
     (hu : cf'.u = cf.u) (hr : cf'.r = -cf.r) [hchar : NeZero (2 : K)] {x y : K}
     (hxy : (elliptic cf).Nonsingular x y) :
-    ellipticNegRAddEquiv cf cf' hu hr (.some hxy) =
-    .some ((nonsigular_of_r_eq_neg cf cf' hu hr x y).mp hxy) := by
+    ellipticNegRAddEquiv cf cf' hu hr (.some _ _ hxy) =
+    .some _ _ ((nonsigular_of_r_eq_neg cf cf' hu hr x y).mp hxy) := by
   simp [ellipticNegRAddEquiv]
 
 
@@ -214,10 +214,10 @@ def fPoint [hchar : NeZero (2 : K)] (p : (elliptic cf).Point) : P2 K :=
   cases p with
   | zero =>
     simp [fPointRaw]
-  | @some x y hxy =>
+  | some x y hxy =>
     by_cases! hx : cf.r * x + cf.u ≠ 0
     · simp [fPointRaw, hx]
-    suffices fPointRaw cf (.some hxy) 1 ≠ 0 by
+    suffices fPointRaw cf (.some _ _ hxy) 1 ≠ 0 by
       contrapose! this
       simp [this]
     suffices cf.k ≠ 0 ∧ y ≠ 0 by simpa [fPointRaw, cf.hr, hchar.out]
@@ -239,7 +239,7 @@ theorem outerCircle_fPoint [hchar : NeZero (2 : K)] (p : (elliptic cf).Point) :
     cf.r ^ 2 * fPointRaw cf p 2 ^ 2
   cases p with
   | zero => simp [fPointRaw]
-  | @some x y hxy =>
+  | some x y hxy =>
     rw [nonsingular_elliptic cf] at hxy
     obtain ⟨heq, hs⟩ := hxy
     suffices
@@ -512,7 +512,7 @@ theorem SingularAbc.k_ne_zero [DecidableEq K] [hchar : NeZero (2 : K)] {x y : K}
 theorem SingularAbc.fPointRaw_eq [DecidableEq K] [hchar : NeZero (2 : K)] {x y : K}
     (h : SingularAbc cf x y)
     (hxy : (elliptic cf).Nonsingular x y) (hur : cf.u + cf.r ≠ 0) :
-    fPointRaw cf (.some hxy) = ![
+    fPointRaw cf (.some _ _ hxy) = ![
       2 * cf.r * x * ((cf.u + cf.r) ^ 2 - 1) / (cf.u + cf.r) ^ 2 * (cf.u ^ 2 - cf.r ^ 2),
       2 * cf.r * x * ((cf.u + cf.r) ^ 2 - 1) / (cf.u + cf.r) ^ 2 *
         ((cf.r * (cf.u + cf.r) ^ 2 * x - cf.u * ((cf.u + cf.r) ^ 2 - 2)) /
@@ -584,7 +584,7 @@ theorem SingularAbc.y_eq_zero_of_casePos [DecidableEq K] [hchar : NeZero (2 : K)
 
 theorem SingularAbc.fPointRaw_eq_of_casePos [DecidableEq K] [hchar : NeZero (2 : K)] {x y : K}
     (h : SingularAbc cf x y) (hxy : (elliptic cf).Nonsingular x y) (hur : cf.u + cf.r = 0) :
-  fPointRaw cf (.some hxy) = ![0, 0, cf.u ^ 2] := by
+  fPointRaw cf (.some _ _ hxy) = ![0, 0, cf.u ^ 2] := by
   obtain hx := h.x_eq_zero_of_casePos cf hxy hur
   obtain hy := h.y_eq_zero_of_casePos cf hxy hur
   simp [fPointRaw, hx, hy, hur]
@@ -598,7 +598,7 @@ theorem SingularAbc.y_eq_zero_of_caseNeg [DecidableEq K] [hchar : NeZero (2 : K)
 theorem SingularAbc.fPoint_eq [DecidableEq K] [hchar : NeZero (2 : K)]
     {x y : K} (h : SingularAbc cf x y)
     (hxy : (elliptic cf).Nonsingular x y) :
-    fPoint cf (.some hxy) = P2.mk ![
+    fPoint cf (.some _ _ hxy) = P2.mk ![
       2 * cf.u * cf.k * (cf.u ^ 2 - cf.r ^ 2),
       ((cf.r * (cf.u + cf.r) ^ 2 * x - cf.u * ((cf.u + cf.r) ^ 2 - 2)) * (cf.u ^ 2 - cf.r ^ 2)),
       4 * cf.u ^ 2 * cf.k] (by
@@ -664,7 +664,7 @@ theorem fChordRaw_zero' [DecidableEq K] :
 
 theorem SingularAbc.fChordRaw_ne_zero [DecidableEq K] [hchar : NeZero (2 : K)] {x y : K}
     (h : SingularAbc cf x y) (hxy : (elliptic cf).Nonsingular x y) :
-    fChordRaw cf (Point.some hxy) ≠ 0 := by
+    fChordRaw cf (Point.some _ _ hxy) ≠ 0 := by
   obtain h2 := hchar.out
   have h4 : (4 : K) ≠ 0 := by
     contrapose! h2
@@ -676,11 +676,11 @@ theorem SingularAbc.fChordRaw_ne_zero [DecidableEq K] [hchar : NeZero (2 : K)] {
     simpa using this
   obtain hk := h.k_ne_zero cf hxy
   by_cases hur : cf.u ^ 2 - cf.r ^ 2 = 0
-  · suffices fChordRaw cf (Point.some hxy) 0 ≠ 0 by
+  · suffices fChordRaw cf (Point.some _ _ hxy) 0 ≠ 0 by
       contrapose! this
       simp [this]
     simp [fChordRaw, h, hk, cf.hu, hur, h2, h4]
-  · suffices fChordRaw cf (Point.some hxy) 2 ≠ 0 by
+  · suffices fChordRaw cf (Point.some _ _ hxy) 2 ≠ 0 by
       contrapose! this
       simp [this]
     simp [fChordRaw, h, hk, cf.hu, hur, h8]
@@ -691,7 +691,7 @@ def fChord [DecidableEq K] [hchar : NeZero (2 : K)] (p : (elliptic cf).Point) : 
   cases p with
   | zero =>
     simp [fChordRaw]
-  | @some x y hxy =>
+  | some x y hxy =>
     by_cases h0 : SingularAbc cf x y
     · exact h0.fChordRaw_ne_zero cf hxy
     · suffices fChordNormal cf x y ≠ 0 by simpa [fChordRaw, h0]
@@ -699,7 +699,8 @@ def fChord [DecidableEq K] [hchar : NeZero (2 : K)] (p : (elliptic cf).Point) : 
 
 theorem SingularAbc.fChord_eq [DecidableEq K] [hchar : NeZero (2 : K)] {x y : K}
     (h : SingularAbc cf x y) (hxy : (elliptic cf).Nonsingular x y) :
-    fChord cf (.some hxy) = P2.mk ![2 * cf.u * cf.k * ((cf.u ^ 2 - cf.r ^ 2) ^ 2 + 4 * cf.u ^ 2),
+    fChord cf (.some _ _ hxy) =
+      P2.mk ![2 * cf.u * cf.k * ((cf.u ^ 2 - cf.r ^ 2) ^ 2 + 4 * cf.u ^ 2),
       (cf.r * (cf.u + cf.r) ^ 2 * x
         - cf.u * ((cf.u + cf.r) ^ 2 - 2)) * ((cf.u ^ 2 - cf.r ^ 2) ^ 2 - 4 * cf.u ^ 2),
       8 * cf.u ^ 2 * cf.k * (cf.u ^ 2 - cf.r ^ 2)]
@@ -721,7 +722,7 @@ theorem innerCircle_fChord [DecidableEq K] [hchar : NeZero (2 : K)] (p : (ellipt
   cases p with
   | zero =>
     simp [fChordRaw, cf.k_sq]
-  | @some x y hxy =>
+  | some x y hxy =>
     by_cases hsingular : SingularAbc cf x y
     · suffices
         (2 * cf.u * cf.k) ^ 2 * ((cf.u ^ 2 - cf.r ^ 2) ^ 2 + 4 * cf.u ^ 2) ^ 2 +
@@ -748,7 +749,7 @@ theorem incidence_fPoint_fChord [DecidableEq K] [hchar : NeZero (2 : K)] (p : (e
   cases p with
   | zero =>
     simp [fChordRaw, fPointRaw]
-  | @some x y hxy =>
+  | some x y hxy =>
     by_cases hsingular : SingularAbc cf x y
     · by_cases hur : cf.u + cf.r = 0
       · have hur2 : cf.u ^ 2 - cf.r ^ 2 = 0 := by grind
@@ -756,12 +757,12 @@ theorem incidence_fPoint_fChord [DecidableEq K] [hchar : NeZero (2 : K)] (p : (e
       simp_rw [hsingular.fPointRaw_eq cf hxy hur]
       suffices
         2 * cf.r * x * ((cf.u + cf.r) ^ 2 - 1) /
-          (cf.u + cf.r) ^ 2 * ((cf.u ^ 2 - cf.r ^ 2) * fChordRaw cf (.some hxy) 0 +
+          (cf.u + cf.r) ^ 2 * ((cf.u ^ 2 - cf.r ^ 2) * fChordRaw cf (.some _ _ hxy) 0 +
           ((cf.r * (cf.u + cf.r) ^ 2 * x - cf.u * ((cf.u + cf.r) ^ 2 - 2)) /
           (2 * cf.u * cf.k) * (cf.u ^ 2 - cf.r ^ 2)) *
-          fChordRaw cf (.some hxy) 1) =
+          fChordRaw cf (.some _ _ hxy) 1) =
         2 * cf.r * x * ((cf.u + cf.r) ^ 2 - 1) /
-        (cf.u + cf.r) ^ 2 * ((2 * cf.u) * fChordRaw cf (.some hxy) 2) by
+        (cf.u + cf.r) ^ 2 * ((2 * cf.u) * fChordRaw cf (.some _ _ hxy) 2) by
         simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Fin.isValue, Matrix.cons_val_zero,
           Matrix.cons_val_one, Matrix.cons_val]
         convert this using 1
@@ -840,7 +841,7 @@ theorem mapsTo_f₀ [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0) :
     cases p with
     | zero =>
       simp [fPoint, fPointRaw, P2.mk_eq_mk, hur] at h
-    | @some x y hxy =>
+    | some x y hxy =>
       rw [nonsingular_elliptic cf] at hxy
       obtain ⟨heq, hs⟩ := hxy
       obtain ⟨hne, hy, heq2⟩ : cf.r ^ 2 * (cf.u + cf.r) * x ^ 2 +
@@ -866,7 +867,7 @@ theorem mapsTo_f₀ [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0) :
     cases p with
     | zero =>
       simp [fPoint, fPointRaw, P2.mk_eq_mk, hur'] at h
-    | @some x y hxy =>
+    | some x y hxy =>
       rw [nonsingular_elliptic cf] at hxy
       obtain ⟨heq, hs⟩ := hxy
       obtain ⟨hne, heq2, hy⟩ : cf.r * x + cf.u ≠ 0 ∧
@@ -893,7 +894,7 @@ theorem mapsTo_f₀ [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0) :
 
 /-- The special point related to `fChord`. -/
 def o : (elliptic cf).Point :=
-  .some (show (elliptic cf).Nonsingular 0 0 by simp [elliptic, cf.hu, cf.hr])
+  .some 0 0 (by simp [elliptic, cf.hu, cf.hr])
 
 @[simp]
 theorem fPointRaw_o : fPointRaw cf (o cf) =
@@ -938,7 +939,7 @@ theorem f_o [DecidableEq K] [hchar : NeZero (2 : K)] : f cf (o cf) =
   simp [f]
 
 theorem eq_o_iff [hchar : NeZero (2 : K)] {x y : K} (h : (elliptic cf).Nonsingular x y) :
-    .some h = o cf ↔ x = 0 where
+    .some x y h = o cf ↔ x = 0 where
   mp h0 := by
     have : x = 0 ∧ y = 0 := by simpa [o] using h0
     exact this.1
@@ -957,8 +958,8 @@ theorem nonsingular_o_sub [CharZero K] {x y : K}
   grind
 
 theorem o_sub [DecidableEq K] [CharZero K] {x y : K} (h : (elliptic cf).Nonsingular x y)
-    (ho : Point.some h ≠ o cf) :
-    o cf - Point.some h = Point.some (nonsingular_o_sub cf h) := by
+    (ho : Point.some _ _ h ≠ o cf) :
+    o cf - Point.some _ _ h = Point.some _ _ (nonsingular_o_sub cf h) := by
   obtain _ := cf.hu
   obtain _ := cf.hr
   obtain hx0 := (eq_o_iff cf h).ne.mp ho
@@ -1008,7 +1009,7 @@ theorem nonsingular_w [hchar : NeZero (2 : K)] :
   field
 
 /-- The special point related to `fPoint`. -/
-def w [hchar : NeZero (2 : K)] : (elliptic cf).Point := .some (nonsingular_w cf)
+def w [hchar : NeZero (2 : K)] : (elliptic cf).Point := .some _ _ (nonsingular_w cf)
 
 theorem slope_w [DecidableEq K] [hchar : NeZero (2 : K)] :
     (elliptic cf).slope (cf.u ^ 2 / cf.r ^ 2) (cf.u ^ 2 / cf.r ^ 2)
@@ -1076,7 +1077,7 @@ theorem nonsingular_2w [hchar : NeZero (2 : K)] :
   simp [hchar.out, cf.hu, cf.hr]
 
 theorem two_w [DecidableEq K] [hchar : NeZero (2 : K)] :
-    w cf + w cf = .some (nonsingular_2w cf) := by
+    w cf + w cf = .some _ _ (nonsingular_2w cf) := by
   unfold w
   rw [Point.add_self_of_Y_ne (by
     suffices cf.u ^ 2 / cf.r ^ 3 ≠ -(cf.u ^ 2 / cf.r ^ 3) by simpa [elliptic]
@@ -1162,10 +1163,10 @@ theorem nonsingular_w_sub [hchar : NeZero (2 : K)] {x y : K}
 theorem w_sub [DecidableEq K] [hchar : NeZero (2 : K)]
     {x y : K} (hxy : (elliptic cf).Nonsingular x y)
     (hx : x ≠ cf.u ^ 2 / cf.r ^ 2) :
-    w cf - .some hxy = .some (nonsingular_w_sub cf hxy hx) := by
+    w cf - .some _ _ hxy = .some _ _ (nonsingular_w_sub cf hxy hx) := by
   have hxy' : (elliptic cf).Nonsingular x (-y) := by
     simpa [elliptic] using (WeierstrassCurve.Affine.nonsingular_neg _ _).mpr hxy
-  have hneg : - Point.some hxy = .some hxy' := by
+  have hneg : - Point.some _ _ hxy = .some _ _ hxy' := by
     rw [WeierstrassCurve.Affine.Point.neg_some]
     simp [elliptic]
   rw [sub_eq_add_neg, hneg]
@@ -1181,12 +1182,12 @@ theorem nonsingular_neg_w [hchar : NeZero (2 : K)] :
   convert (WeierstrassCurve.Affine.nonsingular_neg _ _).mpr (nonsingular_w cf) using 1
   simp [elliptic, neg_div]
 
-theorem neg_w [hchar : NeZero (2 : K)] : -w cf = .some (nonsingular_neg_w cf) := by
+theorem neg_w [hchar : NeZero (2 : K)] : -w cf = .some _ _ (nonsingular_neg_w cf) := by
   rw [w, WeierstrassCurve.Affine.Point.neg_some]
   simp [elliptic, neg_div]
 
 theorem x_not_at_w [hchar : NeZero (2 : K)] {x y : K} (hxy : (elliptic cf).Nonsingular x y)
-    (hpw : .some hxy ≠ w cf) (hpnw : .some hxy ≠ -w cf) :
+    (hpw : .some _ _ hxy ≠ w cf) (hpnw : .some _ _ hxy ≠ -w cf) :
     x ≠ cf.u ^ 2 / cf.r ^ 2 := by
   obtain _ := cf.hr
   obtain _ := cf.hu
@@ -1215,7 +1216,7 @@ theorem nonsingular_g [hchar : NeZero (2 : K)] : (elliptic cf).Nonsingular 1 cf.
   field
 
 /-- The special point related to `next`. -/
-def g [hchar : NeZero (2 : K)] : (elliptic cf).Point := .some (nonsingular_g cf)
+def g [hchar : NeZero (2 : K)] : (elliptic cf).Point := .some _ _ (nonsingular_g cf)
 
 theorem g_eq_neg_of_r_eq_neg [hchar : NeZero (2 : K)] [DecidableEq K] (cf' : Config K)
     (hu : cf'.u = cf.u) (hr : cf'.r = -cf.r) :
