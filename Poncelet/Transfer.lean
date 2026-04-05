@@ -172,7 +172,7 @@ theorem SingularAbc.fChord_o_sub [DecidableEq K] [CharZero K] {x y : K}
         grind
       · simp
     · field_simp
-      grind [h.c_factor_eq_zero cf hxy]
+      grind (ringSteps := 800000) [h.c_factor_eq_zero cf hxy]
   obtain ⟨hy, hur, huxr⟩ := this
   have hk : cf.k ≠ 0 := by
     rw [← sq_eq_zero_iff.ne]
@@ -530,7 +530,7 @@ theorem fChord_2w [DecidableEq K] [CharZero K] :
       grind
     · field_simp
       rw [cf.k_sq]
-      grind
+      grind (ringSteps := 300000)
     · field
   simp only [fChord, fChordRaw, hsxy, ↓reduceIte, fChordNormal_2w cf]
   rw [P2.mk_eq_mk']

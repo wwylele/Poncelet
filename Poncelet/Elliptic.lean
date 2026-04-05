@@ -834,7 +834,7 @@ theorem mapsTo_f₀ [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0) :
       f cf p ≠ (P2.mk ![-1, 0, 1] _, P2.mk ![-1, 0, 1] _) by
     simpa [dom₀, mapsTo_f cf hp]
   by_contra h
-  push_neg +distrib at h
+  push +distrib Not at h
   unfold f at h
   obtain h | h := h
   · have h : fPoint cf p = P2.mk ![1, 0, 1] _ := congr($h.1)
