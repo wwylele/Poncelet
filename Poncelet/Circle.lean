@@ -144,7 +144,6 @@ theorem mem_dom {p q : Fin 3 → K} (hp : p ≠ 0) (hq : q ≠ 0) :
     q 0 ^ 2 + q 1 ^ 2 = q 2 ^ 2 ∧
     p 0 * q 0 + p 1 * q 1 = p 2 * q 2) := by rfl
 
-set_option backward.isDefEq.respectTransparency false in
 theorem encard_dom_fix1_le [hchar : NeZero (2 : K)] (p : P2 K) :
     Set.encard {pq ∈ dom cf | pq.1 = p} ≤ 2 := by
   classical
@@ -334,7 +333,6 @@ theorem encard_dom_fix1_le [hchar : NeZero (2 : K)] (p : P2 K) :
       field_simp
       linear_combination -hpq
 
-set_option backward.isDefEq.respectTransparency false in
 theorem encard_dom_fix2_le [hchar : NeZero (2 : K)] (q : P2 K) :
     Set.encard {pq ∈ dom cf | pq.2 = q} ≤ 2 := by
   obtain _ := cf.hu

@@ -1582,7 +1582,6 @@ theorem rotate_norm {sin cos : ℝ} {r : ℝ} (hr : 0 < r) (hsincos : sin ^ 2 + 
 
 end Concentric
 
-set_option backward.isDefEq.respectTransparency false in
 theorem EuclideanGeometry.poncelet_of_center_eq {o i : Sphere P}
     (ho : 0 < o.radius)
     (hcenter : o.center = i.center)
