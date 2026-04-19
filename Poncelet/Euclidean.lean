@@ -457,11 +457,15 @@ theorem eq_span_dirVec {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.dir
   rw [← Submodule.map_subtype_span_singleton, hp]
   simp
 
-noncomputable def linePoint {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.direction = 1) :
+-- 4.30.0-rc2 seems to like accidentally including `hrank`. We spell out the full
+-- parameter list to work around id
+noncomputable def linePoint {V P : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V]
+    [MetricSpace P] [NormedAddTorsor V P]
+    {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.direction = 1) :
     P :=
   ((AffineSubspace.nonempty_iff_ne_bot p).mpr fun h ↦ by
     rw [h, AffineSubspace.direction_bot] at hp
-    simp at hp
+    simp only [Module.finrank_eq_zero_of_subsingleton, zero_ne_one] at hp
   ).some
 
 omit hrank in
@@ -519,7 +523,7 @@ theorem sendChord'_eq {p1 p2 : P} {d1 d2 : V} {p : AffineSubspace ℝ P}
   fin_cases i
   · simp [← hl, real_inner_smul_left, field]
   · simp [← hl, real_inner_smul_left, field]
-  · simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Fin.reduceFinMk, Matrix.cons_val, Pi.smul_apply,
+  · simp only [Nat.reduceAdd, Fin.reduceFinMk, Matrix.cons_val, Pi.smul_apply,
       Fin.isValue, smul_eq_mul]
     simp_rw [← hl, real_inner_smul_left, ← mul_assoc, mul_comm _ l]
     simp_rw [mul_assoc l, ← mul_sub, mul_div_assoc]
