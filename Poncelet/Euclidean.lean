@@ -597,7 +597,7 @@ theorem isAffine_sendChord {p : AffineSubspace ℝ P}
     rw [h, AffineSubspace.direction_bot] at hp
     simp at hp
   )
-  have : Nonempty p := by simpa using hnonempty
+  have : Nonempty p := by simpa [Set.Nonempty] using hnonempty
   rw [← EuclideanGeometry.Sphere.infDist_eq_radius_iff_isTangent] at hi
   obtain h := hi ▸ Metric.infDist_le_dist_of_mem hmem
   simp [cf.i_pos.not_ge] at h
@@ -722,7 +722,7 @@ theorem isTangent_i_iff {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.di
     rw [h, AffineSubspace.direction_bot] at hp
     simp at hp
   )
-  have : Nonempty p := by simpa using hnonempty
+  have : Nonempty p := by simpa [Set.Nonempty] using hnonempty
   obtain hmem : (orthogonalProjection p cf.i.center).val ∈ p :=
     EuclideanGeometry.orthogonalProjection_mem cf.i.center
   rw [cf.sendChord_eq hp hmem (dirVec_ne_zero' hp) (dirVec hp).prop]
@@ -778,7 +778,7 @@ theorem isTangent_o_iff {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.di
     rw [h, AffineSubspace.direction_bot] at hp
     simp at hp
   )
-  have : Nonempty p := by simpa using hnonempty
+  have : Nonempty p := by simpa [Set.Nonempty] using hnonempty
   obtain hmem : (orthogonalProjection p cf.o.center).val ∈ p :=
     EuclideanGeometry.orthogonalProjection_mem cf.o.center
   rw [cf.sendChord_eq hp hmem (dirVec_ne_zero' hp) (dirVec hp).prop]
@@ -845,7 +845,7 @@ theorem not_tangentOuterCircle_of_isTangent {p : AffineSubspace ℝ P}
     rw [h, AffineSubspace.direction_bot] at hp
     simp at hp
   )
-  have : Nonempty p := by simpa using hnonempty
+  have : Nonempty p := by simpa [Set.Nonempty] using hnonempty
   rw [← cf.isTangent_o_iff hp, ← EuclideanGeometry.Sphere.infDist_eq_radius_iff_isTangent]
   obtain hmem : (orthogonalProjection p cf.i.center).val ∈ p :=
     EuclideanGeometry.orthogonalProjection_mem cf.i.center
@@ -1001,7 +1001,6 @@ def recvChordPoint (p : P2 ℝ) : ℝ × ℝ := P2.lift
   (fun p hp ↦ if p 0 = 0 then ⟨0, p 2 / p 1⟩ else ⟨(p 2 - p 1) / p 0, 1⟩)
   (fun p q hp hq h ↦ by
     obtain ⟨l, hl0, hl⟩ := h
-    simp only
     rw [hl]
     simp only [Fin.isValue, Pi.smul_apply, smul_eq_mul, mul_eq_zero, hl0, false_or]
     congr 2 <;> field
@@ -1011,7 +1010,6 @@ noncomputable
 def recvChordDir (p : P2 ℝ) : ℝ × ℝ := P2.lift
   (fun p hp ↦ if p 0 = 0 then ⟨1, 0⟩ else ⟨p 1 / p 0, -1⟩) (fun p q hp hq h ↦ by
     obtain ⟨l, hl0, hl⟩ := h
-    simp only
     rw [hl]
     simp only [Fin.isValue, Pi.smul_apply, smul_eq_mul, mul_eq_zero, hl0, false_or]
     congr 2

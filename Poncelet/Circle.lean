@@ -87,7 +87,7 @@ theorem tangentOuterCircle_iff (p : P2 K) (hi : InnerCircle cf p) :
     TangentOuterCircle cf p ↔
       (p.lift (fun p hp ↦
         2 * cf.u * p 0 * p 2 + cf.u ^ 2 * p 1 ^ 2 = (1 + cf.u ^ 2 - cf.r ^ 2) * p 2 ^ 2)
-        fun p q hp hq h ↦ by
+        fun p q hp _ h ↦ by
           obtain ⟨l, h0, rfl⟩ := h
           simp_rw [Pi.smul_apply, smul_eq_mul]
           conv_rhs =>

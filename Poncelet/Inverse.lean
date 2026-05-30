@@ -557,7 +557,7 @@ theorem SingularAB.q_eq_of_casePos [DecidableEq K] [hchar : NeZero (2 : K)]
         · simpa [h0, hk] using hp01.symm
         · simp
       · contrapose! hz
-        simpa using h0
+        simpa [ZeroZ] using h0
   · right
     simp only
     constructor
@@ -584,7 +584,7 @@ theorem SingularAB.q_eq_of_casePos [DecidableEq K] [hchar : NeZero (2 : K)]
         · simpa [h0, hk] using hp01.symm
         · simp
       · contrapose! hz
-        simpa using h0
+        simpa [ZeroZ] using h0
 
 def eSingularABcasePos [DecidableEq K] [NeZero (2 : K)]
     (pq : P2 K × P2 K) : (elliptic cf).Point :=
@@ -1137,7 +1137,6 @@ deriving Decidable
 
 def exNormal (pq : P2 K × P2 K) : K := P2.lift₂ (fun p q hp hq ↦ eNume cf p q / eDeno cf p q) (by
     intro p q p' q' hp hq hp' hq' ⟨l, hl0, hl⟩ ⟨m, hm0, hm⟩
-    simp only
     have heq :
       cf.r * ((cf.u + cf.r) * q 0 - q 2) * ((cf.u + cf.r) * q 1 + cf.k * q 2) * p 2 = 0 ↔
       cf.r * ((cf.u + cf.r) * q' 0 - q' 2) * ((cf.u + cf.r) * q' 1 + cf.k * q' 2) * p' 2 = 0 := by

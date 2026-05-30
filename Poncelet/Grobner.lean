@@ -603,7 +603,7 @@ theorem CPoly.eq_zero_of_reduceAll_eq_zero [CharP K char] [IsChar char] {a : CPo
     (ha : (a.reduceAll b).1.eval v = 0) :
     a.eval v = 0 := by
   induction b with
-  | nil => simpa using ha
+  | nil => simpa! using ha
   | cons bx bs hi =>
     rw [List.forall_cons] at hb
     simp only [reduceAll] at ha
@@ -624,7 +624,7 @@ theorem CPoly.eq_zero_of_reduceRepeat_eq_zero [CharP K char] [IsChar char] {a : 
     (fuel : ℕ) (ha : (a.reduceRepeat b fuel).eval v = 0) :
     a.eval v = 0 := by
   induction fuel generalizing a with
-  | zero => simpa using ha
+  | zero => simpa! using ha
   | succ n ih =>
     rw [reduceRepeat] at ha
     split at ha

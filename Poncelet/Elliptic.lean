@@ -1250,7 +1250,7 @@ theorem o_sub_w [DecidableEq K] [hchar : NeZero (2 : K)] : o cf - w cf = g cf :=
       linear_combination h + this
     rw [WeierstrassCurve.Affine.Point.add_of_Y_ne hy]
     simp_rw [WeierstrassCurve.Affine.slope_of_Y_ne hx hy]
-    simp [elliptic]
+    simp [elliptic, addY]
     field_simp
     grind
   · have hx : cf.u ^ 2 / cf.r ^ 2 ≠ 1 := by
@@ -1263,7 +1263,7 @@ theorem o_sub_w [DecidableEq K] [hchar : NeZero (2 : K)] : o cf - w cf = g cf :=
       field_simp
       rw [hx]
     rw [WeierstrassCurve.Affine.Point.add_of_X_ne hx]
-    simp [hx, elliptic]
+    simp [hx, elliptic, addY]
     field_simp
     grind
 
