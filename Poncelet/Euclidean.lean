@@ -167,7 +167,7 @@ theorem radius_lt_of_inside'' {V P : Type*} [NormedAddCommGroup V] [NormedSpace 
     simp_rw [dist_eq_norm_vsub] at ⊢ hinside
     rw [vadd_vsub]
     refine ⟨hq₁, ?_⟩
-    convert hq₂ using 2
+    convert! hq₂ using 2
     simp [vadd_vsub_assoc, sub_eq_add_neg]
   obtain ⟨p, h1, h2⟩ := h
   cases abs_cases (dist o.center i.center - o.radius) <;>
@@ -207,7 +207,7 @@ theorem basis_two {x y : V} (hx : x ≠ 0) (hy : y ≠ 0) (h : ⟪x, y⟫ = 0)
     simpa [h, inner_smul_left, hy] using congr(⟪$ha, y⟫).symm
   have hrangexy : {x, y} = Set.range ![x, y] := by aesop
   have hr : Module.finrank ℝ (Submodule.span ℝ {x, y}) = 2 := by
-    convert finrank_span_eq_card hli
+    convert! finrank_span_eq_card hli
   have hspan : Submodule.span ℝ {x, y} = ⊤ := by
     apply Submodule.eq_top_of_finrank_eq
     rw [hr, hrank.1]

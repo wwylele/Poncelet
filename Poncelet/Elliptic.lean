@@ -247,7 +247,7 @@ theorem outerCircle_fPoint [hchar : NeZero (2 : K)] (p : (elliptic cf).Point) :
         cf.u ^ 2 * (cf.u + cf.r) - cf.u * (cf.r * x + cf.u) ^ 2) ^ 2 +
       (2 * cf.r) ^ 2 * (cf.k) ^ 2 * (cf.r ^ 2 * y ^ 2) =
       cf.r ^ 2 * ((cf.r * x + cf.u) ^ 2) ^ 2 by
-      convert this using 1
+      convert! this using 1
       simp [fPointRaw]
       ring
     rw [heq, cf.k_sq]
@@ -278,7 +278,7 @@ theorem fChordNormal_onCircle [hchar : NeZero (2 : K)] {x y : K}
         (cf.r ^ 2 * (cf.u + cf.r) * x ^ 2 + 2 * cf.r * (1 - cf.r * (cf.r + cf.u)) * x +
         (cf.u + cf.r) * cf.u ^ 2))) ^ 2 =
       ((cf.r * x + cf.u) * ((cf.r * x - cf.u) ^ 2 * (cf.u + cf.r) ^ 2 + 4 * cf.u * cf.r * x)) ^ 2 by
-      convert this using 1
+      convert! this using 1
       · simp [fChordNormal]
         ring
   rw [cf.k_sq]

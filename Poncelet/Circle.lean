@@ -1400,7 +1400,7 @@ theorem mem_dom₀' {pq : P2 K × P2 K} :
     pq ∈ dom₀ cf ↔ pq ∈ dom cf ∧
     pq.1 ≠ P2.mk ![1, 0, 1] (by simp) ∧
     pq.1 ≠ P2.mk ![-1, 0, 1] (by simp) := by
-  simp_rw [dom₀, Set.mem_diff, Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+  simp_rw [dom₀, Set.mem_sdiff, Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
   by_cases hmem : pq ∈ dom cf
   · congrm(_ ∧ ?_ ∧ ?_)
     · contrapose!
