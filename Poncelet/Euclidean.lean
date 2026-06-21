@@ -1178,8 +1178,7 @@ theorem isAffineLine_rChord_of_validPair {pq : P × AffineSubspace ℝ P} (h : c
   · simpa [snd_rPoint] using cf.isAffineLine_sendChord h.hq
   · simpa [snd_rPoint] using cf.isAffine_sendChord h.hq h.hi
 
-noncomputable
-def send_euNext {pq : P × AffineSubspace ℝ P} (h : cf.ValidPair pq) :
+theorem send_euNext {pq : P × AffineSubspace ℝ P} (h : cf.ValidPair pq) :
     (fun pq ↦ ⟨cf.sendPoint pq.1, cf.sendChord pq.2⟩) (cf.euNext pq) =
     next cf.toConfig ⟨cf.sendPoint pq.1, cf.sendChord pq.2⟩ := by
   unfold euNext
@@ -1278,8 +1277,7 @@ theorem validPair_iterate_euNext {pq : P × AffineSubspace ℝ P} (h : cf.ValidP
     rw [Function.iterate_succ_apply']
     exact cf.validPair_euNext ih
 
-noncomputable
-def send_iterate_euNext {pq : P × AffineSubspace ℝ P} (h : cf.ValidPair pq) (n : ℕ) :
+theorem send_iterate_euNext {pq : P × AffineSubspace ℝ P} (h : cf.ValidPair pq) (n : ℕ) :
     (fun pq ↦ ⟨cf.sendPoint pq.1, cf.sendChord pq.2⟩) (cf.euNext^[n] pq) =
     (next cf.toConfig)^[n] ⟨cf.sendPoint pq.1, cf.sendChord pq.2⟩ := by
   induction n with
