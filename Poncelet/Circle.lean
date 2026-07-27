@@ -116,7 +116,7 @@ def Incidence (_ : Config K) (p q : P2 K) : Prop :=
 
 instance [DecidableEq K] (p : P2 K) : DecidablePred (Incidence cf p) := by
   unfold Incidence P2.lift₂
-  infer_instance
+  exact Quotient.lift₂.decidablePred _ _ _
 
 theorem incidence_iff (cf' : Config K) (p q : P2 K) :
     Incidence cf p q ↔ Incidence cf' p q := by

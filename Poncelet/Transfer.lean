@@ -1043,6 +1043,7 @@ theorem f_injective_inf [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0)
   simp [fChordRaw, hx, hy, hs, fChordNormal] at hm
   grind
 
+set_option backward.isDefEq.respectTransparency false in
 theorem f_injective [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) :
     Function.Injective (f cf) := by
   obtain _ := cf.hu

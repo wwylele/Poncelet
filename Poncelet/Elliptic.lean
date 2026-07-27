@@ -938,6 +938,7 @@ theorem f_o [DecidableEq K] [hchar : NeZero (2 : K)] : f cf (o cf) =
     ⟨P2.mk ![cf.u + cf.r, 0, 1] (by simp), P2.mk ![1, cf.k, cf.u + cf.r] (by simp)⟩ := by
   simp [f]
 
+set_option backward.isDefEq.respectTransparency false in
 theorem eq_o_iff [hchar : NeZero (2 : K)] {x y : K} (h : (elliptic cf).Nonsingular x y) :
     .some x y h = o cf ↔ x = 0 where
   mp h0 := by
@@ -957,6 +958,7 @@ theorem nonsingular_o_sub [CharZero K] {x y : K}
   obtain _ := cf.hr
   grind
 
+set_option backward.isDefEq.respectTransparency false in
 theorem o_sub [DecidableEq K] [CharZero K] {x y : K} (h : (elliptic cf).Nonsingular x y)
     (ho : Point.some _ _ h ≠ o cf) :
     o cf - Point.some _ _ h = Point.some _ _ (nonsingular_o_sub cf h) := by

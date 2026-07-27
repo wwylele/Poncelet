@@ -1160,7 +1160,7 @@ structure ValidPair (pq : P × AffineSubspace ℝ P) : Prop where
 
 theorem mem_dom_of_validPair {pq : P × AffineSubspace ℝ P} (h : cf.ValidPair pq) :
     ⟨cf.sendPoint pq.1, cf.sendChord pq.2⟩ ∈ dom cf.toConfig := by
-  simp only [dom, Set.mem_setOf_eq]
+  simp only [dom, Set.mem_ofPred_eq]
   rw [← mem_o_iff, ← cf.isTangent_i_iff h.hq, ← cf.mem_iff_incidence_sendChord h.hq]
   simp [h.ho, h.hi, h.hpq]
 
