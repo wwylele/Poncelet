@@ -523,8 +523,7 @@ theorem sendChord'_eq {p1 p2 : P} {d1 d2 : V} {p : AffineSubspace ℝ P}
   fin_cases i
   · simp [← hl, real_inner_smul_left, field]
   · simp [← hl, real_inner_smul_left, field]
-  · simp only [Nat.reduceAdd, Fin.reduceFinMk, Matrix.cons_val, Pi.smul_apply,
-      Fin.isValue, smul_eq_mul]
+  · simp only [Fin.reduceFinMk, Matrix.cons_val, Pi.smul_apply, Fin.isValue, smul_eq_mul]
     simp_rw [← hl, real_inner_smul_left, ← mul_assoc, mul_comm _ l]
     simp_rw [mul_assoc l, ← mul_sub, mul_div_assoc]
     congr 2
