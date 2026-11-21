@@ -259,7 +259,7 @@ theorem inner_swap {x y : V} (hx : x ≠ 0) (hy : y ≠ 0) (h : ⟪x, y⟫ = 0) 
   simp_rw [← sub_eq_sub_iff_add_eq_add, ← sub_smul]
   by_cases hc : c = 0
   · have hd : d ≠ 0 := by
-      contrapose! hu0 with hd
+      contrapose hu0 with hd
       simp [hu, hc, hd]
     have ha : a = 0 := by
       simpa [hc, hd] using habcd
@@ -413,7 +413,7 @@ theorem mem_o_iff {p : P} : p ∈ cf.o ↔ OuterCircle cf.toConfig (cf.sendPoint
   rw [toConfig]
   simp only
   simp_rw [← div_div, ← sub_div, div_pow, ← add_div, dist_eq_norm_vsub V]
-  rw [div_left_inj' (by simpa using cf.i_pos.ne.symm)]
+  rw [div_left_inj₀ (by simpa using cf.i_pos.ne.symm)]
   rw [div_sub' (by simpa using cf.center), div_pow, ← real_inner_self_eq_norm_mul_norm]
   rw [← inner_sub_left]
   rw [vsub_sub_vsub_cancel_right]
@@ -457,7 +457,7 @@ theorem dirVec_ne_zero' {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.di
 
 theorem eq_span_dirVec {p : AffineSubspace ℝ P} (hp : Module.finrank ℝ p.direction = 1) :
     p.direction = Submodule.span ℝ {(dirVec hp).val} := by
-  rw [finrank_eq_one_iff_of_nonzero (dirVec hp) (dirVec_ne_zero hp) (K := ℝ)] at hp
+  rw [finrank_eq_one_iff_of_ne_zero (dirVec hp) (dirVec_ne_zero hp) (K := ℝ)] at hp
   rw [← Submodule.map_subtype_span_singleton, hp]
   simp
 
@@ -562,7 +562,7 @@ theorem isAffineLine_sendChord {p : AffineSubspace ℝ P}
   have hxd : dist cf.o.center cf.i.center ≠ 0 := by simp [cf.center]
   have hyd : dist cf.yDir cf.i.center ≠ 0 := by simp [cf.yDir_ne_center_i]
   obtain h := dirVec_ne_zero' hp
-  contrapose! h
+  contrapose h
   rw [P2.mk_eq_mk] at h
   obtain ⟨l, hl0, hl⟩ := h
   obtain hy : ⟪(dirVec hp).val, cf.yDir -ᵥ cf.i.center⟫ = 0 := by simpa [hyd] using congr($hl 0)
@@ -586,7 +586,7 @@ theorem isAffine_sendChord {p : AffineSubspace ℝ P}
       ⟪linePoint hp -ᵥ cf.i.center, cf.yDir -ᵥ cf.i.center⟫ *
       ⟪(dirVec hp).val, cf.o.center -ᵥ cf.i.center⟫ ≠ 0 by
     simpa [sendChord, P2.IsAffine, hp, sendChord', cf.yDir_ne_center_i, cf.center, cf.i_pos.ne.symm]
-  by_contra! h
+  by_contra h
   rw [sub_eq_zero, ← inner_swap (by simp [cf.center]) (by simp [cf.yDir_ne_center_i])
     cf.inner_yDir_center_o (dirVec_ne_zero' hp)] at h
   obtain ⟨l, hl⟩ := h
@@ -660,7 +660,7 @@ theorem sendChord_inj {p q : AffineSubspace ℝ P}
   have hl1 : l = 1 := by
     by_cases hx : ⟪v, cf.yDir -ᵥ cf.i.center⟫ = 0
     · have hy : ⟪v, cf.o.center -ᵥ cf.i.center⟫ ≠ 0 := by
-        by_contra! hy
+        by_contra hy
         suffices v = 0 from hv this
         obtain ⟨a, b, hv⟩ := basis_two (by simpa using cf.center)
           (by simpa using cf.yDir_ne_center_i) hxy v
@@ -710,7 +710,7 @@ theorem mem_iff_incidence_sendChord {p : P} {q : AffineSubspace ℝ P}
   rw [show dist cf.yDir cf.i.center * cf.i.radius * dist cf.o.center cf.i.center
     = dist cf.yDir cf.i.center * dist cf.o.center cf.i.center * cf.i.radius by ring]
   rw [← add_div]
-  rw [div_left_inj' (by simp [cf.yDir_ne_center_i, cf.center, cf.i_pos.ne.symm])]
+  rw [div_left_inj₀ (by simp [cf.yDir_ne_center_i, cf.center, cf.i_pos.ne.symm])]
   rw [mul_neg, ← sub_eq_add_neg]
   rw [sub_eq_sub_iff_sub_eq_sub]
   simp_rw [← sub_mul, ← inner_sub_left, vsub_sub_vsub_cancel_right]
@@ -852,7 +852,7 @@ theorem not_tangentOuterCircle_of_isTangent {p : AffineSubspace ℝ P}
   rw [← cf.isTangent_o_iff hp, ← EuclideanGeometry.Sphere.infDist_eq_radius_iff_isTangent]
   obtain hmem : (orthogonalProjection p cf.i.center).val ∈ p :=
     EuclideanGeometry.orthogonalProjection_mem cf.i.center
-  by_contra! h
+  by_contra h
   have h : cf.o.radius ≤ dist cf.o.center (orthogonalProjection p cf.i.center).val :=
     h ▸ Metric.infDist_le_dist_of_mem hmem
   rw [dist_comm] at h
@@ -1028,7 +1028,7 @@ theorem recvChordDir_ne_zero' (p : P2 ℝ) :
     ((recvChordDir p).1 / dist cf.o.center cf.i.center) • (cf.o.center -ᵥ cf.i.center) +
       ((recvChordDir p).2 / dist cf.yDir cf.i.center) • (cf.yDir -ᵥ cf.i.center) ≠ 0 := by
   obtain h := recvChordDir_ne_zero p
-  contrapose! h
+  contrapose h
   obtain hxy := cf.inner_yDir_center_o
   obtain hyx := real_inner_comm (cf.o.center -ᵥ cf.i.center) _ ▸ hxy
   obtain hx := congr(⟪$h, cf.o.center -ᵥ cf.i.center⟫)
@@ -1120,7 +1120,7 @@ theorem sendChord_recvChord {p : P2 ℝ} (hp : p.IsAffineLine) :
   simp_rw [h1, h2, h3]
   by_cases hp0 : p 0 = 0
   · have hp1 : p 1 ≠ 0 := by
-      contrapose! hp with hp1
+      contrapose hp with hp1
       suffices ∃ l, p = ![0, 0, l] by
         simpa [P2.IsAffineLine, P2.mk_eq_mk']
       use p 2

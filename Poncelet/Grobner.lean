@@ -550,7 +550,7 @@ def CPoly.reduce [hc : IsChar char] (a b : CPoly char n) : CPoly char n × Bool 
   if ax.exp - bx.exp + bx.exp = ax.exp then
     ⟨smul ⟨Int.lcm ax.coeff bx.coeff / ax.coeff, 0, by
       rw [Int.dvd_ediv_iff_mul_dvd (Int.dvd_lcm_left _ _)]
-      by_contra!
+      by_contra
       obtain h := dvd_of_mul_left_dvd this
       rw [Int.natCast_dvd, Int.lcm_eq_natAbs_lcm_natAbs, Int.natAbs_natCast] at h
       obtain hc | hc := hc.eq_zero_or_prime
@@ -561,7 +561,7 @@ def CPoly.reduce [hc : IsChar char] (a b : CPoly char n) : CPoly char n × Bool 
         simp_all⟩ a +
     smul ⟨-(Int.lcm ax.coeff bx.coeff / bx.coeff), ax.exp - bx.exp, by
       rw [dvd_neg, Int.dvd_ediv_iff_mul_dvd (Int.dvd_lcm_right _ _)]
-      by_contra!
+      by_contra
       obtain h := dvd_of_mul_left_dvd this
       rw [Int.natCast_dvd, Int.lcm_eq_natAbs_lcm_natAbs, Int.natAbs_natCast] at h
       obtain hc | hc := hc.eq_zero_or_prime

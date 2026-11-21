@@ -51,7 +51,7 @@ theorem nonsingular_eyZeroZ [NeZero (2 : K)]
   have hp2 : p 2 = 0 := by simpa [ZeroZ] using hz
   rw [hp2] at ho
   have hp0 : p 0 ≠ 0 := by
-    by_contra! hp0
+    by_contra hp0
     have hp1 : p 1 = 0 := by simpa [hp0] using ho
     have : p = 0 := by
       ext i
@@ -61,7 +61,7 @@ theorem nonsingular_eyZeroZ [NeZero (2 : K)]
       · exact hp2
     exact hp this
   have hp1 : p 1 ≠ 0 := by
-    contrapose! hp0 with hp1
+    contrapose hp0 with hp1
     simpa [hp1] using ho
   rw [nonsingular_elliptic]
   constructor
@@ -90,7 +90,7 @@ theorem fPoint_eZeroZ [DecidableEq K] [NeZero (2 : K)] (hk : cf.k ≠ 0)
   have hp2 : p 2 = 0 := by simpa [ZeroZ] using hz
   rw [hp2] at ho
   have hp0 : p 0 ≠ 0 := by
-    by_contra! hp0
+    by_contra hp0
     have hp1 : p 1 = 0 := by simpa [hp0] using ho
     have : p = 0 := by
       ext i
@@ -100,7 +100,7 @@ theorem fPoint_eZeroZ [DecidableEq K] [NeZero (2 : K)] (hk : cf.k ≠ 0)
       · exact hp2
     exact hp this
   have hp1 : p 1 ≠ 0 := by
-    contrapose! hp0 with hp1
+    contrapose hp0 with hp1
     simpa [hp1] using ho
   suffices P2.mk
       ![cf.r ^ 2 * (cf.u + cf.r) * (-cf.u / cf.r) ^ 2 +
@@ -122,11 +122,11 @@ theorem fChord_eZeroZ [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0)
     fChord cf (eZeroZ cf hk hpq hz) = pq.2 := by
   obtain h2 := hchar.out
   have h4 : (4 : K) ≠ 0 := by
-    contrapose! h2
+    contrapose h2
     have : (2 : K) * 2 = 0 := by linear_combination h2
     simpa using this
   have hk2 : (cf.u + cf.r) ^ 2 - 1 ≠ 0 := by
-    contrapose! hk
+    contrapose hk
     rw [← sq_eq_zero_iff, cf.k_sq, hk]
   obtain _ := cf.hu
   obtain _ := cf.hr
@@ -138,7 +138,7 @@ theorem fChord_eZeroZ [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0)
   have hp2 : p 2 = 0 := by simpa [ZeroZ] using hz
   rw [hp2] at ho hpq
   have hp0 : p 0 ≠ 0 := by
-    by_contra! hp0
+    by_contra hp0
     have hp1 : p 1 = 0 := by simpa [hp0] using ho
     have : p = 0 := by
       ext i
@@ -148,7 +148,7 @@ theorem fChord_eZeroZ [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0)
       · exact hp2
     exact hp this
   have hp1 : p 1 ≠ 0 := by
-    contrapose! hp0 with hp1
+    contrapose hp0 with hp1
     simpa [hp1] using ho
   have ho : p 0 ^ 2 = - p 1 ^ 2 := by linear_combination ho
   have hpq : p 0 * q 0 = -p 1 * q 1 := by linear_combination hpq
@@ -160,7 +160,7 @@ theorem fChord_eZeroZ [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0)
   have hq2 : q 2 = 0 := by
     simpa [hq01] using hi.symm
   have hs : ¬SingularAbc cf (-cf.u / cf.r) (-(p 1 * cf.u * cf.k) / (p 0 * cf.r ^ 2)) := by
-    by_contra! h
+    by_contra h
     obtain ha := h.a_eq_zero
     field_simp at ha
     have : -4 * cf.k * cf.u ^ 2 * p 1 * ((cf.u + cf.r) ^ 2 - 1) = 0 := by
@@ -199,7 +199,7 @@ def SingularA (pq : P2 K × P2 K) : Prop := P2.lift₂
     congrm ?_ ∧ ?_
     · simp [hm]
       grind
-    · contrapose!
+    · contrapose
       simp [hm]
       grind
   ) pq.1 pq.2
@@ -214,7 +214,7 @@ theorem SingularA.u_add_r_ne_zero {pq : P2 K × P2 K} (h : SingularA cf pq) :
   obtain ⟨p, q⟩ := pq
   induction p with | mk p hp
   induction q with | mk q hq
-  by_contra!
+  by_contra
   simp [SingularA, P2.lift₂_mk, this] at h
   grind
 
@@ -250,7 +250,7 @@ theorem SingularA.q_eq {pq : P2 K × P2 K} (h : SingularA cf pq)
 theorem SingularA.p2_ne_zero {p q : Fin 3 → K} {hp : p ≠ 0} {hq : q ≠ 0}
     (h : SingularA cf ⟨P2.mk p hp, P2.mk q hq⟩) (hpq : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) :
     p 2 ≠ 0 := by
-  by_contra! hp2
+  by_contra hp2
   obtain hqeq := h.q_eq cf hpq
   simp only at hqeq
   rw [P2.mk_eq_mk] at hqeq
@@ -445,7 +445,7 @@ theorem fChord_eSingularA [DecidableEq K] [NeZero (2 : K)] (hk : cf.k ≠ 0) {pq
   obtain ⟨hp0, hp1⟩ | ⟨hp0, hp1⟩ := hp01
   · have hs : ¬ SingularAbc cf (exSingularA cf (P2.mk p hp, P2.mk q hq))
         (eySingularA cf (P2.mk p hp, P2.mk q hq)) := by
-      by_contra! hs
+      by_contra hs
       obtain hc := hs.c_factor_eq_zero cf hnonsingular
       contrapose! hc
       simp [exSingularA, hp1, cf.hu, hur]
@@ -540,7 +540,7 @@ theorem SingularAB.q_eq_of_casePos [DecidableEq K] [hchar : NeZero (2 : K)]
     rw [mul_pow, cf.k_sq, hur]
     linear_combination -hi
   have hq0 : q 0 ≠ 0 := by
-    by_contra! hq0
+    by_contra hq0
     suffices q = 0 from hq this
     ext i
     fin_cases i
@@ -623,7 +623,7 @@ theorem f_eSingularABcasePos [DecidableEq K] [hchar : NeZero (2 : K)]
   · obtain ⟨_, hp⟩ := hcases.resolve_right (by
       apply not_and_of_not_left
       rw [hq]
-      contrapose! hk with h
+      contrapose hk with h
       rw [P2.mk_eq_mk] at h
       obtain ⟨l, hl0, hl⟩ := h
       have : l = 1 := by simpa using congr($hl.symm 0)
@@ -690,7 +690,7 @@ theorem SingularAB.p_eq [DecidableEq K] (hk : cf.k ≠ 0) {pq : P2 K × P2 K}
   obtain ⟨h1, h2⟩ := h
   obtain ⟨ho, hi, hpq⟩ := mem_dom cf hp hq |>.mp hpq
   have hq2 : q 2 ≠ 0 := by
-    by_contra! hq2
+    by_contra hq2
     suffices q = 0 from hq this
     ext i
     fin_cases i
@@ -788,7 +788,7 @@ def SingularB (pq : P2 K × P2 K) : Prop := P2.lift₂
     congrm ?_ ∧ ?_
     · simp [hm]
       grind
-    · contrapose!
+    · contrapose
       simp [hm]
       grind
   ) pq.1 pq.2
@@ -803,7 +803,7 @@ theorem SingularB.u_add_r_ne_zero {pq : P2 K × P2 K} (h : SingularB cf pq) :
   obtain ⟨p, q⟩ := pq
   induction p with | mk p hp
   induction q with | mk q hq
-  by_contra!
+  by_contra
   simp [SingularB, P2.lift₂_mk, this] at h
   grind
 
@@ -912,7 +912,7 @@ theorem nonsingular_exSingularB_eySingularB [hchar : NeZero (2 : K)] (hk : cf.k 
   obtain hu0 := cf.hu
   obtain h2 := hchar.out
   have h4 : (4 : K) ≠ 0 := by
-    contrapose! h2
+    contrapose h2
     have : (2 : K) * 2 = 0 := by linear_combination h2
     simpa using this
   obtain ⟨p, q⟩ := pq
@@ -922,7 +922,7 @@ theorem nonsingular_exSingularB_eySingularB [hchar : NeZero (2 : K)] (hk : cf.k 
   obtain hpeq := h.p_equation cf hpq
   have hp2 : p 2 ≠ 0 := by simpa [ZeroZ] using hz
   obtain hur0 := h.u_add_r_ne_zero
-  by_contra! hs
+  by_contra hs
   obtain ⟨hux, hy⟩ :=
     (singular_elliptic cf _ _).mp ⟨(equation_exSingularB_eySingularB cf hpq h hz), hs⟩
   have hy : (cf.u * cf.r + cf.r ^ 2 - 1) * (cf.u + cf.r) * p 0 +
@@ -936,7 +936,7 @@ theorem nonsingular_exSingularB_eySingularB [hchar : NeZero (2 : K)] (hk : cf.k 
       linear_combination hx
     obtain hu | hu := hu
     · have hr0 : cf.r - 1 ≠ 0 := by
-        by_contra! h
+        by_contra h
         simp [hu, h] at hu0
       rw [hu] at hx
       rw [hu] at hy
@@ -1203,7 +1203,7 @@ theorem equation_exNormal_eyNormal [CharZero K]
   obtain ⟨ho, hi, hpq⟩ := mem_dom cf hp hq |>.mp hpq
   simp only [SingularE, P2.lift₂_mk] at hes
   have hp2 : p 2 ≠ 0 := by
-    contrapose! hes with hp2
+    contrapose hes with hp2
     simp [eDeno, hp2]
   obtain _ := cf.hr
   obtain _ := cf.hu
@@ -1232,14 +1232,14 @@ theorem nonsingular_exNormal_eyNormal [CharZero K]
   obtain ⟨p, q⟩ := pq
   induction p with | mk p hp
   induction q with | mk q hq
-  by_contra! hs
+  by_contra hs
   obtain hequation := equation_exNormal_eyNormal cf hk hpq hes
   obtain ⟨ho, hi, hpq⟩ := mem_dom cf hp hq |>.mp hpq
   obtain ⟨hux, hy⟩ := (singular_elliptic cf _ _).mp ⟨hequation, hs⟩
   obtain heq := (equation_elliptic cf _ _).mp hequation
   simp only [SingularE, P2.lift₂_mk] at hes
   have hp2 : p 2 ≠ 0 := by
-    contrapose! hes with hp2
+    contrapose hes with hp2
     simp [eDeno, hp2]
   obtain hx2 | hy : cf.r * (eNume cf p q / eDeno cf p q) + cf.u = 0 ∨ p 1 = 0 := by
     simpa [eyNormal, cf.hr, hk, hp2] using hy
@@ -1354,7 +1354,7 @@ theorem fPoint_eNormal [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K
   obtain ⟨ho, hi, hpq⟩ := mem_dom cf hp hq |>.mp hpq
   have hes : eDeno cf p q ≠ 0 := by simpa [SingularE] using hes
   have hp2 : p 2 ≠ 0 := by
-    contrapose! hes
+    contrapose hes
     simp [eDeno, hes]
   suffices P2.mk
     ![cf.r ^ 2 * (cf.u + cf.r) * (eNume cf p q / eDeno cf p q) ^ 2 +
@@ -1389,7 +1389,7 @@ theorem fChord_eNormal_singularAbc [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0
   obtain _ := cf.hu
   have heDeno0 : eDeno cf p q ≠ 0 := by simpa [SingularE] using hes
   have hp2 : p 2 ≠ 0 := by
-    contrapose! hes
+    contrapose hes
     simp [SingularE, eDeno, hes]
   have hpoint := hs.fPoint_eq cf (nonsingular_exNormal_eyNormal cf hk hmem hleft hright hes)
   have hpe := fPoint_eNormal cf hk hmem hleft hright hes
@@ -1419,7 +1419,7 @@ theorem fChord_eNormal_singularAbc [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0
   · rw [hq2] at hi hpq
     have hq1 : q 1 ^ 2 = - q 0 ^ 2 := by simpa [hq2] using hi'
     have hq0ne0 : q 0 ≠ 0 := by
-      by_contra! hq0
+      by_contra hq0
       suffices q = 0 from hq this
       ext i
       fin_cases i
@@ -1427,13 +1427,13 @@ theorem fChord_eNormal_singularAbc [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0
       · simpa [hq0] using hq1
       · exact hq2
     have hq1ne0 : q 1 ≠ 0 := by
-      contrapose! hq0ne0 with h
+      contrapose hq0ne0 with h
       simpa [h] using hq1
     have hDeno : eDeno cf p q = (cf.u + cf.r) ^ 2 * cf.r * q 0 * q 1 * p 2 := by
       simp_rw [eDeno, hq2]
       ring
     have hur0 : cf.u + cf.r ≠ 0 := by
-      contrapose! heDeno0 with h
+      contrapose heDeno0 with h
       simp [hDeno, h]
     have hNume : eNume cf p q =
         (2 * cf.u * cf.k * q 0 ^ 2 +
@@ -1499,10 +1499,10 @@ theorem fChord_eNormal_singularAbc [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0
     linear_combination 2 * cf.u * cf.k * hq02
   · simp only [Matrix.cons_val_one, Matrix.cons_val_zero, Matrix.cons_val]
     have hur : cf.u ^ 2 - cf.r ^ 2 ≠ 0 := by
-      contrapose! hq2 with hur
+      contrapose hq2 with hur
       simpa [hur, cf.hu] using hq02
     have hp1ne0 : p 1 ≠ 0 := by
-      contrapose! hur with hp1ne0
+      contrapose hur with hp1ne0
       simpa [hp1ne0, hl0, cf.hu, hk] using hp1'
     rw [← mul_left_inj' (show l * p 1 * (cf.u ^ 2 - cf.r ^ 2) ≠ 0 by
       simp [hl0, hp1ne0, hur] )]
@@ -1534,7 +1534,7 @@ theorem fChord_eNormal [DecidableEq K] [CharZero K] (hk : cf.k ≠ 0) {pq : P2 K
   obtain ⟨ho, hi, hpq⟩ := mem_dom cf hp hq |>.mp hmem
   have hes : eDeno cf p q ≠ 0 := by simpa [SingularE] using hes
   have hp2 : p 2 ≠ 0 := by
-    contrapose! hes
+    contrapose hes
     simp [eDeno, hes]
   by_cases hs : SingularAbc cf (eNume cf p q / eDeno cf p q) (eyNormal cf (P2.mk p hp, P2.mk q hq))
   · exact fChord_eNormal_singularAbc cf hk hp hq hmem hleft hright hes hs

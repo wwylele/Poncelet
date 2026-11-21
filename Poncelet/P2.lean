@@ -47,7 +47,7 @@ theorem mk_eq_mk' {p q : Fin 3 → K} (hp : p ≠ 0) (hq : q ≠ 0) :
   refine exists_congr (fun l ↦ ?_)
   suffices p = l • q → l ≠ 0 by simpa
   intro rfl
-  contrapose! hp with rfl
+  contrapose hp with rfl
   simp
 
 theorem mk'_eq_mk' [DecidableEq K] {p q : Fin 3 → K} {l : K} (hl : l ≠ 0) (h : p = l • q) :
@@ -61,7 +61,7 @@ theorem mk'_eq_mk' [DecidableEq K] {p q : Fin 3 → K} {l : K} (hl : l ≠ 0) (h
 theorem mk_eq_mk'_of_l [DecidableEq K] {p q : Fin 3 → K} (hp : p ≠ 0) (l : K) (h : p = l • q) :
     mk p hp = mk' q := by
   have hl : l ≠ 0 := by
-    contrapose! hp with hl
+    contrapose hp with hl
     simp [h, hl]
   rw [← mk'_eq]
   apply mk'_eq_mk' hl h
@@ -86,7 +86,7 @@ theorem mk_eq_mk_of_third_zero {p q : Fin 3 → K} (hp : p ≠ 0) (hq : q ≠ 0)
   classical
   by_cases hq1 : q 1 = 0
   · have hq0 : q 0 ≠ 0 := by
-      contrapose! hq
+      contrapose hq
       ext i
       fin_cases i
       · simpa using hq
@@ -185,7 +185,7 @@ theorem normalize_injective [DecidableEq K] :
         simpa [hp2, hp1, hq2, hq1, ite_apply] using congr($h 1)
       rw [mk_eq_mk']
       have hq0 : q 0 ≠ 0 := by
-        contrapose! hq with hq0
+        contrapose hq with hq0
         ext i
         fin_cases i
         · exact hq0

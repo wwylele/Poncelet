@@ -58,7 +58,7 @@ theorem iterate_next_eq_self_iff_of_isAlgClosed
       k_sq := by rw [hk'sq, ← sub_eq_add_neg]
     }
     have hk' : cf'.k ≠ 0 := by
-      by_contra! hk'
+      by_contra hk'
       rw [← sq_eq_zero_iff, cf'.k_sq] at hk'
       simp only [cf'] at hk'
       rw [← sq_eq_zero_iff, cf.k_sq] at hk

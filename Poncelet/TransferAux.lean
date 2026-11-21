@@ -26,11 +26,11 @@ theorem fChord_w_sub_c_eq_zero [DecidableEq K] [hchar : NeZero (2 : K)] {x y wx 
   obtain _ := cf.hu
   obtain hx := x_not_at_w cf hxy hpw hpnw
   have : cf.r ^ 2 * x - cf.u ^ 2 ≠ 0 := by
-    contrapose! hx
+    contrapose hx
     field_simp
     linear_combination hx
   have : cf.u ^ 2 - cf.r ^ 2 * x ≠ 0 := by
-    contrapose! this
+    contrapose this
     linear_combination -this
   suffices P2.mk (fChordNormal cf wx wy) _ = P2.mk (fChordNormal cf x y) _ by
     simpa [fChord, fChordRaw, hsxy, hwsxy]
@@ -41,7 +41,7 @@ theorem fChord_w_sub_c_eq_zero [DecidableEq K] [hchar : NeZero (2 : K)] {x y wx 
   have hdeno : -2 * cf.r ^ 2 * ((cf.u + cf.r) ^ 2 - 1) * (cf.r * x - cf.u) * y +
       (cf.r * x + cf.u) *
       (cf.r ^ 2 * (cf.u + cf.r) * x ^ 2 + 2 * cf.r * (1 - cf.r * (cf.u + cf.r)) * x + (cf.u + cf.r) * cf.u ^ 2) ≠ 0 := by
-    contrapose! hsxy with hdeno
+    contrapose hsxy with hdeno
     apply SingularAbc.mk cf hxy hdeno hc
   set deno := -2 * cf.r ^ 2 * ((cf.u + cf.r) ^ 2 - 1) * (cf.r * x - cf.u) * y +
       (cf.r * x + cf.u) *
@@ -134,17 +134,17 @@ theorem fChord_w_sub_c_ne_zero [DecidableEq K] [hchar : NeZero (2 : K)] {x y wx 
   obtain _ := cf.hu
   obtain hx := x_not_at_w cf hxy hpw hpnw
   have : cf.r ^ 2 * x - cf.u ^ 2 ≠ 0 := by
-    contrapose! hx
+    contrapose hx
     field_simp
     linear_combination hx
   have : cf.u ^ 2 - cf.r ^ 2 * x ≠ 0 := by
-    contrapose! this
+    contrapose this
     linear_combination -this
   have hinf1' : cf.r * x + cf.u ≠ 0 := by
-    contrapose! hc
+    contrapose hc
     simp [hc]
   have hinf2' : (cf.u + cf.r) ^ 2 * (cf.r * x - cf.u) ^ 2 + cf.r * cf.u * x * 4 ≠ 0 := by
-    contrapose! hc
+    contrapose hc
     linear_combination (cf.r * x + cf.u) * hc
   set inf2 := (cf.u + cf.r) ^ 2 * (cf.r * x - cf.u) ^ 2 + cf.r * cf.u * x * 4
   obtain ⟨heq, hnonsingular⟩ := (nonsingular_elliptic cf _ _).mp hxy
@@ -217,11 +217,11 @@ theorem fChord_w_sub_singularAbc_not_singularAbc [DecidableEq K] [hchar : NeZero
     fChord cf (.some _ _ hwxy) = fChord cf (.some _ _ hxy) := by
   obtain h2 := hchar.out
   have h4 : (4 : K) ≠ 0 := by
-    contrapose! h2
+    contrapose h2
     have : (2 : K) * 2 = 0 := by linear_combination h2
     simpa using this
   have h8 : (8 : K) ≠ 0 := by
-    contrapose! h2
+    contrapose h2
     have : (2 : K) * 2 * 2 = 0 := by linear_combination h2
     simpa using this
   obtain _ := cf.hr
@@ -229,16 +229,16 @@ theorem fChord_w_sub_singularAbc_not_singularAbc [DecidableEq K] [hchar : NeZero
   obtain hx := x_not_at_w cf hxy hpw hpnw
   have hk : cf.k ≠ 0 := hsxy.k_ne_zero cf hxy
   have : cf.r ^ 2 * x - cf.u ^ 2 ≠ 0 := by
-    contrapose! hx
+    contrapose hx
     field_simp
     linear_combination hx
   have : cf.u ^ 2 - cf.r ^ 2 * x ≠ 0 := by
-    contrapose! this
+    contrapose this
     linear_combination -this
   rw [w_sub cf hxy hx, Point.some.injEq] at hwxyeq
   obtain ⟨hwx, hwy⟩ := hwxyeq
   have hur : cf.u + cf.r ≠ 0 := by
-    contrapose! hur
+    contrapose hur
     linear_combination (cf.u - cf.r) * hur
   have hy : y = (cf.u - cf.r) * (cf.r * ((cf.u + cf.r) ^ 2 - 2) * x - cf.u * (cf.u + cf.r) ^ 2) /
       (-2 * cf.r ^ 2 * (cf.u + cf.r)) := by
@@ -356,7 +356,7 @@ theorem fChord_w_sub_singularAbc_not_singularAbc_u_eq_r [DecidableEq K] [hchar :
     fChord cf (.some _ _ hwxy) = fChord cf (.some _ _ hxy) := by
   obtain h2 := hchar.out
   have h4 : (4 : K) ≠ 0 := by
-    contrapose! h2
+    contrapose h2
     have : (2 : K) * 2 = 0 := by linear_combination h2
     simpa using this
   obtain _ := cf.hr
@@ -364,11 +364,11 @@ theorem fChord_w_sub_singularAbc_not_singularAbc_u_eq_r [DecidableEq K] [hchar :
   obtain hx := x_not_at_w cf hxy hpw hpnw
   have hk : cf.k ≠ 0 := hsxy.k_ne_zero cf hxy
   have : cf.r ^ 2 * x - cf.u ^ 2 ≠ 0 := by
-    contrapose! hx
+    contrapose hx
     field_simp
     linear_combination hx
   have : cf.u ^ 2 - cf.r ^ 2 * x ≠ 0 := by
-    contrapose! this
+    contrapose this
     linear_combination -this
   rw [w_sub cf hxy hx, Point.some.injEq] at hwxyeq
   obtain ⟨hwx, hwy⟩ := hwxyeq
@@ -421,11 +421,11 @@ theorem f_w_sub_singularAbc [DecidableEq K] [CharZero K] {x y : K}
   obtain _ := cf.hu
   obtain hx := x_not_at_w cf hxy hpw hpnw
   have : cf.r ^ 2 * x - cf.u ^ 2 ≠ 0 := by
-    contrapose! hx
+    contrapose hx
     field_simp
     linear_combination hx
   have : cf.u ^ 2 - cf.r ^ 2 * x ≠ 0 := by
-    contrapose! this
+    contrapose this
     linear_combination -this
   suffices fPoint cf (w cf - Point.some _ _ hxy) =
       P2.lift₂ (fun p q hp hq ↦ P2.mk' (rPoint' cf p q)) _
@@ -438,7 +438,7 @@ theorem f_w_sub_singularAbc [DecidableEq K] [CharZero K] {x y : K}
     pow_eq_zero_iff, cf.hu, or_self, hk, hur, Matrix.cons_val_zero, Matrix.cons_val_one,
     sub_neg_eq_add]
   have huradd : cf.u + cf.r ≠ 0 := by
-    contrapose! hur
+    contrapose hur
     linear_combination (cf.u - cf.r) * hur
   obtain hy := hsxy.xy_linear cf hxy
   have hy : y = -(cf.u - cf.r) * (cf.r * ((cf.u + cf.r) ^ 2 - 2) * x - cf.u * (cf.u + cf.r) ^ 2) /
@@ -680,18 +680,18 @@ theorem f_w_sub_not_singularAbc_p2 [DecidableEq K] [hchar : NeZero (2 : K)]
     f cf (w cf - (.some _ _ hxy)) = rPoint cf (f cf (.some _ _ hxy)) := by
   obtain h2 := hchar.out
   have h4 : (4 : K) ≠ 0 := by
-    contrapose! h2
+    contrapose h2
     have : (2 : K) * 2 = 0 := by linear_combination h2
     simpa using this
   obtain _ := cf.hr
   obtain _ := cf.hu
   obtain hx := x_not_at_w cf hxy hpw hpnw
   have : cf.r ^ 2 * x - cf.u ^ 2 ≠ 0 := by
-    contrapose! hx
+    contrapose hx
     field_simp
     linear_combination hx
   have : cf.u ^ 2 - cf.r ^ 2 * x ≠ 0 := by
-    contrapose! this
+    contrapose this
     linear_combination -this
   suffices fPoint cf (w cf - Point.some _ _ hxy) =
       P2.lift₂ (fun p q hp hq ↦ P2.mk' (rPoint' cf p q)) _
@@ -701,7 +701,7 @@ theorem f_w_sub_not_singularAbc_p2 [DecidableEq K] [hchar : NeZero (2 : K)]
     simpa [fChordNormal, huxr] using hp2
   obtain ⟨heq, hnonsingular⟩ := (nonsingular_elliptic cf _ _).mp hxy
   have hur0 : cf.u + cf.r ≠ 0 := by
-    contrapose! hsxy with hur0
+    contrapose hsxy with hur0
     have hx0 : x = 0 := by simpa [hur0, cf.hr, cf.hu, h4] using huxr2
     have hy0 : y = 0 := by simpa [cf.hr, hx0] using heq
     apply SingularAbc.mk cf hxy
@@ -726,7 +726,7 @@ theorem f_w_sub_not_singularAbc_p2 [DecidableEq K] [hchar : NeZero (2 : K)]
     · linear_combination -hy
     · linear_combination (cf.r * x + cf.u) * huxr2
   have hur1 : (cf.u + cf.r) ^ 2 - 1 ≠ 0 := by
-    by_contra! hur1
+    by_contra hur1
     have hx: cf.r ^ 2 * (cf.u + cf.r) * x ^ 2 +
         2 * cf.r * (1 - cf.r * (cf.u + cf.r)) * x + (cf.u + cf.r) * cf.u ^ 2 = 0 := by
       simpa [hur1, huxr] using hy
@@ -745,7 +745,7 @@ theorem f_w_sub_not_singularAbc_p2 [DecidableEq K] [hchar : NeZero (2 : K)]
     rw [← sq_eq_zero_iff.ne, cf.k_sq]
     exact hur1
   have hrxmu : cf.r * x - cf.u ≠ 0 := by
-    by_contra! hrxmu
+    by_contra hrxmu
     have : x = 0 := by simpa [hrxmu, cf.hr, cf.hu, h4] using huxr2
     simp [this, cf.hu] at hrxmu
   have hy : y = -(cf.r * x + cf.u) * (cf.r ^ 2 * (cf.u + cf.r) * x ^ 2 +
@@ -760,7 +760,7 @@ theorem f_w_sub_not_singularAbc_p2 [DecidableEq K] [hchar : NeZero (2 : K)]
     neg_add_rev, neg_neg]
   refine P2.mk'_eq_mk'_of_third_zero _ ?_ ?_ ?_ ?_
   · simp only [Fin.isValue, Matrix.cons_val_one, Matrix.cons_val_zero]
-    contrapose! hsxy with h1
+    contrapose hsxy with h1
     apply SingularAbc.mk cf hxy
     · linear_combination -h1
     · linear_combination (cf.r * x + cf.u) * huxr2
@@ -819,11 +819,11 @@ theorem f_w_sub_normal [DecidableEq K] [hchar : NeZero (2 : K)]
   obtain _ := cf.hu
   obtain hx := x_not_at_w cf hxy hpw hpnw
   have : cf.r ^ 2 * x - cf.u ^ 2 ≠ 0 := by
-    contrapose! hx
+    contrapose hx
     field_simp
     linear_combination hx
   have : cf.u ^ 2 - cf.r ^ 2 * x ≠ 0 := by
-    contrapose! this
+    contrapose this
     linear_combination -this
   suffices fPoint cf (w cf - Point.some _ _ hxy) =
       P2.lift₂ (fun p q hp hq ↦ P2.mk' (rPoint' cf p q)) _

@@ -222,7 +222,7 @@ def fPoint [hchar : NeZero (2 : K)] (p : (elliptic cf).Point) : P2 K :=
     by_cases! hx : cf.r * x + cf.u ≠ 0
     · simp [fPointRaw, hx]
     suffices fPointRaw cf (.some _ _ hxy) 1 ≠ 0 by
-      contrapose! this
+      contrapose this
       simp [this]
     suffices cf.k ≠ 0 ∧ y ≠ 0 by simpa [fPointRaw, cf.hr, hchar.out]
     grind
@@ -367,7 +367,7 @@ theorem SingularAbc.rx_add_u_ne_zero [DecidableEq K] [hchar : NeZero (2 : K)] {x
   obtain h2 := hchar.out
   obtain _ := cf.hr
   have : (4 : K) ≠ 0 := by
-    contrapose! h2
+    contrapose h2
     have : (2 : K) * 2 = 0 := by linear_combination h2
     simpa using this
   obtain ha := h.a_eq_zero
@@ -506,7 +506,7 @@ theorem SingularAbc.k_ne_zero [DecidableEq K] [hchar : NeZero (2 : K)] {x y : K}
     (h : SingularAbc cf x y)
     (hxy : (elliptic cf).Nonsingular x y) :
     cf.k ≠ 0 := by
-  by_contra! hk
+  by_contra hk
   have hur : (cf.u + cf.r) ^ 2 = 1 := by
     obtain hk2 := congr($hk ^ 2)
     simpa [cf.k_sq, sub_eq_zero] using hk2
@@ -524,7 +524,7 @@ theorem SingularAbc.fPointRaw_eq [DecidableEq K] [hchar : NeZero (2 : K)] {x y :
       2 * cf.r * x * ((cf.u + cf.r) ^ 2 - 1) / (cf.u + cf.r) ^ 2 * (2 * cf.u)] := by
   obtain h2 := hchar.out
   have : (4 : K) ≠ 0 := by
-    contrapose! h2
+    contrapose h2
     have : (2 : K) * 2 = 0 := by linear_combination h2
     simpa using this
   suffices
@@ -573,7 +573,7 @@ theorem SingularAbc.x_eq_zero_of_casePos [DecidableEq K] [hchar : NeZero (2 : K)
     x = 0 := by
   obtain h2 := hchar.out
   have h4 : (4 : K) ≠ 0 := by
-    contrapose! h2
+    contrapose h2
     have : (2 : K) * 2 = 0 := by linear_combination h2
     simpa using this
   simpa [hur, cf.hu, cf.hr, h4] using h.c_factor_eq_zero cf hxy
@@ -608,7 +608,7 @@ theorem SingularAbc.fPoint_eq [DecidableEq K] [hchar : NeZero (2 : K)]
       4 * cf.u ^ 2 * cf.k] (by
     obtain h2 := hchar.out
     have h4 : (4 : K) ≠ 0 := by
-      contrapose! h2
+      contrapose h2
       have : (2 : K) * 2 = 0 := by linear_combination h2
       simpa using this
     simp [cf.hu, h.k_ne_zero cf hxy, h2, h4]
@@ -671,21 +671,21 @@ theorem SingularAbc.fChordRaw_ne_zero [DecidableEq K] [hchar : NeZero (2 : K)] {
     fChordRaw cf (Point.some _ _ hxy) ≠ 0 := by
   obtain h2 := hchar.out
   have h4 : (4 : K) ≠ 0 := by
-    contrapose! h2
+    contrapose h2
     have : (2 : K) * 2 = 0 := by linear_combination h2
     simpa using this
   have h8 : (8 : K) ≠ 0 := by
-    contrapose! h2
+    contrapose h2
     have : (2 : K) * 2 * 2 = 0 := by linear_combination h2
     simpa using this
   obtain hk := h.k_ne_zero cf hxy
   by_cases hur : cf.u ^ 2 - cf.r ^ 2 = 0
   · suffices fChordRaw cf (Point.some _ _ hxy) 0 ≠ 0 by
-      contrapose! this
+      contrapose this
       simp [this]
     simp [fChordRaw, h, hk, cf.hu, hur, h2, h4]
   · suffices fChordRaw cf (Point.some _ _ hxy) 2 ≠ 0 by
-      contrapose! this
+      contrapose this
       simp [this]
     simp [fChordRaw, h, hk, cf.hu, hur, h8]
 
@@ -818,14 +818,14 @@ theorem mapsTo_f [DecidableEq K] [hchar : NeZero (2 : K)] : Set.MapsTo (f cf) Se
 theorem mapsTo_f₀ [DecidableEq K] [hchar : NeZero (2 : K)] (hk : cf.k ≠ 0) :
     Set.MapsTo (f cf) Set.univ (dom₀ cf) := by
   have hur : cf.u + cf.r ≠ 1 := by
-    contrapose! hk
+    contrapose hk
     rw [← sq_eq_zero_iff, cf.k_sq, hk]
     simp
   have hursub : cf.u + cf.r - 1 ≠ 0 := by
     rw [sub_eq_zero.ne]
     exact hur
   have hur' : cf.u + cf.r ≠ -1 := by
-    contrapose! hk
+    contrapose hk
     rw [← sq_eq_zero_iff, cf.k_sq, hk]
     simp
   have huradd : cf.u + cf.r + 1 ≠ 0 := by
@@ -1026,7 +1026,7 @@ theorem slope_w [DecidableEq K] [hchar : NeZero (2 : K)] :
   obtain _ := cf.hr
   obtain h2 := hchar.out
   have h11 : (1 : K) + 1 ≠ 0 := by
-    contrapose! h2
+    contrapose h2
     linear_combination h2
   rw [slope_of_Y_ne rfl (by
     suffices cf.u ^ 2 / cf.r ^ 3 ≠ -(cf.u ^ 2 / cf.r ^ 3) by simpa
@@ -1043,7 +1043,7 @@ theorem addX_w_w [DecidableEq K] [hchar : NeZero (2 : K)] :
   obtain _ := cf.hr
   obtain h2 := hchar.out
   have h4 : (4 : K) ≠ 0 := by
-    contrapose! h2
+    contrapose h2
     have : (2 : K) * 2 = 0 := by linear_combination h2
     simpa using this
   rw [slope_w cf]
@@ -1059,11 +1059,11 @@ theorem addY_w_w [DecidableEq K] [hchar : NeZero (2 : K)] :
       - 2 * (cf.r ^ 2 + cf.u ^ 2)) / (8 * cf.r ^ 3) := by
   obtain h2 := hchar.out
   have h4 : (4 : K) ≠ 0 := by
-    contrapose! h2
+    contrapose h2
     have : (2 : K) * 2 = 0 := by linear_combination h2
     simpa using this
   have h8 : (8 : K) ≠ 0 := by
-    contrapose! h2
+    contrapose h2
     have : (2 : K) * 2 * 2 = 0 := by linear_combination h2
     simpa using this
   rw [slope_w cf]
@@ -1199,7 +1199,7 @@ theorem x_not_at_w [hchar : NeZero (2 : K)] {x y : K} (hxy : (elliptic cf).Nonsi
   obtain _ := cf.hu
   obtain ⟨heq, hnonsingular⟩ := (nonsingular_elliptic cf _ _).mp hxy
   unfold w at hpw hpnw
-  by_contra! h
+  by_contra h
   have h1 : y ≠ cf.u ^ 2 / cf.r ^ 3 := by simpa [h] using hpw
   have h2 : y ≠ -(cf.u ^ 2 / cf.r ^ 3) := by
     rw [WeierstrassCurve.Affine.Point.neg_some] at hpnw
@@ -1236,7 +1236,7 @@ theorem g_eq_neg_of_r_eq_neg [hchar : NeZero (2 : K)] [DecidableEq K] (cf' : Con
 theorem o_sub_w [DecidableEq K] [hchar : NeZero (2 : K)] : o cf - w cf = g cf := by
   obtain h2 := hchar.out
   have h4 : (4 : K) ≠ 0 := by
-    contrapose! h2
+    contrapose h2
     have : (2 : K) * 2 = 0 := by linear_combination h2
     simpa using this
   obtain _ := cf.hr
@@ -1249,7 +1249,7 @@ theorem o_sub_w [DecidableEq K] [hchar : NeZero (2 : K)] : o cf - w cf = g cf :=
       exact hur
     have hy : cf.u ^ 2 / cf.r ^ 3 ≠ (elliptic cf).negY 1 cf.r⁻¹ := by
       simp only [negY, elliptic, mul_one, sub_zero, ne_eq, hur]
-      by_contra! h
+      by_contra h
       field_simp at h
       contrapose! h2
       have : (1 : K) = 1 := rfl
@@ -1260,12 +1260,12 @@ theorem o_sub_w [DecidableEq K] [hchar : NeZero (2 : K)] : o cf - w cf = g cf :=
     field_simp
     grind
   · have hx : cf.u ^ 2 / cf.r ^ 2 ≠ 1 := by
-      contrapose! hur
+      contrapose hur
       field_simp at hur
       exact hur
     have : cf.u ^ 2 - cf.r ^ 2 ≠ 0 := by
       rw [sub_eq_zero.ne]
-      contrapose! hx
+      contrapose hx
       field_simp
       rw [hx]
     rw [WeierstrassCurve.Affine.Point.add_of_X_ne hx]

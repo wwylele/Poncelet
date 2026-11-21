@@ -159,7 +159,7 @@ theorem encard_dom_fix1_le [hchar : NeZero (2 : K)] (p : P2 K) :
       rw [Set.eq_empty_iff_forall_notMem]
       intro pq
       obtain ⟨p', q⟩ := pq
-      by_contra! hpq
+      by_contra hpq
       obtain ⟨hpq, rfl⟩ : ⟨p', q⟩ ∈ dom cf ∧ p' = P2.mk p hp := by simpa using hpq
       have hp0 : p 0 = 0 := by simpa [OuterCircle, hp2, hp1] using hpq.1
       suffices p = 0 from hp this
@@ -199,7 +199,7 @@ theorem encard_dom_fix1_le [hchar : NeZero (2 : K)] (p : P2 K) :
         ∧ p 0 * q0 = p 2 * q2 := by
       simpa using hpq
     have hq2 : q2 ≠ 0 := by
-      by_contra! hq2
+      by_contra hq2
       suffices ![q0, 0, q2] = 0 from hq this
       suffices q0 = 0 by simpa [hq2]
       simpa [hq2] using hi
@@ -213,7 +213,7 @@ theorem encard_dom_fix1_le [hchar : NeZero (2 : K)] (p : P2 K) :
       field_simp
       linear_combination -hpq
     have hp0 : p 0 ≠ 0 := by
-      by_contra! hp0
+      by_contra hp0
       suffices p = 0 from hp this
       have hp20 : p 2 = 0 := by simpa [hp0] using hp2'
       simp [hp20] at hp2
@@ -258,7 +258,7 @@ theorem encard_dom_fix1_le [hchar : NeZero (2 : K)] (p : P2 K) :
         rw [← mul_left_inj' hq'1]
         linear_combination h
       have hp1 : p 1 ≠ 0 := by
-        by_contra! hp1
+        by_contra hp1
         simp [hp0, hp1, hq'1, ← hp02] at h
       right
       rw [P2.mk_eq_mk']
@@ -275,11 +275,11 @@ theorem encard_dom_fix1_le [hchar : NeZero (2 : K)] (p : P2 K) :
   let poly : Polynomial K := Polynomial.C (p 2 ^ 2 - p 0 ^ 2) * Polynomial.X ^ 2
     - Polynomial.C (2 * p 0 * p 1) * Polynomial.X + Polynomial.C (p 2 ^ 2 - p 1 ^ 2)
   have hpoly : poly ≠ 0 := by
-    by_contra!
+    by_contra
     unfold poly at this
-    have ha : p 2 ^ 2 - p 0 ^ 2 = 0 := by simpa [-map_sub] using congr(Polynomial.coeff $this 2)
-    have hb : 2 * p 0 * p 1 = 0 := by simpa [-map_sub] using congr(Polynomial.coeff $this 1)
-    have hc : p 2 ^ 2 - p 1 ^ 2 = 0 := by simpa [-map_sub] using congr(Polynomial.coeff $this 0)
+    have ha : p 2 ^ 2 - p 0 ^ 2 = 0 := by simpa [-map_sub] using congr(($this).coeff 2)
+    have hb : 2 * p 0 * p 1 = 0 := by simpa [-map_sub] using congr(($this).coeff 1)
+    have hc : p 2 ^ 2 - p 1 ^ 2 = 0 := by simpa [-map_sub] using congr(($this).coeff 0)
     obtain h0 | h1 : p 0 = 0 ∨ p 1 = 0 := by simpa [hchar.out] using hb
     · refine hp2 ?_
       simpa [h0] using ha
@@ -305,7 +305,7 @@ theorem encard_dom_fix1_le [hchar : NeZero (2 : K)] (p : P2 K) :
   obtain ⟨hpq, rfl⟩ : (p', q) ∈ dom cf ∧ p' = P2.mk p hp := by simpa using h
   induction q with | mk q hq
   have hq1 : q 1 ≠ 0 := by
-    contrapose! hq1
+    contrapose hq1
     have hqeq : ![q 0, 0, q 2] = q := by
       ext i
       fin_cases i
@@ -349,7 +349,7 @@ theorem encard_dom_fix2_le [hchar : NeZero (2 : K)] (q : P2 K) :
         q 0 ^ 2 + q 1 ^ 2 = q 2 ^ 2 ∧ p0 * q 0 + p1 * q 1 = 0 := by
       simpa using hmem
     have hp1ne0 : p1 ≠ 0 := by
-      by_contra! hp1
+      by_contra hp1
       suffices ![p0, p1, 0] = 0 from hp this
       ext i
       fin_cases i
@@ -366,7 +366,7 @@ theorem encard_dom_fix2_le [hchar : NeZero (2 : K)] (q : P2 K) :
         linear_combination -hpq
       simpa [this] using hi.symm
     have hq1ne0 : q 1 ≠ 0 := by
-      by_contra! hq1
+      by_contra hq1
       suffices q = 0 from hq this
       ext i
       fin_cases i
@@ -436,7 +436,7 @@ theorem encard_dom_fix2_le [hchar : NeZero (2 : K)] (q : P2 K) :
       rw [hq1] at hi hpq
       have hq02 : q 0 ^ 2 = q 2 ^ 2 := by simpa using hi
       have hq2ne0 : q 2 ≠ 0 := by
-        by_contra! hq2
+        by_contra hq2
         suffices q = 0 from hq this
         ext i
         fin_cases i
@@ -482,7 +482,7 @@ theorem encard_dom_fix2_le [hchar : NeZero (2 : K)] (q : P2 K) :
     rw [hq1] at hi hpq
     have hq02 : q 0 ^ 2 = q 2 ^ 2 := by simpa using hi
     have hq2ne0 : q 2 ≠ 0 := by
-      by_contra! hq2
+      by_contra hq2
       suffices q = 0 from hq this
       ext i
       fin_cases i
@@ -490,9 +490,9 @@ theorem encard_dom_fix2_le [hchar : NeZero (2 : K)] (q : P2 K) :
       · simpa using hq1
       · simpa using hq2
     have hpoly : poly ≠ 0 := by
-      contrapose! hq2ne0 with h
+      contrapose hq2ne0 with h
       unfold poly at h
-      simpa [-map_pow] using congr(Polynomial.coeff $h 0)
+      simpa [-map_pow] using congr(($h).coeff 0)
     have hp02 : p 2 = q 0 * p 0 / q 2 := by
       field_simp
       linear_combination -hpq
@@ -503,7 +503,7 @@ theorem encard_dom_fix2_le [hchar : NeZero (2 : K)] (q : P2 K) :
         field_simp at ho
         linear_combination ho
     have hp1ne0 : p 1 ≠ 0 := by
-      by_contra! hp1
+      by_contra hp1
       have hp0 : p 0 = 0 := by simpa [hy0, hp1] using this
       suffices p = 0 from hp this
       ext i
@@ -550,15 +550,15 @@ theorem encard_dom_fix2_le [hchar : NeZero (2 : K)] (q : P2 K) :
   rw [mem_dom] at hpq
   obtain ⟨ho, hi, hpq⟩ := hpq
   have hpoly : poly ≠ 0 := by
-    by_contra! hpoly
+    by_contra hpoly
     unfold poly at hpoly
     have ha : q 0 ^ 2 + q 1 ^ 2 = 0 := by
-      simpa [-map_add] using congr(Polynomial.coeff $hpoly 2)
+      simpa [-map_add] using congr(($hpoly).coeff 2)
     have hb : 2 * cf.u * q 1 ^ 2 + 2 * q 0 * q 2 = 0 := by
       set guard := 2 * cf.u * q 1 ^ 2 + 2 * q 0 * q 2
-      simpa [-map_add] using congr(Polynomial.coeff $hpoly 1)
+      simpa [-map_add] using congr(($hpoly).coeff 1)
     have hc : (cf.u ^ 2 - cf.r ^ 2) * q 1 ^ 2 + q 2 ^ 2 = 0 := by
-      simpa [-map_add] using congr(Polynomial.coeff $hpoly 0)
+      simpa [-map_add] using congr(($hpoly).coeff 0)
     have hq2 : q 2 = 0 := by
       simpa [ha] using hi.symm
     have hq1 : q 1 = 0 := by simpa [hq2, cf.hu, hchar.out] using hb
@@ -569,7 +569,7 @@ theorem encard_dom_fix2_le [hchar : NeZero (2 : K)] (q : P2 K) :
     · simpa using hq1
     · simpa using hq2
   have hp2 : p 2 ≠ 0 := by
-    contrapose! hp2
+    contrapose hp2
     have hqeq : ![p 0, p 1, 0] = p := by
       ext i
       fin_cases i
@@ -624,13 +624,13 @@ theorem rPoint'_rPoint' [DecidableEq K] [hchar : NeZero (2 : K)]
   by_cases! hq2 : q 2 = 0
   · by_cases hp2 : p 2 = 0
     · have hq1 : q 1 ≠ 0 := by
-        by_contra! hq1
+        by_contra hq1
         have : q 0 = 0 := by simpa [hq2, hq1] using hi
         clear h
         contrapose! hq
         ext n; fin_cases n <;> assumption
       have hp0 : p 0 ≠ 0 := by
-        by_contra! hp0
+        by_contra hp0
         have : p 1 = 0 := by simpa [hp0, hp2, hq1] using hpq
         clear h
         contrapose! hp
@@ -662,7 +662,7 @@ theorem rPoint'_ne_zero [DecidableEq K] [hchar : NeZero (2 : K)]
     {p q : Fin 3 → K} (hp : p ≠ 0) (hq : q ≠ 0)
     (hpq : ⟨P2.mk p hp, P2.mk q hq⟩ ∈ dom cf) : rPoint' cf p q ≠ 0 := by
   unfold rPoint'
-  by_contra! h0
+  by_contra h0
   by_cases! hq2 : q 2 = 0
   · by_cases! hp2 : p 2 = 0
     · obtain ⟨_, _, hq1⟩ : _ ∧ _ ∧ q 1 = 0 := by simpa [cf.hu, hp2, hq2, hchar.out] using h0
@@ -855,13 +855,13 @@ theorem rChord'_ne_zero [DecidableEq K] [hchar : NeZero (2 : K)]
     · suffices q 0 = 0 → q 1 = 0 → q 2 ≠ 0 by simpa [hp0]
       intro hq2 hq0
       clear h
-      contrapose! hq with hq1
+      contrapose hq with hq1
       ext n; fin_cases n <;> assumption
     have hp1 : p 1 ≠ 0 := by
-      contrapose! hp0
+      contrapose hp0
       simpa [hp0] using h0'
     have hp2 : p 2 ≠ 0 := by
-      contrapose! hp0
+      contrapose hp0
       simpa [hp0, cf.hu, hchar.out] using hxy
     by_cases! hq2 : q 2 = 0
     · simp [hp0, hq2, hp1, hp2, hchar.out]
@@ -891,10 +891,10 @@ theorem rChord'_rChord' [DecidableEq K] [hchar : NeZero (2 : K)] {p q : Fin 3 �
       all_goals
       simp [hp0]
     have hp1 : p 1 ≠ 0 := by
-      contrapose! hp0
+      contrapose hp0
       simpa [hp0] using h0'
     have hp2 : p 2 ≠ 0 := by
-      contrapose! hp0
+      contrapose hp0
       simpa [hp0, cf.hu, hchar.out] using h0
     by_cases! hq2 : q 2 = 0
     · have hp2 : p 2 ≠ 0 := by grind
@@ -902,7 +902,7 @@ theorem rChord'_rChord' [DecidableEq K] [hchar : NeZero (2 : K)] {p q : Fin 3 �
       suffices ∃ l, ![p 1, -p 0, 0] = l • q by simpa [hp0, hq2, hp2, hp1, hchar.out]
       have hq0 : q 0 ≠ 0 := by
         clear h
-        contrapose! hq with hq0
+        contrapose hq with hq0
         have hq1 : q 1 = 0 := by simpa [hq0, hp1] using hq12
         ext n; fin_cases n <;> assumption
       use p 1 / q 0
@@ -945,7 +945,7 @@ theorem rChord'_eq_self_special [DecidableEq K] [hchar : NeZero (2 : K)] {p q : 
       · have heq : p 0 * q 0 = p 2 * q 2 := by simpa [hq1] using heq
         have : q 0 ^ 2 = q 2 ^ 2 := by simpa [hq1] using hi
         have hq2 : q 2 ≠ 0 := by
-          contrapose! hq with hq2
+          contrapose hq with hq2
           ext i
           fin_cases i
           · simpa [hq2] using this
@@ -957,7 +957,7 @@ theorem rChord'_eq_self_special [DecidableEq K] [hchar : NeZero (2 : K)] {p q : 
       · grind
     · intro h
       have hp2 : p 2 ≠ 0 := by
-        contrapose! hp with hp2
+        contrapose hp with hp2
         ext i
         fin_cases i
         · exact hp0
@@ -981,7 +981,7 @@ theorem rChord'_eq_self_special [DecidableEq K] [hchar : NeZero (2 : K)] {p q : 
             2 * p 0 * p 1 * p 2 = l * q 2 by
           simpa [funext_iff, Fin.forall_fin_succ]
         have hq0 : q 0 ≠ 0 := by
-          contrapose! hq
+          contrapose hq
           ext i
           fin_cases i
           · exact hq
@@ -1021,7 +1021,7 @@ theorem rChord'_eq_self_normal [DecidableEq K] [hchar : NeZero (2 : K)] {p q : F
       grind
   · simp only [h_case2, iff_false]
     simp_rw [funext_iff, Fin.forall_fin_succ]
-    by_contra! h
+    by_contra h
     obtain ⟨l, hl⟩ := h
     by_cases hq2 : q 2 = 0
     · by_cases hq0 : q 0 = 0
@@ -1111,7 +1111,7 @@ theorem isAffineLine_rChord [DecidableEq K] {pq : P2 K × P2 K}
   by_cases h0 : rChord' cf p q = 0
   · suffices P2.mk ![(1 : K), 0, 0] _ ≠ P2.mk ![0, 0, 1] _ by
       simpa [rChord, P2.IsAffineLine, P2.mk', h0]
-    by_contra! h
+    by_contra h
     rw [P2.mk_eq_mk] at h
     obtain ⟨l, hl0, hl⟩ := h
     simpa [hl0] using congr($hl 2).symm
@@ -1122,7 +1122,7 @@ theorem isAffineLine_rChord [DecidableEq K] {pq : P2 K × P2 K}
   · simp only [hs, ↓reduceIte]
     by_cases hp0 : p 0 = 0
     · simp only [hp0, ↓reduceIte]
-      contrapose! hq
+      contrapose hq
       simp only [P2.IsAffineLine, Decidable.not_not]
       rw [P2.mk_eq_mk'] at hq ⊢
       obtain ⟨l, hl⟩ := hq
@@ -1134,12 +1134,12 @@ theorem isAffineLine_rChord [DecidableEq K] {pq : P2 K × P2 K}
       · simpa using congr($hl 2)
     suffices P2.mk ![p 1, -p 0, 0] _ ≠ P2.mk ![0, 0, 1] _ by
       simpa [hp0, hq2]
-    by_contra! h
+    by_contra h
     rw [P2.mk_eq_mk] at h
     obtain ⟨l, hl0, hl⟩ := h
     simpa [hl0] using congr($hl 2).symm
   · simp only [hs, ↓reduceIte]
-    by_contra! h
+    by_contra h
     rw [P2.mk_eq_mk'] at h
     obtain ⟨l, h⟩ := h
     have hx : 2 * p 0 * q 2 - (2 * cf.u * p 0 + cf.r ^ 2 * p 2 - cf.u ^ 2 * p 2) * q 0 = 0 := by
@@ -1239,7 +1239,7 @@ theorem next_eq_self' [DecidableEq K] [hchar : NeZero (2 : K)]
   obtain _ := cf.hr
   obtain hchar := hchar.out
   have h4 : (4 : K) ≠ 0 := by
-    suffices (2 * 2 : K) ≠ 0 by contrapose! this; linear_combination this
+    suffices (2 * 2 : K) ≠ 0 by contrapose this; linear_combination this
     simpa using hchar
   rw [next_eq_self cf h]
   obtain ⟨p, q⟩ := pq
@@ -1258,14 +1258,14 @@ theorem next_eq_self' [DecidableEq K] [hchar : NeZero (2 : K)]
   constructor
   · rintro ⟨h1, h2⟩
     have hp2 : p 2 ≠ 0 := by
-      contrapose! hq with hp2
+      contrapose hq with hp2
       rw [hp2] at h1 heq
       rw [zero_pow (by simp), ← eq_neg_iff_add_eq_zero] at h1
       rw [zero_mul, ← eq_neg_iff_add_eq_zero] at heq
       have heq : p 0 ^ 2 * q 0 ^ 2 = p 1 ^ 2 * q 1 ^ 2 := by linear_combination congr($heq ^ 2)
       rw [h1, neg_mul_comm] at heq
       have : p 1 ^ 2 ≠ 0 := by
-        contrapose! hp
+        contrapose hp
         ext i
         fin_cases i
         · simpa [hp] using h1
@@ -1280,14 +1280,14 @@ theorem next_eq_self' [DecidableEq K] [hchar : NeZero (2 : K)]
       · exact hq1
       · exact hq2
     have hq2 : q 2 ≠ 0 := by
-      contrapose! hp2 with hq2
+      contrapose hp2 with hq2
       rw [hq2] at hi heq
       rw [zero_pow (by simp), ← eq_neg_iff_add_eq_zero] at hi
       rw [mul_zero, ← eq_neg_iff_add_eq_zero] at heq
       have heq : p 0 ^ 2 * q 0 ^ 2 = p 1 ^ 2 * q 1 ^ 2 := by linear_combination congr($heq ^ 2)
       rw [hi, ← neg_mul_comm] at heq
       have : q 1 ^ 2 ≠ 0 := by
-        contrapose! hq
+        contrapose hq
         ext i
         fin_cases i
         · simpa [hq] using hi
@@ -1361,7 +1361,7 @@ theorem next_eq_self' [DecidableEq K] [hchar : NeZero (2 : K)]
     · constructor
       · simp [hp1, hp2]
       · have hp0 : p 0 ≠ 0 := by
-          contrapose! hp
+          contrapose hp
           ext i
           fin_cases i
           · exact hp
@@ -1371,7 +1371,7 @@ theorem next_eq_self' [DecidableEq K] [hchar : NeZero (2 : K)]
     · constructor
       · simp [hp1, hp2]
       · have hp0 : p 0 ≠ 0 := by
-          contrapose! hp
+          contrapose hp
           ext i
           fin_cases i
           · exact hp
@@ -1407,7 +1407,7 @@ theorem mem_dom₀' {pq : P2 K × P2 K} :
   simp_rw [dom₀, Set.mem_sdiff, Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
   by_cases hmem : pq ∈ dom cf
   · congrm(_ ∧ ?_ ∧ ?_)
-    · contrapose!
+    · contrapose
       refine ⟨by grind, fun h ↦ ?_⟩
       ext
       · exact h
@@ -1421,7 +1421,7 @@ theorem mem_dom₀' {pq : P2 K × P2 K} :
         · simpa using congr($hl 2).symm
       have hp1 : p 1 = 0 := by simpa using congr($hl 1)
       have hp2 : p 2 ≠ 0 := by
-        by_contra! hp2
+        by_contra hp2
         suffices p = 0 from hp this
         ext i
         fin_cases i
@@ -1438,7 +1438,7 @@ theorem mem_dom₀' {pq : P2 K × P2 K} :
       · simp
       · simpa [hq02] using hi
       · simpa using hq02.symm
-    · contrapose!
+    · contrapose
       refine ⟨by grind, fun h ↦ ?_⟩
       ext
       · exact h
@@ -1452,7 +1452,7 @@ theorem mem_dom₀' {pq : P2 K × P2 K} :
         · simpa using congr($hl 2).symm
       have hp1 : p 1 = 0 := by simpa using congr($hl 1)
       have hp2 : p 2 ≠ 0 := by
-        by_contra! hp2
+        by_contra hp2
         suffices p = 0 from hp this
         ext i
         fin_cases i
