@@ -1,4 +1,9 @@
-import Mathlib
+module
+
+public import Mathlib
+
+@[expose] public section
+
 set_option linter.style.longLine false
 
 set_option maxHeartbeats 4000000 in

@@ -1,6 +1,9 @@
-import Poncelet.Inverse
+module
 
+public import Poncelet.Inverse
+meta import Poncelet.Inverse
 
+@[expose] public section
 
 variable {K : Type*} [Field K]
 variable (cf : Config K)

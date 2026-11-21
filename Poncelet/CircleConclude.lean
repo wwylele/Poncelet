@@ -1,5 +1,9 @@
-import Poncelet.Inverse
-import Poncelet.Transfer
+module
+
+public import Poncelet.Inverse
+public import Poncelet.Transfer
+
+@[expose] public section
 
 variable {K : Type*} [Field K]
 variable (cf : Config K)

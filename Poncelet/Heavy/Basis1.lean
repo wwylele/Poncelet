@@ -1,4 +1,8 @@
-import Poncelet.Grobner
+module
+
+public import Poncelet.Grobner
+
+@[expose] public section
 
 namespace Detail
 open CPoly

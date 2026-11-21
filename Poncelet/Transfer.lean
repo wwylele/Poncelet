@@ -1,5 +1,9 @@
-import Mathlib
-import Poncelet.TransferAux
+module
+
+public import Mathlib
+public import Poncelet.TransferAux
+
+@[expose] public section
 
 open WeierstrassCurve.Affine
 

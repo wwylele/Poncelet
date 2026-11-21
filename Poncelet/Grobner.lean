@@ -1,4 +1,8 @@
-import Mathlib
+module
+
+public import Mathlib
+
+@[expose] public section
 
 open scoped MonomialOrder
 
@@ -7,9 +11,11 @@ variable {char : ℕ} {n : ℕ}
 
 @[simp]
 theorem Vector.get_zero {α : Type*} [Zero α] (i : Fin n) : (0 : Vector α n).get i = 0 := by
-  change Vector.zero.get i = 0
-  unfold zero
-  simp
+  simp [Vector.get_eq_getElem]
+
+theorem Vector.toList_add' {α : Type*} [Add α] (a b : Vector α n) :
+    (a + b).toList = List.zipWith (· + ·) a.toList b.toList := by
+  apply List.ext_getElem <;> simp [Vector.getElem_add]
 
 instance Vector.addCommMonoid {α : Type*} [AddCommMonoid α] :
     AddCommMonoid (Vector α n) where
@@ -76,9 +82,8 @@ instance {α : Type*} [AddCommMonoid α] [LinearOrder α] [IsOrderedCancelAddMon
     IsOrderedCancelAddMonoid (Vector α n) := by
   apply IsOrderedCancelAddMonoid.of_add_lt_add_left
   intro a b c h
-  change Vector.add a b < Vector.add a c
   rw [Vector.lt_def, Vector.lt] at ⊢ h
-  simp_rw [Vector.add, Vector.toList_zipWith]
+  simp_rw [Vector.toList_add']
   set x := a.toList
   set y := b.toList
   set z := c.toList

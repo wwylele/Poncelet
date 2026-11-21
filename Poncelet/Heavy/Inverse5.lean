@@ -1,4 +1,9 @@
-import Poncelet.Grobner
+module
+
+public import Poncelet.Grobner
+meta import Poncelet.Grobner
+
+@[expose] public section
 
 namespace Detail5
 open CPoly

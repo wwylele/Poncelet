@@ -1,5 +1,9 @@
-import Mathlib
-import Poncelet.P2
+module
+
+public import Mathlib
+public import Poncelet.P2
+
+@[expose] public section
 
 variable {K : Type*} [Field K]
 

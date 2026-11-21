@@ -1,10 +1,14 @@
-import Poncelet.Elliptic
-import Poncelet.Heavy.Inverse1
-import Poncelet.Heavy.Inverse2
-import Poncelet.Heavy.Inverse3
-import Poncelet.Heavy.Inverse4
-import Poncelet.Heavy.Inverse5
-import Poncelet.Heavy.Inverse6
+module
+
+public import Poncelet.Elliptic
+public import Poncelet.Heavy.Inverse1
+public import Poncelet.Heavy.Inverse2
+public import Poncelet.Heavy.Inverse3
+public import Poncelet.Heavy.Inverse4
+public import Poncelet.Heavy.Inverse5
+public import Poncelet.Heavy.Inverse6
+
+@[expose] public section
 
 open WeierstrassCurve.Affine
 

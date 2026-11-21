@@ -1,5 +1,10 @@
-import Mathlib
-import Poncelet.Heavy.Basis1
+module
+
+public import Mathlib
+public import Poncelet.Heavy.Basis1
+meta import Poncelet.Heavy.Basis1
+
+@[expose] public section
 
 namespace Detail
 open CPoly

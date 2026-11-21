@@ -1,5 +1,9 @@
-import Mathlib
-import Poncelet.Circle
+module
+
+public import Mathlib
+public import Poncelet.Circle
+
+@[expose] public section
 
 open WeierstrassCurve.Affine
 

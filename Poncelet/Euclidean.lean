@@ -1,4 +1,8 @@
-import Poncelet.CircleConclude
+module
+
+public import Poncelet.CircleConclude
+
+@[expose] public section
 
 open EuclideanGeometry Real RealInnerProductSpace
 
